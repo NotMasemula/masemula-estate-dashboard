@@ -1448,8 +1448,8 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 let supabase = null;
 let syncEnabled = false;
 
-// Initialize Supabase
-(async function initSupabase() {
+// Initialize Supabase (with delay to ensure DOM ready)
+setTimeout(async function initSupabase() {
   if (!SUPABASE_KEY || SUPABASE_KEY.length < 10) {
     console.log('⚠️ Supabase key not set - running in offline mode');
     updateSyncStatus('offline');
@@ -1459,20 +1459,31 @@ let syncEnabled = false;
   try {
     const { createClient } = window.supabase || {};
     if (!createClient) {
-      console.log('⚠️ Supabase library not loaded');
+      console.log('⚠️ Supabase library not loaded - running offline');
+      updateSyncStatus('offline');
       return;
     }
     supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // Test connection by querying the table
+    const { error } = await supabase.from('estate_data').select('user_id').limit(1);
+    if (error) {
+      console.log('⚠️ Database not ready:', error.message);
+      updateSyncStatus('offline');
+      return;
+    }
+    
     syncEnabled = true;
     console.log('☁️ Supabase sync enabled');
     updateSyncStatus('synced');
     
-    // Load cloud data on init
+    // Load cloud data on init (don't auto-reload)
     await loadAllFromCloud();
   } catch (e) {
     console.error('Supabase init failed:', e);
+    updateSyncStatus('offline');
   }
-})();
+}, 500);
 
 // Get or create user ID
 function getUserId() {
@@ -1544,6 +1555,8 @@ async function loadAllFromCloud() {
     }
     
     const cloudData = data.data;
+    if (!cloudData) return;
+    
     const localUpdated = localStorage.getItem('estate_last_sync');
     const cloudUpdated = data.updated_at;
     
@@ -1564,9 +1577,7 @@ async function loadAllFromCloud() {
       if (cloudData.moodboardTiles) localStorage.setItem('moodboardTiles', JSON.stringify(cloudData.moodboardTiles));
       
       localStorage.setItem('estate_last_sync', cloudUpdated);
-      
-      // Refresh UI
-      location.reload();
+      console.log('☁️ Cloud data loaded successfully');
     }
   } catch (e) {
     console.error('Load from cloud failed:', e);
