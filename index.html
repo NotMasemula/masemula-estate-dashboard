@@ -1596,14 +1596,9 @@ setTimeout(async function initSupabase() {
   }
 }, 1000);
 
-// Get or create user ID
+// Fixed user ID for cross-device sync (all devices use same ID)
 function getUserId() {
-  let userId = localStorage.getItem('estate_user_id');
-  if (!userId) {
-    userId = crypto.randomUUID();
-    localStorage.setItem('estate_user_id', userId);
-  }
-  return userId;
+  return 'ntobeko-masemula-estate';
 }
 
 // Sync all estate data to cloud
@@ -1701,8 +1696,11 @@ function updateSyncStatus(status) {
   if (!el) return;
   if (status === 'synced') {
     el.innerHTML = '☁️';
-    el.title = 'Synced to cloud - click to sync now';
-    el.onclick = () => syncAllToCloud();
+    el.title = 'Synced - Click to refresh from cloud';
+    el.onclick = async () => {
+      await loadAllFromCloud();
+      location.reload();
+    };
   } else if (status === 'syncing') {
     el.innerHTML = '⟳';
     el.title = 'Syncing...';
