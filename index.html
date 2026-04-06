@@ -1451,8 +1451,14 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 let supabase = null;
 let syncEnabled = false;
 
+console.log('🔧 Estate OS: Supabase module loaded');
+console.log('🔧 URL:', SUPABASE_URL);
+console.log('🔧 Key present:', SUPABASE_KEY.length > 50 ? 'Yes (' + SUPABASE_KEY.substring(0,20) + '...)' : 'No');
+
 // Initialize Supabase (with delay to ensure DOM ready)
 setTimeout(async function initSupabase() {
+  console.log('🔧 InitSupabase starting...');
+  
   if (!SUPABASE_KEY || SUPABASE_KEY.length < 10) {
     console.log('⚠️ Supabase key not set - running in offline mode');
     updateSyncStatus('offline');
@@ -1460,16 +1466,26 @@ setTimeout(async function initSupabase() {
   }
   
   try {
+    console.log('🔧 Checking for Supabase library...');
+    console.log('🔧 window.supabase:', typeof window.supabase);
+    
     const { createClient } = window.supabase || {};
     if (!createClient) {
       console.log('⚠️ Supabase library not loaded - running offline');
+      console.log('🔧 Available on window:', Object.keys(window).filter(k => k.toLowerCase().includes('supa')));
       updateSyncStatus('offline');
       return;
     }
+    
+    console.log('🔧 Creating Supabase client...');
     supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('🔧 Client created:', !!supabase);
     
     // Test connection by querying the table
-    const { error } = await supabase.from('estate_data').select('user_id').limit(1);
+    console.log('🔧 Testing database connection...');
+    const { data, error } = await supabase.from('estate_data').select('user_id').limit(1);
+    console.log('🔧 Query result - data:', data, 'error:', error);
+    
     if (error) {
       console.log('⚠️ Database not ready:', error.message);
       updateSyncStatus('offline');
@@ -1477,7 +1493,7 @@ setTimeout(async function initSupabase() {
     }
     
     syncEnabled = true;
-    console.log('☁️ Supabase sync enabled');
+    console.log('☁️ Supabase sync enabled successfully!');
     updateSyncStatus('synced');
     
     // Load cloud data on init (don't auto-reload)
@@ -1486,7 +1502,7 @@ setTimeout(async function initSupabase() {
     console.error('Supabase init failed:', e);
     updateSyncStatus('offline');
   }
-}, 500);
+}, 1000);
 
 // Get or create user ID
 function getUserId() {
