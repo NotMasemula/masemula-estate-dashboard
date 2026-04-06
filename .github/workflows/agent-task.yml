@@ -1,0 +1,124 @@
+# Agent Task Dispatcher
+# Manually trigger agent tasks from the dashboard via repository_dispatch
+
+name: Agent Task
+
+on:
+  repository_dispatch:
+    types: [agent-task]
+  workflow_dispatch:
+    inputs:
+      agent:
+        description: 'Agent to assign'
+        required: true
+        type: choice
+        options:
+          - pa
+          - estate
+          - business
+          - music
+          - brand
+          - finance
+          - legal
+          - intel
+          - archive
+          - portfolio
+          - tutor
+      task:
+        description: 'Task description'
+        required: true
+        type: string
+      priority:
+        description: 'Priority level'
+        required: true
+        default: 'normal'
+        type: choice
+        options:
+          - urgent
+          - high
+          - normal
+          - low
+
+jobs:
+  process-task:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log Task Assignment
+        run: |
+          echo "🤖 AGENT TASK ASSIGNED"
+          echo "====================="
+          echo ""
+          echo "Agent: ${{ github.event.inputs.agent || github.event.client_payload.agent }}"
+          echo "Task: ${{ github.event.inputs.task || github.event.client_payload.task }}"
+          echo "Priority: ${{ github.event.inputs.priority || github.event.client_payload.priority }}"
+          echo "Assigned: $(TZ='Africa/Johannesburg' date '+%Y-%m-%d %H:%M SAST')"
+          echo ""
+          echo "Status: QUEUED"
+
+      - name: Route to Agent
+        run: |
+          AGENT="${{ github.event.inputs.agent || github.event.client_payload.agent }}"
+          
+          case $AGENT in
+            pa)
+              echo "📋 Routing to Personal Assistant..."
+              echo "Responsibilities: Scheduling, briefings, habit tracking"
+              ;;
+            estate)
+              echo "🏛️ Routing to Estate Manager..."
+              echo "Responsibilities: Cross-venture coordination, delegation"
+              ;;
+            business)
+              echo "💼 Routing to Business Manager..."
+              echo "Responsibilities: DS ops, active ventures, ROAS monitoring"
+              ;;
+            music)
+              echo "🎵 Routing to Music Manager..."
+              echo "Responsibilities: Releases, DSP, SAMRO/SAMPRA, sync licensing"
+              ;;
+            brand)
+              echo "👔 Routing to Brand Manager..."
+              echo "Responsibilities: Masemula brand, The Internal collection"
+              ;;
+            finance)
+              echo "💰 Routing to Finance Manager..."
+              echo "Responsibilities: P&L, budgets, RS3 tracking, SARS"
+              ;;
+            legal)
+              echo "⚖️ Routing to Legal Manager..."
+              echo "Responsibilities: Contracts, compliance, disputes"
+              ;;
+            intel)
+              echo "🔍 Routing to Intelligence Agent..."
+              echo "Responsibilities: Market research, opportunities"
+              ;;
+            archive)
+              echo "📁 Routing to Archive Agent..."
+              echo "Responsibilities: Decision logging, memory"
+              ;;
+            portfolio)
+              echo "📊 Routing to Portfolio Manager..."
+              echo "Responsibilities: Long-term ventures planning"
+              ;;
+            tutor)
+              echo "📚 Routing to Academic Tutor..."
+              echo "Responsibilities: University support"
+              ;;
+            *)
+              echo "❓ Unknown agent: $AGENT"
+              ;;
+          esac
+
+      - name: Create task log
+        run: |
+          mkdir -p .tasks
+          TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+          AGENT="${{ github.event.inputs.agent || github.event.client_payload.agent }}"
+          echo "agent: $AGENT" > .tasks/task_${TIMESTAMP}.yml
+          echo "task: ${{ github.event.inputs.task || github.event.client_payload.task }}" >> .tasks/task_${TIMESTAMP}.yml
+          echo "priority: ${{ github.event.inputs.priority || github.event.client_payload.priority }}" >> .tasks/task_${TIMESTAMP}.yml
+          echo "status: queued" >> .tasks/task_${TIMESTAMP}.yml
+          echo "created: $(date -Iseconds)" >> .tasks/task_${TIMESTAMP}.yml

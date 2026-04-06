@@ -1,0 +1,70 @@
+# Morning Briefing - Personal Assistant Agent
+# Runs daily at 4:00 AM SAST (2:00 AM UTC) - aligned with Ntobeko's wake time
+# Free GitHub Actions minutes: 2000/month for private repos, unlimited for public
+
+name: Morning Briefing
+
+on:
+  schedule:
+    # 4:00 AM SAST = 2:00 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      briefing_type:
+        description: 'Type of briefing'
+        required: true
+        default: 'morning'
+        type: choice
+        options:
+          - morning
+          - weekly
+          - monthly
+
+jobs:
+  morning-briefing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Morning Briefing
+        run: |
+          echo "🌅 MASEMULA ESTATE - MORNING BRIEFING"
+          echo "====================================="
+          echo "Date: $(TZ='Africa/Johannesburg' date '+%A, %d %B %Y')"
+          echo "Time: $(TZ='Africa/Johannesburg' date '+%H:%M SAST')"
+          echo ""
+          echo "📋 TODAY'S SCHEDULE"
+          echo "-------------------"
+          echo "• 04:00 - Wake up, gym"
+          echo "• 06:00 - Morning routine"
+          echo "• 08:00 - Classes (check timetable)"
+          echo "• 14:00 - Deep work block"
+          echo "• 18:00 - Evening session"
+          echo "• 23:30 - Bedtime"
+          echo ""
+          echo "🎯 ONE PRIORITY"
+          echo "---------------"
+          echo "Focus: Check active tasks in Estate OS"
+          echo ""
+          echo "🚩 FLAGS"
+          echo "--------"
+          echo "[URGENT] SAMRO/SAMPRA registration - Music Manager"
+          echo "[WATCH] DS Store Ops agent - needs building"
+          echo ""
+          echo "✨ LOOK FORWARD TO"
+          echo "------------------"
+          echo "One day closer to the RS3."
+
+      - name: Create briefing artifact
+        run: |
+          mkdir -p briefings
+          TZ='Africa/Johannesburg' date '+%Y-%m-%d' > briefings/latest.txt
+          echo "Briefing generated at $(TZ='Africa/Johannesburg' date)" >> briefings/latest.txt
+
+      - name: Upload briefing
+        uses: actions/upload-artifact@v4
+        with:
+          name: morning-briefing-${{ github.run_number }}
+          path: briefings/
+          retention-days: 7

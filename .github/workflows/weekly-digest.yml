@@ -1,0 +1,73 @@
+# Weekly Estate Digest - Estate Manager Agent
+# Runs every Monday at 6:00 AM SAST (4:00 AM UTC)
+
+name: Weekly Estate Digest
+
+on:
+  schedule:
+    # Monday 6:00 AM SAST = 4:00 AM UTC
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+jobs:
+  weekly-digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Weekly Digest
+        run: |
+          echo "📊 MASEMULA ESTATE - WEEKLY DIGEST"
+          echo "==================================="
+          echo "Week of: $(TZ='Africa/Johannesburg' date '+%d %B %Y')"
+          echo ""
+          echo "═══ VENTURE STATUS ═══"
+          echo ""
+          echo "🛒 DROPSHIPPING"
+          echo "   Status: Setup phase"
+          echo "   Product: Clean Desk Bundle"
+          echo "   Action: Build Store Ops agent"
+          echo ""
+          echo "🎵 MUSIC"
+          echo "   Status: 2 projects released"
+          echo "   [URGENT] SAMRO registration pending"
+          echo "   [URGENT] SAMPRA registration pending"
+          echo ""
+          echo "👔 MASEMULA BRAND"
+          echo "   Status: Concept stage"
+          echo "   Collection: 'The Internal' in development"
+          echo "   Target: Q4 2026"
+          echo ""
+          echo "═══ FINANCIAL SNAPSHOT ═══"
+          echo ""
+          echo "RS3 Progress: Track in Finance section"
+          echo "Target: R30,800/month by June-July 2027"
+          echo ""
+          echo "═══ FLAGS FOR NTOBEKO ═══"
+          echo ""
+          echo "[DECISION NEEDED] None this week"
+          echo "[URGENT] SAMRO/SAMPRA registration"
+          echo "[WATCH] DS store setup progress"
+          echo "[ON TRACK] Gym habit"
+          echo ""
+          echo "═══ AGENT STATUS ═══"
+          echo ""
+          echo "● PA - Online"
+          echo "● Estate Manager - Online"
+          echo "● Business Manager - Online"
+          echo "● Music Manager - Action needed"
+          echo "○ Brand Manager - Concept stage"
+          echo "● Finance Manager - Online"
+          echo "● Legal Manager - Online"
+          echo "● Intelligence Agent - Online"
+          echo "● Archive Agent - Online"
+          echo "○ Portfolio Manager - Planning"
+          echo "● Academic Tutor - Online"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-digest-${{ github.run_number }}
+          path: .
+          retention-days: 30
