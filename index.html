@@ -2477,10 +2477,17 @@ function renderJournalDiary(){
     const d=new Date(e.date);
     const dateStr=d.toLocaleDateString('en-ZA',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     const timeStr=d.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});
-    const content=e.answers.map(a=>`<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px">${a.prompt}</div><div style="font-size:12px;font-weight:300;color:var(--ink);line-height:1.7">${a.text}</div></div>`).join('');
+    let content='';let countText='';
+    if(e.answers&&Array.isArray(e.answers)){
+      content=e.answers.map(a=>`<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px">${a.prompt}</div><div style="font-size:12px;font-weight:300;color:var(--ink);line-height:1.7">${a.text}</div></div>`).join('');
+      countText=`${e.answers.length} prompt${e.answers.length>1?'s':''}`;
+    }else if(e.title||e.content){
+      content=`<div style="margin-bottom:10px">${e.title?`<div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px">${e.title}</div>`:''}${e.content?`<div style="font-size:12px;font-weight:300;color:var(--ink);line-height:1.7">${e.content}</div>`:''}</div>`;
+      countText=e.mood||'entry';
+    }else{content='<div style="font-size:12px;color:var(--muted)">Empty entry</div>';countText='entry';}
     return`<div class="diary-entry">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div><div class="diary-date">${dateStr}</div><div style="font-size:10px;color:var(--muted)">${timeStr} · ${e.answers.length} prompt${e.answers.length>1?'s':''}</div></div>
+        <div><div class="diary-date">${dateStr}</div><div style="font-size:10px;color:var(--muted)">${timeStr} · ${countText}</div></div>
         <button class="btn" style="font-size:9px;padding:4px 8px" onclick="deleteJournalEntry(${idx})">Delete</button>
       </div>
       <div>${content}</div>
