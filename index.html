@@ -203,6 +203,8 @@ html,body{background:transparent;font-family:'Jost',sans-serif;color:var(--ink);
 .btn:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
 .btn-gold{border-color:var(--gold);color:var(--accent)}
 .btn-gold:hover{background:var(--gold);color:var(--deep);border-color:var(--gold)}
+.btn-del{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:2px 6px;border-radius:3px;transition:all 0.2s}
+.btn-del:hover{background:var(--red);color:#fff}
 .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-bottom:14px}
 
 /* VENTURE CARDS */
@@ -1003,12 +1005,8 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 
       <div class="itab-panel" id="hs-log">
         <div class="card">
-          <div class="card-title">Emotion log — this week</div>
-          <div id="emo-history">
-            <div class="emo-entry"><div class="emo-dot" style="background:#97C459"></div><span style="color:var(--muted);min-width:55px">Today</span><span style="flex:1">Proud · 7/10</span><span style="color:var(--muted);font-size:10px">After gym</span></div>
-            <div class="emo-entry"><div class="emo-dot" style="background:#AFA9EC"></div><span style="color:var(--muted);min-width:55px">Yesterday</span><span style="flex:1">Anxious · 5/10</span><span style="color:var(--muted);font-size:10px">DS store setup</span></div>
-            <div class="emo-entry"><div class="emo-dot" style="background:#EF9F27"></div><span style="color:var(--muted);min-width:55px">Mon</span><span style="flex:1">Energetic · 8/10</span><span style="color:var(--muted);font-size:10px">Deep work day</span></div>
-          </div>
+          <div class="card-title">Emotion log</div>
+          <div id="emo-history"></div>
         </div>
       </div>
     </div>
@@ -1708,18 +1706,52 @@ if(ecanvas){
 const emoColors={'Happy':'#97C459','Surprised':'#AFA9EC','Bad':'#5DCAA5','Fearful':'#85B7EB','Angry':'#E24B4A','Disgusted':'#888780','Sad':'#378ADD'};
 let ecolorMap={};
 emoData.forEach(e=>{ecolorMap[e.label]=e.color;e.sub.forEach(s=>ecolorMap[s]=e.color)});
+let emoLog=JSON.parse(localStorage.getItem('emotionLog')||'[]');
 function logEmotion(){
   const sel=document.getElementById('emo-selected').textContent;
   if(sel==='—')return;
   const inten=document.getElementById('emo-intensity').value;
   const note=document.getElementById('emo-note').value;
-  const hist=document.getElementById('emo-history');
-  const color=ecolorMap[sel]||'#C9A84C';
-  const row=document.createElement('div');row.className='emo-entry';
-  row.innerHTML=`<div class="emo-dot" style="background:${color}"></div><span style="color:var(--muted);min-width:55px">Now</span><span style="flex:1">${sel} · ${inten}/10</span><span style="color:var(--muted);font-size:10px">${note||'—'}</span>`;
-  hist.insertBefore(row,hist.firstChild);
+  const entry={emotion:sel,intensity:inten,note:note||'—',date:Date.now()};
+  emoLog.unshift(entry);
+  localStorage.setItem('emotionLog',JSON.stringify(emoLog));
+  renderEmotionLog();
   document.getElementById('emo-note').value='';
 }
+function deleteEmotionEntry(i){
+  if(confirm('Delete this emotion entry?')){
+    emoLog.splice(i,1);
+    localStorage.setItem('emotionLog',JSON.stringify(emoLog));
+    renderEmotionLog();
+  }
+}
+function renderEmotionLog(){
+  const hist=document.getElementById('emo-history');if(!hist)return;
+  if(emoLog.length===0){
+    hist.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">No emotion entries yet. Use the wheel to check in.</div>';
+    return;
+  }
+  hist.innerHTML=emoLog.slice(0,20).map((e,i)=>{
+    const color=ecolorMap[e.emotion]||'#C9A84C';
+    const d=new Date(e.date);
+    const rel=getRelativeTime(d);
+    return`<div class="emo-entry"><div class="emo-dot" style="background:${color}"></div><span style="color:var(--muted);min-width:55px">${rel}</span><span style="flex:1">${e.emotion} · ${e.intensity}/10</span><span style="color:var(--muted);font-size:10px">${e.note}</span><button class="btn-del" onclick="deleteEmotionEntry(${i})">×</button></div>`;
+  }).join('');
+}
+function getRelativeTime(d){
+  const now=new Date();
+  const diff=now-d;
+  const mins=Math.floor(diff/60000);
+  const hrs=Math.floor(diff/3600000);
+  const days=Math.floor(diff/86400000);
+  if(mins<1)return'Just now';
+  if(mins<60)return mins+'m ago';
+  if(hrs<24)return hrs+'h ago';
+  if(days===1)return'Yesterday';
+  if(days<7)return d.toLocaleDateString('en-ZA',{weekday:'short'});
+  return d.toLocaleDateString('en-ZA',{day:'numeric',month:'short'});
+}
+renderEmotionLog();
 
 // ─── JOURNAL EXPAND ───
 function toggleJQ(el){
@@ -2231,7 +2263,7 @@ function renderLedger(){
     el.innerHTML='<div style="font-size:12px;color:var(--muted);font-style:italic;padding:10px 0">No transactions yet.</div>';
     return;
   }
-  el.innerHTML=ledger.slice(0,20).map(e=>{
+  el.innerHTML=ledger.slice(0,20).map((e,i)=>{
     const d=new Date(e.date);
     const dateStr=d.toLocaleDateString('en-ZA',{day:'numeric',month:'short'});
     return`<div class="ledger-row">
@@ -2239,8 +2271,17 @@ function renderLedger(){
       <div class="ledger-desc">${e.desc}</div>
       <div class="ledger-cat">${e.cat}</div>
       <div class="ledger-amt" style="color:${e.type==='income'?'var(--green)':'var(--red)'}">R ${e.amt.toLocaleString()}</div>
+      <button class="btn-del" onclick="deleteLedgerEntry(${i})">×</button>
     </div>`;
   }).join('');
+}
+function deleteLedgerEntry(i){
+  if(confirm('Delete this transaction?')){
+    ledger.splice(i,1);
+    localStorage.setItem('ledger',JSON.stringify(ledger));
+    renderLedger();
+    updateFinanceTotals();
+  }
 }
 function updateFinanceTotals(){
   const income=ledger.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
@@ -2292,11 +2333,18 @@ function renderSavingsGoals(){
   el.innerHTML=savingsGoals.map((g,i)=>{
     const pct=Math.min(g.current/g.target*100,100);
     return`<div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${g.name}</span><span style="color:var(--muted)">R${g.current.toLocaleString()} / R${g.target.toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px"><span>${g.name}</span><div><span style="color:var(--muted);margin-right:8px">R${g.current.toLocaleString()} / R${g.target.toLocaleString()}</span><button class="btn-del" onclick="deleteSavingsGoal(${i})">×</button></div></div>
       <div class="prog-bar" style="width:100%;height:4px"><div class="prog-fill" style="width:${pct}%"></div></div>
       <input class="ledger-input" type="number" style="margin-top:6px;width:120px" placeholder="Update current" onchange="updateSavingsGoal(${i},this.value)">
     </div>`;
   }).join('');
+}
+function deleteSavingsGoal(i){
+  if(confirm('Delete this savings goal?')){
+    savingsGoals.splice(i,1);
+    localStorage.setItem('savingsGoals',JSON.stringify(savingsGoals));
+    renderSavingsGoals();
+  }
 }
 // Init finance
 renderLedger();
