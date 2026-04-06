@@ -24,6 +24,8 @@
   --card:#1A1210;--surface:#120E0B;--cream:#0E0A08;--gold:#C9A84C;
   --deep:#0A0806;--green:#F0EDE7;--red:#F0EDE7;--warm:#F0EDE7;
 }
+/* Force all text to cream in dark mode */
+.dark, .dark *{color:#F0EDE7}
 .dark #sidebar{background:var(--deep);border-color:var(--border)}
 .dark .topbar{background:var(--card);border-color:var(--border)}
 .dark .content{background:var(--cream)}
@@ -50,6 +52,9 @@
 .dark .sel{background:var(--surface);color:#F0EDE7;border-color:var(--border)}
 .dark textarea{background:var(--surface);color:#F0EDE7;border-color:var(--border)}
 .dark select{background:var(--surface);color:#F0EDE7;border-color:var(--border)}
+.dark input{background:var(--surface);color:#F0EDE7;border-color:var(--border)}
+.dark input::placeholder{color:rgba(240,237,231,0.5)}
+.dark textarea::placeholder{color:rgba(240,237,231,0.5)}
 .dark .theme-toggle{border-color:var(--border);color:#F0EDE7}
 .dark .theme-toggle:hover{border-color:var(--gold);color:var(--gold)}
 .dark .vc{background:var(--card);border-color:var(--border)}
@@ -70,6 +75,10 @@
 .dark .btn-gold:hover{background:var(--gold);color:var(--deep)}
 .dark .prog-bar{background:var(--border)}
 .dark .nav-tip{background:var(--deep);border-color:rgba(201,168,76,0.3)}
+.dark h1,.dark h2,.dark h3,.dark h4,.dark h5,.dark h6{color:#F0EDE7}
+.dark p,.dark span,.dark div,.dark li,.dark td,.dark th{color:#F0EDE7}
+.dark label{color:#F0EDE7}
+.dark ::placeholder{color:rgba(240,237,231,0.5)}
 html,body{background:transparent;font-family:'Jost',sans-serif;color:var(--ink);margin:0;padding:0;min-height:100vh}
 #os{display:flex;min-height:100vh;border:none;border-radius:0;background:var(--cream)}
 
