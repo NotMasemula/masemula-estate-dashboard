@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Masemula Estate — Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F4EF;--card:#FFFFFF;--ink:#2A2421;--muted:#6B6560;--border:#E8E4DD;--gold:#C9A84C;--accent:#8B7355}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.7}
+.container{display:flex;min-height:100vh}
+.sidebar{width:260px;background:var(--card);border-right:1px solid var(--border);padding:24px;position:fixed;height:100vh;overflow-y:auto}
+.logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;margin-bottom:8px}
+.tagline{font-size:11px;color:var(--muted);letter-spacing:0.05em;margin-bottom:32px}
+.nav-section{margin-bottom:24px}
+.nav-title{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:12px}
+.nav-link{display:block;padding:8px 12px;border-radius:6px;color:var(--ink);text-decoration:none;font-size:13px;margin-bottom:4px;transition:all 0.2s}
+.nav-link:hover{background:var(--bg)}
+.nav-link.active{background:var(--gold);color:white}
+.nav-link span{margin-right:8px}
+.main{margin-left:260px;flex:1;padding:48px 64px;max-width:900px}
+h1{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:500;margin-bottom:8px}
+h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;margin:32px 0 16px;padding-top:24px;border-top:1px solid var(--border)}
+h3{font-size:16px;font-weight:500;margin:24px 0 12px}
+p{margin-bottom:16px;color:var(--ink)}
+blockquote{border-left:3px solid var(--gold);padding-left:16px;margin:24px 0;font-style:italic;color:var(--muted)}
+ul,ol{margin:16px 0;padding-left:24px}
+li{margin-bottom:8px}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--bg);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.05em}
+code{background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px}
+pre{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;margin:16px 0}
+pre code{background:none;padding:0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;margin:16px 0}
+.badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:10px;text-transform:uppercase;letter-spacing:0.05em}
+.badge-active{background:#E8F5E9;color:#2E7D32}
+.badge-plan{background:#FFF3E0;color:#E65100}
+.badge-done{background:#E8F5E9;color:#2E7D32}
+.check{color:#2E7D32}
+.section{display:none}
+.section.active{display:block}
+hr{border:none;border-top:1px solid var(--border);margin:32px 0}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px}}
+</style>
+</head>
+<body>
+<div class="container">
+<nav class="sidebar">
+  <div class="logo">🏛️ Masemula Estate</div>
+  <div class="tagline">Documentation</div>
+  
+  <div class="nav-section">
+    <div class="nav-title">Overview</div>
+    <a href="#" class="nav-link active" onclick="showSection('home',this)"><span>📖</span>Home</a>
+    <a href="#" class="nav-link" onclick="showSection('philosophy',this)"><span>💭</span>Philosophy</a>
+  </div>
+  
+  <div class="nav-section">
+    <div class="nav-title">Sections</div>
+    <a href="#" class="nav-link" onclick="showSection('ventures',this)"><span>💼</span>Ventures</a>
+    <a href="#" class="nav-link" onclick="showSection('time',this)"><span>⏰</span>Time & Routine</a>
+    <a href="#" class="nav-link" onclick="showSection('finance',this)"><span>💰</span>Finance</a>
+    <a href="#" class="nav-link" onclick="showSection('headspace',this)"><span>🧠</span>Headspace</a>
+    <a href="#" class="nav-link" onclick="showSection('academics',this)"><span>📚</span>Academics</a>
+    <a href="#" class="nav-link" onclick="showSection('goals',this)"><span>🎯</span>Goals</a>
+    <a href="#" class="nav-link" onclick="showSection('agents',this)"><span>🤖</span>Agents</a>
+    <a href="#" class="nav-link" onclick="showSection('content',this)"><span>📱</span>Content</a>
+  </div>
+  
+  <div class="nav-section">
+    <div class="nav-title">Links</div>
+    <a href="index.html" class="nav-link"><span>🖥️</span>Dashboard</a>
+    <a href="https://github.com/NotMasemula/masemula-estate-dashboard" class="nav-link" target="_blank"><span>📂</span>GitHub</a>
+  </div>
+</nav>
+
+<main class="main">
+  <!-- HOME -->
+  <div class="section active" id="home">
+    <h1>Masemula Estate OS</h1>
+    <blockquote>"Build the life, then live it."</blockquote>
+    
+    <p>Welcome to the Masemula Estate Operating System — a personal command center for managing ventures, time, finances, headspace, and growth.</p>
+    
+    <h2>Overview</h2>
+    <p>The Masemula Estate OS is a single-page dashboard designed to centralize all aspects of life management:</p>
+    
+    <table>
+      <tr><th>Section</th><th>Purpose</th></tr>
+      <tr><td><strong>Dashboard</strong></td><td>Daily overview, priorities, weather, quick stats</td></tr>
+      <tr><td><strong>Ventures</strong></td><td>Business tracking (Dropshipping, Music, Brand, Events)</td></tr>
+      <tr><td><strong>Goals</strong></td><td>Milestones and progress tracking</td></tr>
+      <tr><td><strong>Time & Routine</strong></td><td>Schedule, focus timer, daily briefings</td></tr>
+      <tr><td><strong>Finance</strong></td><td>Income/expenses, savings, investments, accounts</td></tr>
+      <tr><td><strong>Headspace</strong></td><td>Emotion tracking, journaling, mental wellness</td></tr>
+      <tr><td><strong>Academics</strong></td><td>Study tracking, GPA goals, course management</td></tr>
+      <tr><td><strong>Content</strong></td><td>Content calendar and posting checklist</td></tr>
+      <tr><td><strong>Agents</strong></td><td>Task delegation to estate managers</td></tr>
+      <tr><td><strong>Jarvis</strong></td><td>AI assistant integration</td></tr>
+    </table>
+    
+    <h2>Quick Start</h2>
+    <ol>
+      <li>Open the dashboard in any modern browser</li>
+      <li>Use the sidebar icons to navigate sections</li>
+      <li>Toggle dark mode with the 🌙 button (top-right)</li>
+      <li>Data persists in browser localStorage</li>
+    </ol>
+    
+    <div class="card">
+      <h3>Live Dashboard</h3>
+      <p>🌐 <strong>URL:</strong> <a href="https://notmasemula.github.io/masemula-estate-dashboard/">https://notmasemula.github.io/masemula-estate-dashboard/</a></p>
+      <p>📂 <strong>GitHub:</strong> <a href="https://github.com/NotMasemula/masemula-estate-dashboard">https://github.com/NotMasemula/masemula-estate-dashboard</a></p>
+    </div>
+  </div>
+
+  <!-- PHILOSOPHY -->
+  <div class="section" id="philosophy">
+    <h1>Philosophy</h1>
+    <blockquote>"Build the life, then live it."</blockquote>
+    
+    <h2>The Three Pillars</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>1. Build</h3>
+        <p>Create systems, businesses, and assets that generate value.</p>
+      </div>
+      <div class="card">
+        <h3>2. Grow</h3>
+        <p>Continuous learning, health, and self-improvement.</p>
+      </div>
+    </div>
+    <div class="card">
+      <h3>3. Live</h3>
+      <p>Enjoy the fruits of disciplined work. The RS3 is the symbol.</p>
+    </div>
+    
+    <h2>Core Values</h2>
+    <table>
+      <tr><th>Value</th><th>Meaning</th></tr>
+      <tr><td><strong>No external debt</strong></td><td>Self-funded growth only</td></tr>
+      <tr><td><strong>4am discipline</strong></td><td>Morning gym, non-negotiable</td></tr>
+      <tr><td><strong>School protected</strong></td><td>Education comes first</td></tr>
+      <tr><td><strong>Compound effort</strong></td><td>Small daily wins stack</td></tr>
+    </table>
+    
+    <h2>The Vision</h2>
+    <p>Build a self-sustaining estate generating <strong>R30,800+/month</strong> by <strong>November 2027</strong>, while completing university and maintaining health.</p>
+    <p>The RS3 represents proof of concept — the first major milestone showing the estate model works.</p>
+  </div>
+
+  <!-- VENTURES -->
+  <div class="section" id="ventures">
+    <h1>Ventures</h1>
+    <blockquote>Track all business ventures from idea to scale.</blockquote>
+    
+    <h2>1. Dropshipping — Clean Desk Co.</h2>
+    <p><span class="badge badge-active">🟢 Active</span> <span class="badge badge-plan">Operational</span></p>
+    <p>E-commerce store selling desk organization bundles via TikTok organic marketing.</p>
+    
+    <h3>Build Progress</h3>
+    <ul>
+      <li><span class="check">✓</span> Niche Research</li>
+      <li><span class="check">✓</span> Product Selection</li>
+      <li><span class="check">✓</span> Store Setup</li>
+      <li><span class="check">✓</span> Content Strategy</li>
+      <li><span class="check">✓</span> First Sales</li>
+      <li>⏳ Scale Testing ← <em>Current</em></li>
+      <li>☐ Ad Launch</li>
+      <li>☐ R4K Target</li>
+    </ul>
+    
+    <h3>Metrics</h3>
+    <table>
+      <tr><th>Metric</th><th>Value</th></tr>
+      <tr><td>Revenue</td><td>R 2,000</td></tr>
+      <tr><td>Budget</td><td>R 6,000</td></tr>
+      <tr><td>Profit Margin</td><td>73%</td></tr>
+      <tr><td>Orders</td><td>12</td></tr>
+      <tr><td>Conversion Rate</td><td>2.1%</td></tr>
+      <tr><td>ROAS</td><td>2.4x</td></tr>
+    </table>
+    
+    <hr>
+    
+    <h2>2. Music — Amapiano Production</h2>
+    <p><span class="badge badge-active">🟢 Active</span> <span class="badge badge-plan">Growth</span></p>
+    <p>Independent Amapiano producer building catalog and audience. 2 projects released.</p>
+    
+    <h3>Build Progress</h3>
+    <ul>
+      <li><span class="check">✓</span> First Release</li>
+      <li><span class="check">✓</span> Distribution Setup</li>
+      <li>⏳ Profile Claims ← <em>Current</em></li>
+      <li>☐ SAMRO/SAMPRA Registration</li>
+      <li>☐ 10K Streams</li>
+      <li>☐ First Sync Deal</li>
+    </ul>
+    
+    <hr>
+    
+    <h2>3. Masemula — Luxury Menswear</h2>
+    <p><span class="badge badge-plan">🟡 Planning</span> <span class="badge">Concept</span></p>
+    <p>Heritage-inspired SA luxury brand. Ralph Lauren/ALD positioning. First collection "The Internal".</p>
+    
+    <h3>Build Progress</h3>
+    <ul>
+      <li><span class="check">✓</span> Brand Identity</li>
+      <li><span class="check">✓</span> Concept Development</li>
+      <li>⏳ Collection Design ← <em>Current</em></li>
+      <li>☐ Sampling</li>
+      <li>☐ Photography</li>
+      <li>☐ Launch (Target: Q4 2026)</li>
+    </ul>
+    
+    <hr>
+    
+    <h2>4. Events & Hosting</h2>
+    <p><span class="badge badge-plan">🟡 Planning</span></p>
+    <p>Event planning and hosting business. Kea-led with Ntobeko as business manager/support.</p>
+    
+    <h2>ROAS Decision Rules</h2>
+    <table>
+      <tr><th>ROAS</th><th>Action</th></tr>
+      <tr><td>&lt; 1.5x</td><td>🔴 Kill immediately</td></tr>
+      <tr><td>1.5x – 2x</td><td>🟡 Tweak and test</td></tr>
+      <tr><td>2x – 3x</td><td>🟢 Maintain and optimise</td></tr>
+      <tr><td>&gt; 3x</td><td>🔵 Scale aggressively</td></tr>
+    </table>
+  </div>
+
+  <!-- TIME -->
+  <div class="section" id="time">
+    <h1>Time & Routine</h1>
+    <blockquote>Master your time, master your life.</blockquote>
+    
+    <h2>Weekly Schedule</h2>
+    <table>
+      <tr><th>Day</th><th>Blocks</th></tr>
+      <tr><td>Monday</td><td>🏋️ Gym → 📚 School → 📚 School → 🎯 Deep Work → 🎵 Music → 💼 Business</td></tr>
+      <tr><td>Tuesday</td><td>🏋️ Gym → 🎯 Deep Work → 📚 School → 📚 School → 🎵 Music → ⬜ Free</td></tr>
+      <tr><td>Wednesday</td><td>🏋️ Gym → 📚 School → 📚 School → 📚 School → ⬜ Free → ⬜ Free</td></tr>
+      <tr><td>Thursday</td><td>🏋️ Gym → 🎯 Deep Work → 📚 School → 📚 School → ⬜ Free → ⬜ Free</td></tr>
+      <tr><td>Friday</td><td>🏋️ Gym → 📚 School → 📚 School → 📚 School → ⬜ Free → ⬜ Free</td></tr>
+      <tr><td>Saturday</td><td>🏋️ Gym → 🎯 Deep Work → 🎵 Music → 💼 Business → ⬜ Free → ⬜ Free</td></tr>
+      <tr><td>Sunday</td><td>🏋️ Gym → ⬜ Free → 🎵 Music → ⬜ Free → ⬜ Free → ⬜ Free</td></tr>
+    </table>
+    
+    <h2>Block Legend</h2>
+    <table>
+      <tr><th>Icon</th><th>Category</th></tr>
+      <tr><td>🏋️ Teal</td><td>Gym (4am daily)</td></tr>
+      <tr><td>📚 Green</td><td>School / University</td></tr>
+      <tr><td>🎯 Gold</td><td>Deep Work</td></tr>
+      <tr><td>🎵 Purple</td><td>Music Production</td></tr>
+      <tr><td>💼 Orange</td><td>Business / DS</td></tr>
+      <tr><td>⬜ Grey</td><td>Free / Flex</td></tr>
+    </table>
+    
+    <h2>Non-Negotiables</h2>
+    <ol>
+      <li><strong>4am Gym</strong> — Every single day</li>
+      <li><strong>Bed by 11:30pm</strong> — Recovery is growth</li>
+      <li><strong>School protected</strong> — No skipping for business</li>
+      <li><strong>Sunday planning</strong> — Set up the week</li>
+    </ol>
+    
+    <h2>Focus Timer Protocol</h2>
+    <table>
+      <tr><th>Duration</th><th>Use Case</th></tr>
+      <tr><td>25 min</td><td>Quick tasks, emails, admin</td></tr>
+      <tr><td>52 min</td><td>Standard deep work block</td></tr>
+      <tr><td>90 min</td><td>Creative work, music, design</td></tr>
+    </table>
+    <p><strong>Daily Target:</strong> 4 focused sessions per day</p>
+  </div>
+
+  <!-- FINANCE -->
+  <div class="section" id="finance">
+    <h1>Finance</h1>
+    <blockquote>No external debt. Self-funded growth. Follow the money.</blockquote>
+    
+    <h2>Core Rules</h2>
+    <ol>
+      <li><strong>R5,000 approval threshold</strong> — Anything above needs review</li>
+      <li><strong>SARS compliant</strong> — Keep records for tax</li>
+      <li><strong>No external debt</strong> — Bootstrap everything</li>
+      <li><strong>10% to savings</strong> — Always, non-negotiable</li>
+    </ol>
+    
+    <h2>DS Budget (R6,000)</h2>
+    <table>
+      <tr><th>Category</th><th>Amount</th><th>%</th></tr>
+      <tr><td>Shopify (monthly)</td><td>R 190</td><td>3%</td></tr>
+      <tr><td>Domain</td><td>R 200</td><td>3%</td></tr>
+      <tr><td>Product samples</td><td>R 800</td><td>13%</td></tr>
+      <tr><td>Ad budget Month 1</td><td>R 2,000</td><td>33%</td></tr>
+      <tr><td>Ad budget Month 2</td><td>R 1,500</td><td>25%</td></tr>
+      <tr><td>Emergency buffer</td><td>R 1,310</td><td>22%</td></tr>
+    </table>
+    
+    <h2>Bank Accounts Structure</h2>
+    <table>
+      <tr><th>Account</th><th>Purpose</th></tr>
+      <tr><td>Primary Checking</td><td>Day-to-day expenses</td></tr>
+      <tr><td>Business Account</td><td>Venture income & expenses</td></tr>
+      <tr><td>Savings / Emergency</td><td>6-month runway buffer</td></tr>
+    </table>
+    
+    <h3>Money Flow</h3>
+    <pre><code>Income → Business Account → Reinvest / Personal
+                         ↓
+                    10% → Savings (always)</code></pre>
+    
+    <h2>RS3 Income Target</h2>
+    <p><strong>Goal:</strong> R30,800/month by November 2027</p>
+    <table>
+      <tr><th>Milestone</th><th>Monthly Income</th></tr>
+      <tr><td>Side hustle level</td><td>R 5,000</td></tr>
+      <tr><td>Part-time income</td><td>R 10,000</td></tr>
+      <tr><td>Full-time equivalent</td><td>R 20,000</td></tr>
+      <tr><td>RS3 Target</td><td>R 30,800</td></tr>
+    </table>
+  </div>
+
+  <!-- HEADSPACE -->
+  <div class="section" id="headspace">
+    <h1>Headspace</h1>
+    <blockquote>Emotional awareness. Daily reflection. Inner work.</blockquote>
+    
+    <h2>Core Emotions</h2>
+    <table>
+      <tr><th>Emotion</th><th>Color</th><th>Sub-emotions</th></tr>
+      <tr><td>Joy</td><td>Yellow</td><td>Happy, Proud, Content, Excited, Grateful, Peaceful</td></tr>
+      <tr><td>Sadness</td><td>Blue</td><td>Lonely, Disappointed, Hopeless, Grieving, Tired, Lost</td></tr>
+      <tr><td>Fear</td><td>Purple</td><td>Anxious, Insecure, Overwhelmed, Nervous, Scared, Uncertain</td></tr>
+      <tr><td>Anger</td><td>Red</td><td>Frustrated, Annoyed, Resentful, Betrayed, Irritated, Bitter</td></tr>
+      <tr><td>Surprise</td><td>Orange</td><td>Amazed, Confused, Shocked, Curious, Startled, Moved</td></tr>
+      <tr><td>Disgust</td><td>Green</td><td>Judgmental, Disapproving, Bored, Avoidant, Repelled, Detached</td></tr>
+    </table>
+    
+    <h2>Daily Journal Prompts</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Morning</h3>
+        <ul>
+          <li>What am I grateful for today?</li>
+          <li>What's my main intention?</li>
+          <li>What might get in my way?</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Evening</h3>
+        <ul>
+          <li>What went well today?</li>
+          <li>What challenged me?</li>
+          <li>What did I learn?</li>
+        </ul>
+      </div>
+    </div>
+    
+    <h2>Affirmations</h2>
+    <div class="card">
+      <p><em>"I am building a legacy, not chasing quick wins."</em></p>
+      <p><em>"Discipline today creates freedom tomorrow."</em></p>
+      <p><em>"Small daily improvements compound into massive results."</em></p>
+      <p><em>"I don't need to feel like it to do it."</em></p>
+      <p><em>"The Masemula Estate is under construction."</em></p>
+    </div>
+    
+    <h2>When Feeling Overwhelmed</h2>
+    <ol>
+      <li><strong>Pause</strong> — Stop and breathe</li>
+      <li><strong>Name it</strong> — Use the emotion wheel</li>
+      <li><strong>Write it</strong> — Journal for 5 minutes</li>
+      <li><strong>Move</strong> — Walk, stretch, or gym</li>
+      <li><strong>Talk</strong> — Reach out if needed</li>
+    </ol>
+  </div>
+
+  <!-- ACADEMICS -->
+  <div class="section" id="academics">
+    <h1>Academics</h1>
+    <blockquote>Education protected. Build the foundation.</blockquote>
+    
+    <h2>Study Rules</h2>
+    <ol>
+      <li><strong>No business during class time</strong></li>
+      <li><strong>Readings done same week assigned</strong></li>
+      <li><strong>Assignments submitted early</strong></li>
+      <li><strong>Exams = total focus mode</strong></li>
+    </ol>
+    
+    <h2>Exam Prep Checklist</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>2 Weeks Before</h3>
+        <ul>
+          <li>☐ Gather all notes and materials</li>
+          <li>☐ Create topic summary sheet</li>
+          <li>☐ Identify weak areas</li>
+          <li>☐ Make study schedule</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>1 Week Before</h3>
+        <ul>
+          <li>☐ Complete all readings</li>
+          <li>☐ Review past papers</li>
+          <li>☐ Practice questions daily</li>
+          <li>☐ Reduce other commitments</li>
+        </ul>
+      </div>
+    </div>
+    
+    <h2>Balance Notes</h2>
+    <ul>
+      <li>School is the foundation</li>
+      <li>Ventures are built on free time</li>
+      <li>Degree = backup + credibility</li>
+      <li>Network built at university is valuable</li>
+      <li>Don't sacrifice grades for quick money</li>
+    </ul>
+  </div>
+
+  <!-- GOALS -->
+  <div class="section" id="goals">
+    <h1>Goals & Milestones</h1>
+    <blockquote>Track progress toward the vision.</blockquote>
+    
+    <h2>The Vision</h2>
+    <p>Build a self-sustaining estate generating <strong>R30,800+/month</strong> by <strong>November 2027</strong>, while completing university and maintaining health.</p>
+    
+    <h2>Business Goals</h2>
+    <table>
+      <tr><th>Goal</th><th>Target</th><th>Status</th></tr>
+      <tr><td>DS first R1K month</td><td>R 1,000</td><td>⬜</td></tr>
+      <tr><td>DS R4K month</td><td>R 4,000</td><td>⬜</td></tr>
+      <tr><td>DS R10K month</td><td>R 10,000</td><td>⬜</td></tr>
+      <tr><td>Music 10K streams</td><td>10,000</td><td>⬜</td></tr>
+      <tr><td>SAMRO registration</td><td>Complete</td><td>⬜</td></tr>
+      <tr><td>Masemula launch</td><td>Collection 1</td><td>⬜</td></tr>
+    </table>
+    
+    <h2>Health Goals</h2>
+    <table>
+      <tr><th>Goal</th><th>Target</th><th>Status</th></tr>
+      <tr><td>4am gym streak</td><td>30 days</td><td>⬜</td></tr>
+      <tr><td>4am gym streak</td><td>90 days</td><td>⬜</td></tr>
+      <tr><td>4am gym streak</td><td>365 days</td><td>⬜</td></tr>
+      <tr><td>Consistent sleep</td><td>11:30pm bed</td><td>⬜</td></tr>
+    </table>
+    
+    <h2>Financial Goals</h2>
+    <table>
+      <tr><th>Goal</th><th>Target</th><th>Status</th></tr>
+      <tr><td>Emergency fund</td><td>R 30,000</td><td>⬜</td></tr>
+      <tr><td>First investment</td><td>R 5,000</td><td>⬜</td></tr>
+      <tr><td>RS3 income</td><td>R 30,800/mo</td><td>⬜</td></tr>
+    </table>
+  </div>
+
+  <!-- AGENTS -->
+  <div class="section" id="agents">
+    <h1>Estate Agents</h1>
+    <blockquote>Delegate, monitor, and manage tasks across the estate.</blockquote>
+    
+    <h2>Agent Roster</h2>
+    <table>
+      <tr><th>Agent</th><th>Domain</th><th>Status</th></tr>
+      <tr><td>Jarvis</td><td>AI Assistant / General</td><td><span class="badge badge-active">Active</span></td></tr>
+      <tr><td>Finance Manager</td><td>Money tracking, budgets</td><td><span class="badge badge-active">Active</span></td></tr>
+      <tr><td>Content Manager</td><td>Social media, calendar</td><td><span class="badge badge-active">Active</span></td></tr>
+      <tr><td>DS Operations</td><td>Dropshipping tasks</td><td><span class="badge badge-active">Active</span></td></tr>
+      <tr><td>Music Manager</td><td>Production, releases</td><td><span class="badge badge-active">Active</span></td></tr>
+      <tr><td>Brand Manager</td><td>Masemula development</td><td><span class="badge badge-plan">Standby</span></td></tr>
+    </table>
+    
+    <h2>Task Priorities</h2>
+    <table>
+      <tr><th>Priority</th><th>Meaning</th><th>Response</th></tr>
+      <tr><td>🔴 Critical</td><td>Blocking other work</td><td>Same day</td></tr>
+      <tr><td>🟠 High</td><td>Important, time-sensitive</td><td>1-2 days</td></tr>
+      <tr><td>🟡 Normal</td><td>Standard task</td><td>This week</td></tr>
+      <tr><td>⚪ Low</td><td>Nice to have</td><td>When possible</td></tr>
+    </table>
+    
+    <h2>Delegation Principles</h2>
+    <ol>
+      <li><strong>Be specific</strong> — Vague tasks get vague results</li>
+      <li><strong>Set deadlines</strong> — No deadline = no urgency</li>
+      <li><strong>Define success</strong> — How do we know it's done?</li>
+      <li><strong>Follow up</strong> — Check progress regularly</li>
+      <li><strong>Trust but verify</strong> — Review completed work</li>
+    </ol>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="section" id="content">
+    <h1>Content</h1>
+    <blockquote>Consistent content builds the brand.</blockquote>
+    
+    <h2>Platforms</h2>
+    <table>
+      <tr><th>Platform</th><th>Purpose</th><th>Frequency</th></tr>
+      <tr><td>TikTok</td><td>DS organic marketing</td><td>3x daily</td></tr>
+      <tr><td>Instagram</td><td>Personal brand, Masemula</td><td>Daily</td></tr>
+      <tr><td>YouTube</td><td>Long-form, music</td><td>Weekly</td></tr>
+      <tr><td>Twitter/X</td><td>Thoughts, networking</td><td>As needed</td></tr>
+    </table>
+    
+    <h2>TikTok Hook Templates</h2>
+    <ul>
+      <li>"POV: Your desk finally looks like this"</li>
+      <li>"Stop scrolling if your desk is messy"</li>
+      <li>"This changed my productivity"</li>
+      <li>"Wait for the transformation"</li>
+      <li>"Things I wish I knew sooner"</li>
+    </ul>
+    
+    <h2>Best Posting Times</h2>
+    <table>
+      <tr><th>Time</th><th>Day</th><th>Notes</th></tr>
+      <tr><td>7am</td><td>Weekdays</td><td>Morning scroll</td></tr>
+      <tr><td>12pm</td><td>All</td><td>Lunch break</td></tr>
+      <tr><td>6pm</td><td>All</td><td>After work</td></tr>
+      <tr><td>9pm</td><td>Weekends</td><td>Evening wind-down</td></tr>
+    </table>
+    
+    <h2>Content Production Workflow</h2>
+    <pre><code>Idea → Script/Plan → Record → Edit → Caption → Schedule → Post → Engage</code></pre>
+    
+    <h3>Batch Production</h3>
+    <ul>
+      <li><strong>Saturday morning:</strong> Film week's TikToks</li>
+      <li><strong>Sunday evening:</strong> Edit and schedule</li>
+      <li><strong>Daily:</strong> Post and engage</li>
+    </ul>
+  </div>
+</main>
+</div>
+
+<script>
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
