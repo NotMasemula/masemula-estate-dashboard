@@ -1546,10 +1546,23 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 // ═══ SUPABASE SYNC ═══
 const SUPABASE_URL = 'https://romytadgdnpphqzlseaa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ggs07ym7m21ZKiTwQdB94g_lFACej5D';
+const SYNC_USER_ID = 'ntobeko-masemula-estate';
 let supabaseClient = null;
 let syncEnabled = false;
+let syncTimeout = null;
+let isSyncing = false;
 
 console.log('🔧 Estate OS: Supabase module loaded');
+
+// Intercept localStorage to auto-trigger sync on any save
+const originalSetItem = localStorage.setItem.bind(localStorage);
+localStorage.setItem = function(key, value) {
+  originalSetItem(key, value);
+  // Don't trigger sync for internal sync keys or during cloud load
+  if (!key.startsWith('estate_') && syncEnabled && !isSyncing) {
+    triggerSync();
+  }
+};
 
 // Initialize Supabase (with delay to ensure DOM ready)
 setTimeout(async function initSupabase() {
@@ -1574,37 +1587,41 @@ setTimeout(async function initSupabase() {
     console.log('🔧 Creating Supabase client...');
     supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
     
-    // Test connection by querying the table
+    // Test connection with a simple query
     console.log('🔧 Testing database connection...');
-    const { data, error } = await supabaseClient.from('estate_data').select('user_id').limit(1);
+    const { error } = await supabaseClient.from('estate_data').select('user_id').limit(1);
     
     if (error) {
-      console.log('⚠️ Database not ready:', error.message);
+      console.log('⚠️ Database error:', error.message);
       updateSyncStatus('offline');
       return;
     }
     
     syncEnabled = true;
-    console.log('☁️ Supabase sync enabled successfully!');
+    console.log('☁️ Supabase sync enabled!');
     updateSyncStatus('synced');
     
     // Load cloud data on init
     await loadAllFromCloud();
+    
+    // Do initial sync to push any local data
+    setTimeout(() => syncAllToCloud(), 2000);
   } catch (e) {
     console.error('Supabase init failed:', e);
     updateSyncStatus('offline');
   }
-}, 1000);
+}, 500);
 
 // Fixed user ID for cross-device sync (all devices use same ID)
 function getUserId() {
-  return 'ntobeko-masemula-estate';
+  return SYNC_USER_ID;
 }
 
 // Sync all estate data to cloud
 async function syncAllToCloud() {
-  if (!syncEnabled || !supabaseClient) return;
+  if (!syncEnabled || !supabaseClient || isSyncing) return;
   
+  isSyncing = true;
   updateSyncStatus('syncing');
   
   const allData = {
@@ -1619,74 +1636,92 @@ async function syncAllToCloud() {
     modules: JSON.parse(localStorage.getItem('academicModules') || '[]'),
     contentStats: JSON.parse(localStorage.getItem('contentStats') || '{}'),
     moodboardTiles: JSON.parse(localStorage.getItem('moodboardTiles') || '[]'),
-    theme: localStorage.getItem('theme') || 'light'
+    financeLedger: JSON.parse(localStorage.getItem('financeLedger') || '[]'),
+    moduleMarks: JSON.parse(localStorage.getItem('moduleMarks') || '{}'),
+    rs3Income: localStorage.getItem('rs3Income') || '',
+    theme: localStorage.getItem('theme') || 'light',
+    syncedAt: new Date().toISOString()
   };
   
   try {
     const { error } = await supabaseClient
       .from('estate_data')
       .upsert({ 
-        user_id: getUserId(), 
+        user_id: SYNC_USER_ID, 
         data: allData,
         updated_at: new Date().toISOString() 
       }, { onConflict: 'user_id' });
     
     if (error) {
-      console.error('Sync error:', error);
+      console.error('☁️ Sync error:', error.message);
       updateSyncStatus('offline');
     } else {
-      console.log('✓ Synced to cloud');
+      console.log('☁️ Synced to cloud at', new Date().toLocaleTimeString());
+      localStorage.setItem('estate_last_sync', new Date().toISOString());
       updateSyncStatus('synced');
     }
   } catch (e) {
-    console.error('Sync failed:', e);
+    console.error('☁️ Sync failed:', e);
     updateSyncStatus('offline');
+  } finally {
+    isSyncing = false;
   }
 }
 
 // Load all data from cloud
 async function loadAllFromCloud() {
-  if (!syncEnabled || !supabaseClient) return;
+  if (!syncEnabled || !supabaseClient) return false;
+  
+  isSyncing = true;
   
   try {
     const { data, error } = await supabaseClient
       .from('estate_data')
       .select('data, updated_at')
-      .eq('user_id', getUserId())
-      .single();
+      .eq('user_id', SYNC_USER_ID)
+      .maybeSingle();
     
-    if (error || !data) {
-      console.log('No cloud data found, using local');
-      return;
+    if (error) {
+      console.log('☁️ Load error:', error.message);
+      isSyncing = false;
+      return false;
+    }
+    
+    if (!data || !data.data) {
+      console.log('☁️ No cloud data found - this device will create initial sync');
+      isSyncing = false;
+      return false;
     }
     
     const cloudData = data.data;
-    if (!cloudData) return;
+    console.log('☁️ Loading cloud data from:', data.updated_at);
     
-    const localUpdated = localStorage.getItem('estate_last_sync');
-    const cloudUpdated = data.updated_at;
+    // Load all cloud data to localStorage (cloud is truth)
+    if (cloudData.ledger) localStorage.setItem('ledger', JSON.stringify(cloudData.ledger));
+    if (cloudData.savingsGoals) localStorage.setItem('savingsGoals', JSON.stringify(cloudData.savingsGoals));
+    if (cloudData.emotionLog) localStorage.setItem('emotionLog', JSON.stringify(cloudData.emotionLog));
+    if (cloudData.journalDiary) localStorage.setItem('journalDiary', JSON.stringify(cloudData.journalDiary));
+    if (cloudData.agentTasks) localStorage.setItem('agentTasks', JSON.stringify(cloudData.agentTasks));
+    if (cloudData.agentHistory) localStorage.setItem('agentHistory', JSON.stringify(cloudData.agentHistory));
+    if (cloudData.investments) localStorage.setItem('investments', JSON.stringify(cloudData.investments));
+    if (cloudData.accountBalances) localStorage.setItem('accountBalances', JSON.stringify(cloudData.accountBalances));
+    if (cloudData.modules) localStorage.setItem('academicModules', JSON.stringify(cloudData.modules));
+    if (cloudData.contentStats) localStorage.setItem('contentStats', JSON.stringify(cloudData.contentStats));
+    if (cloudData.moodboardTiles) localStorage.setItem('moodboardTiles', JSON.stringify(cloudData.moodboardTiles));
+    if (cloudData.financeLedger) localStorage.setItem('financeLedger', JSON.stringify(cloudData.financeLedger));
+    if (cloudData.moduleMarks) localStorage.setItem('moduleMarks', JSON.stringify(cloudData.moduleMarks));
+    if (cloudData.rs3Income) localStorage.setItem('rs3Income', cloudData.rs3Income);
+    if (cloudData.theme) localStorage.setItem('theme', cloudData.theme);
     
-    // If cloud is newer, update local
-    if (!localUpdated || new Date(cloudUpdated) > new Date(localUpdated)) {
-      console.log('☁️ Loading from cloud...');
-      
-      if (cloudData.ledger) localStorage.setItem('ledger', JSON.stringify(cloudData.ledger));
-      if (cloudData.savingsGoals) localStorage.setItem('savingsGoals', JSON.stringify(cloudData.savingsGoals));
-      if (cloudData.emotionLog) localStorage.setItem('emotionLog', JSON.stringify(cloudData.emotionLog));
-      if (cloudData.journalDiary) localStorage.setItem('journalDiary', JSON.stringify(cloudData.journalDiary));
-      if (cloudData.agentTasks) localStorage.setItem('agentTasks', JSON.stringify(cloudData.agentTasks));
-      if (cloudData.agentHistory) localStorage.setItem('agentHistory', JSON.stringify(cloudData.agentHistory));
-      if (cloudData.investments) localStorage.setItem('investments', JSON.stringify(cloudData.investments));
-      if (cloudData.accountBalances) localStorage.setItem('accountBalances', JSON.stringify(cloudData.accountBalances));
-      if (cloudData.modules) localStorage.setItem('academicModules', JSON.stringify(cloudData.modules));
-      if (cloudData.contentStats) localStorage.setItem('contentStats', JSON.stringify(cloudData.contentStats));
-      if (cloudData.moodboardTiles) localStorage.setItem('moodboardTiles', JSON.stringify(cloudData.moodboardTiles));
-      
-      localStorage.setItem('estate_last_sync', cloudUpdated);
-      console.log('☁️ Cloud data loaded successfully');
-    }
+    localStorage.setItem('estate_last_sync', data.updated_at);
+    console.log('☁️ Cloud data loaded successfully!');
+    
+    isSyncing = false;
+    return true;
   } catch (e) {
-    console.error('Load from cloud failed:', e);
+    console.error('☁️ Load from cloud failed:', e);
+    isSyncing = false;
+    return false;
   }
 }
 
@@ -1696,29 +1731,38 @@ function updateSyncStatus(status) {
   if (!el) return;
   if (status === 'synced') {
     el.innerHTML = '☁️';
-    el.title = 'Synced - Click to refresh from cloud';
+    el.title = 'Synced! Click to pull latest from cloud';
+    el.style.cursor = 'pointer';
     el.onclick = async () => {
-      await loadAllFromCloud();
-      location.reload();
+      el.innerHTML = '⟳';
+      el.title = 'Refreshing...';
+      const loaded = await loadAllFromCloud();
+      if (loaded) {
+        location.reload();
+      } else {
+        el.innerHTML = '☁️';
+        alert('Already up to date!');
+      }
     };
   } else if (status === 'syncing') {
     el.innerHTML = '⟳';
-    el.title = 'Syncing...';
+    el.title = 'Syncing to cloud...';
+    el.style.cursor = 'wait';
     el.onclick = null;
   } else {
     el.innerHTML = '📴';
-    el.title = 'Offline mode - data stored locally only';
+    el.title = 'Offline - check console for errors';
+    el.style.cursor = 'default';
     el.onclick = null;
   }
 }
 
-// Debounced sync
-let syncTimeout;
+// Debounced sync - waits 2 seconds after last change before syncing
 function triggerSync() {
-  if (!syncEnabled) return;
+  if (!syncEnabled || isSyncing) return;
   clearTimeout(syncTimeout);
   updateSyncStatus('syncing');
-  syncTimeout = setTimeout(syncAllToCloud, 3000);
+  syncTimeout = setTimeout(syncAllToCloud, 2000);
 }
 
 // ─── THEME TOGGLE ───
