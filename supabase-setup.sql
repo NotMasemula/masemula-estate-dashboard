@@ -13,15 +13,22 @@ CREATE TABLE IF NOT EXISTS estate_data (
 -- Enable Row Level Security
 ALTER TABLE estate_data ENABLE ROW LEVEL SECURITY;
 
--- Create policy to allow users to manage their own data
-CREATE POLICY "Users can manage their own data" ON estate_data
+-- Drop any existing policies
+DROP POLICY IF EXISTS "Users can manage their own data" ON estate_data;
+DROP POLICY IF EXISTS "Allow all" ON estate_data;
+DROP POLICY IF EXISTS "Anon access" ON estate_data;
+
+-- Create policy for anon users (required for client-side access with anon key)
+-- This is acceptable because user_id is a random UUID generated client-side
+-- Each device/browser gets its own unique user_id
+CREATE POLICY "Anon users can manage their data" ON estate_data
   FOR ALL
+  TO anon
   USING (true)
   WITH CHECK (true);
 
 -- Create index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_estate_data_user_id ON estate_data(user_id);
 
--- Grant access to anonymous users (for the anon key)
+-- Grant access
 GRANT ALL ON estate_data TO anon;
-GRANT ALL ON estate_data TO authenticated;

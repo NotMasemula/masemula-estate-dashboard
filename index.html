@@ -1447,13 +1447,11 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 <script>
 // ═══ SUPABASE SYNC ═══
 const SUPABASE_URL = 'https://romytadgdnpphqzlseaa.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvbXl0YWRnZG5wcGhxemxzZWFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODgzMzQsImV4cCI6MjA5MTA2NDMzNH0.ZlWcUjxGnOA-MGrmNz-GBsodxlcmaFTtJRvaadILHOA';
+const SUPABASE_KEY = 'sb_publishable_ggs07ym7m21ZKiTwQdB94g_lFACej5D';
 let supabase = null;
 let syncEnabled = false;
 
 console.log('🔧 Estate OS: Supabase module loaded');
-console.log('🔧 URL:', SUPABASE_URL);
-console.log('🔧 Key present:', SUPABASE_KEY.length > 50 ? 'Yes (' + SUPABASE_KEY.substring(0,20) + '...)' : 'No');
 
 // Initialize Supabase (with delay to ensure DOM ready)
 setTimeout(async function initSupabase() {
@@ -1467,24 +1465,20 @@ setTimeout(async function initSupabase() {
   
   try {
     console.log('🔧 Checking for Supabase library...');
-    console.log('🔧 window.supabase:', typeof window.supabase);
     
     const { createClient } = window.supabase || {};
     if (!createClient) {
       console.log('⚠️ Supabase library not loaded - running offline');
-      console.log('🔧 Available on window:', Object.keys(window).filter(k => k.toLowerCase().includes('supa')));
       updateSyncStatus('offline');
       return;
     }
     
     console.log('🔧 Creating Supabase client...');
     supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log('🔧 Client created:', !!supabase);
     
     // Test connection by querying the table
     console.log('🔧 Testing database connection...');
     const { data, error } = await supabase.from('estate_data').select('user_id').limit(1);
-    console.log('🔧 Query result - data:', data, 'error:', error);
     
     if (error) {
       console.log('⚠️ Database not ready:', error.message);
@@ -1496,7 +1490,7 @@ setTimeout(async function initSupabase() {
     console.log('☁️ Supabase sync enabled successfully!');
     updateSyncStatus('synced');
     
-    // Load cloud data on init (don't auto-reload)
+    // Load cloud data on init
     await loadAllFromCloud();
   } catch (e) {
     console.error('Supabase init failed:', e);
@@ -1630,19 +1624,6 @@ function triggerSync() {
   updateSyncStatus('syncing');
   syncTimeout = setTimeout(syncAllToCloud, 3000);
 }
-
-// Override localStorage.setItem to trigger sync
-const originalSetItem = localStorage.setItem.bind(localStorage);
-localStorage.setItem = function(key, value) {
-  originalSetItem(key, value);
-  // Trigger sync for estate-related keys
-  const syncKeys = ['ledger', 'savingsGoals', 'emotionLog', 'journalDiary', 'agentTasks', 
-                    'agentHistory', 'investments', 'accountBalances', 'academicModules', 
-                    'contentStats', 'moodboardTiles'];
-  if (syncKeys.includes(key)) {
-    triggerSync();
-  }
-};
 
 // ─── THEME TOGGLE ───
 function toggleTheme(){
