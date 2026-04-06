@@ -7,6 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
 <title>Masemula Estate OS</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -1448,7 +1449,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 // ═══ SUPABASE SYNC ═══
 const SUPABASE_URL = 'https://romytadgdnpphqzlseaa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ggs07ym7m21ZKiTwQdB94g_lFACej5D';
-let supabase = null;
+let supabaseClient = null;
 let syncEnabled = false;
 
 console.log('🔧 Estate OS: Supabase module loaded');
@@ -1474,11 +1475,11 @@ setTimeout(async function initSupabase() {
     }
     
     console.log('🔧 Creating Supabase client...');
-    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
     
     // Test connection by querying the table
     console.log('🔧 Testing database connection...');
-    const { data, error } = await supabase.from('estate_data').select('user_id').limit(1);
+    const { data, error } = await supabaseClient.from('estate_data').select('user_id').limit(1);
     
     if (error) {
       console.log('⚠️ Database not ready:', error.message);
@@ -1510,7 +1511,7 @@ function getUserId() {
 
 // Sync all estate data to cloud
 async function syncAllToCloud() {
-  if (!syncEnabled || !supabase) return;
+  if (!syncEnabled || !supabaseClient) return;
   
   updateSyncStatus('syncing');
   
@@ -1530,7 +1531,7 @@ async function syncAllToCloud() {
   };
   
   try {
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('estate_data')
       .upsert({ 
         user_id: getUserId(), 
@@ -1553,10 +1554,10 @@ async function syncAllToCloud() {
 
 // Load all data from cloud
 async function loadAllFromCloud() {
-  if (!syncEnabled || !supabase) return;
+  if (!syncEnabled || !supabaseClient) return;
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('estate_data')
       .select('data, updated_at')
       .eq('user_id', getUserId())
