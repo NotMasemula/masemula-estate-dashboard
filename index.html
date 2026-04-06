@@ -1716,6 +1716,15 @@ async function loadAllFromCloud() {
     localStorage.setItem('estate_last_sync', data.updated_at);
     console.log('☁️ Cloud data loaded successfully!');
     
+    // Re-render UI components to show cloud data
+    if (typeof renderJournalDiary === 'function') renderJournalDiary();
+    if (typeof renderLedger === 'function') renderLedger();
+    if (typeof renderSavingsGoals === 'function') renderSavingsGoals();
+    if (typeof renderAgentTasks === 'function') renderAgentTasks();
+    if (typeof renderEmotionLog === 'function') renderEmotionLog();
+    if (typeof renderInvestments === 'function') renderInvestments();
+    console.log('☁️ UI refreshed with cloud data');
+    
     isSyncing = false;
     return true;
   } catch (e) {
