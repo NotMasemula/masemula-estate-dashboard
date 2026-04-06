@@ -3,6 +3,9 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masemula Estate OS</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -13,37 +16,37 @@
 }
 /* Dark theme - warm brown inversion */
 .dark{
-  --ink:#F0EDE7;--muted:#A89080;--accent:#C9A84C;--border:#4A3828;
+  --ink:#F0EDE7;--muted:#F0EDE7;--accent:#F0EDE7;--border:#4A3828;
   --card:#1A1210;--surface:#120E0B;--cream:#0E0A08;--gold:#C9A84C;
-  --deep:#0A0806;--green:#7FB239;--red:#D4563D;--warm:#C9A84C;
+  --deep:#0A0806;--green:#F0EDE7;--red:#F0EDE7;--warm:#F0EDE7;
 }
 .dark #sidebar{background:var(--deep);border-color:var(--border)}
 .dark .topbar{background:var(--card);border-color:var(--border)}
 .dark .content{background:var(--cream)}
 .dark .card{background:var(--card);border-color:var(--border)}
-.dark .status-pill{background:rgba(127,178,57,0.15);color:var(--green)}
-.dark .b-acad{background:rgba(127,178,57,0.15);color:var(--green)}
-.dark .b-biz{background:rgba(201,168,76,0.15);color:var(--gold)}
-.dark .b-music{background:rgba(175,169,236,0.15);color:#AFA9EC}
-.dark .b-brand{background:rgba(212,86,61,0.15);color:var(--red)}
-.dark .b-fin{background:rgba(93,202,165,0.15);color:#5DCAA5}
-.dark .b-health{background:rgba(201,168,76,0.15);color:var(--accent)}
-.dark .b-urgent{background:rgba(212,86,61,0.2);color:#E86C4F}
-.dark .b-watch{background:rgba(201,168,76,0.2);color:var(--gold)}
-.dark .b-track{background:rgba(127,178,57,0.15);color:var(--green)}
+.dark .status-pill{background:rgba(240,237,231,0.1);color:#F0EDE7}
+.dark .b-acad{background:rgba(240,237,231,0.1);color:#F0EDE7}
+.dark .b-biz{background:rgba(240,237,231,0.1);color:#F0EDE7}
+.dark .b-music{background:rgba(240,237,231,0.1);color:#F0EDE7}
+.dark .b-brand{background:rgba(240,237,231,0.1);color:#F0EDE7}
+.dark .b-fin{background:rgba(240,237,231,0.1);color:#F0EDE7}
+.dark .b-health{background:rgba(240,237,231,0.1);color:#F0EDE7}
+.dark .b-urgent{background:rgba(240,237,231,0.15);color:#F0EDE7}
+.dark .b-watch{background:rgba(240,237,231,0.1);color:#F0EDE7}
+.dark .b-track{background:rgba(240,237,231,0.1);color:#F0EDE7}
 .dark #jarvis-canvas{background:#050403}
 .dark .stat{background:var(--surface)}
 .dark .module-card{background:var(--card);border-color:var(--border)}
 .dark .journal-card{background:var(--card);border-color:var(--border)}
 .dark .diary-entry{background:var(--card);border-color:var(--border)}
-.dark .ledger-input{background:var(--surface);border-color:var(--border);color:var(--ink)}
-.dark .mark-input{background:var(--surface);border-color:var(--border);color:var(--ink)}
-.dark .journal-textarea{background:var(--surface);border-color:var(--border);color:var(--ink)}
-.dark .stat-input{color:var(--ink);border-bottom-color:var(--border)}
-.dark .sel{background:var(--surface);color:var(--ink);border-color:var(--border)}
-.dark textarea{background:var(--surface);color:var(--ink);border-color:var(--border)}
-.dark select{background:var(--surface);color:var(--ink);border-color:var(--border)}
-.dark .theme-toggle{border-color:var(--border);color:var(--muted)}
+.dark .ledger-input{background:var(--surface);border-color:var(--border);color:#F0EDE7}
+.dark .mark-input{background:var(--surface);border-color:var(--border);color:#F0EDE7}
+.dark .journal-textarea{background:var(--surface);border-color:var(--border);color:#F0EDE7}
+.dark .stat-input{color:#F0EDE7;border-bottom-color:var(--border)}
+.dark .sel{background:var(--surface);color:#F0EDE7;border-color:var(--border)}
+.dark textarea{background:var(--surface);color:#F0EDE7;border-color:var(--border)}
+.dark select{background:var(--surface);color:#F0EDE7;border-color:var(--border)}
+.dark .theme-toggle{border-color:var(--border);color:#F0EDE7}
 .dark .theme-toggle:hover{border-color:var(--gold);color:var(--gold)}
 .dark .vc{background:var(--card);border-color:var(--border)}
 .dark .day-block{background:var(--card);border-color:var(--border)}
@@ -51,8 +54,16 @@
 .dark .design-card{background:var(--card);border-color:var(--border)}
 .dark .emo-log{background:var(--surface)}
 .dark .inner-tabs{border-color:var(--border)}
-.dark .itab{color:var(--muted)}
+.dark .itab{color:#F0EDE7}
 .dark .itab:hover,.dark .itab.active{color:var(--gold)}
+.dark .stat-n,.dark .stat-l,.dark .card-title,.dark .sec-title,.dark .sec-sub{color:#F0EDE7}
+.dark .stat-pos,.dark .stat-neg{color:#F0EDE7}
+.dark .prog-label,.dark .prog-pct{color:#F0EDE7}
+.dark a{color:#F0EDE7}
+.dark .btn{color:#F0EDE7;border-color:var(--border)}
+.dark .btn:hover{background:#F0EDE7;color:var(--deep);border-color:#F0EDE7}
+.dark .btn-gold{border-color:var(--gold);color:var(--gold)}
+.dark .btn-gold:hover{background:var(--gold);color:var(--deep)}
 .dark .prog-bar{background:var(--border)}
 .dark .nav-tip{background:var(--deep);border-color:rgba(201,168,76,0.3)}
 html,body{background:transparent;font-family:'Jost',sans-serif;color:var(--ink);margin:0;padding:0;min-height:100vh}
@@ -385,6 +396,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       <div class="tb-sub" id="tb-sub">Ntobeko Masemula · Johannesburg</div>
     </div>
     <div class="tb-right">
+      <span id="sync-status" title="Sync status" style="cursor:help;font-size:14px">📴</span>
       <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">
         <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <svg id="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -1430,6 +1442,178 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 </div><!-- end os -->
 
 <script>
+// ═══ SUPABASE SYNC ═══
+const SUPABASE_URL = 'https://romytadgdnpphqzlseaa.supabase.co';
+const SUPABASE_KEY = 'YOUR_ANON_KEY_HERE'; // Replace with your anon key from Supabase dashboard
+let supabase = null;
+let syncEnabled = false;
+
+// Initialize Supabase
+(async function initSupabase() {
+  if (SUPABASE_KEY === 'YOUR_ANON_KEY_HERE') {
+    console.log('⚠️ Supabase key not set - running in offline mode');
+    updateSyncStatus('offline');
+    return;
+  }
+  
+  try {
+    const { createClient } = window.supabase || {};
+    if (!createClient) {
+      console.log('⚠️ Supabase library not loaded');
+      return;
+    }
+    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    syncEnabled = true;
+    console.log('☁️ Supabase sync enabled');
+    updateSyncStatus('synced');
+    
+    // Load cloud data on init
+    await loadAllFromCloud();
+  } catch (e) {
+    console.error('Supabase init failed:', e);
+  }
+})();
+
+// Get or create user ID
+function getUserId() {
+  let userId = localStorage.getItem('estate_user_id');
+  if (!userId) {
+    userId = crypto.randomUUID();
+    localStorage.setItem('estate_user_id', userId);
+  }
+  return userId;
+}
+
+// Sync all estate data to cloud
+async function syncAllToCloud() {
+  if (!syncEnabled || !supabase) return;
+  
+  updateSyncStatus('syncing');
+  
+  const allData = {
+    ledger: JSON.parse(localStorage.getItem('ledger') || '[]'),
+    savingsGoals: JSON.parse(localStorage.getItem('savingsGoals') || '[]'),
+    emotionLog: JSON.parse(localStorage.getItem('emotionLog') || '[]'),
+    journalDiary: JSON.parse(localStorage.getItem('journalDiary') || '[]'),
+    agentTasks: JSON.parse(localStorage.getItem('agentTasks') || '[]'),
+    agentHistory: JSON.parse(localStorage.getItem('agentHistory') || '[]'),
+    investments: JSON.parse(localStorage.getItem('investments') || '[]'),
+    accountBalances: JSON.parse(localStorage.getItem('accountBalances') || '{}'),
+    modules: JSON.parse(localStorage.getItem('academicModules') || '[]'),
+    contentStats: JSON.parse(localStorage.getItem('contentStats') || '{}'),
+    moodboardTiles: JSON.parse(localStorage.getItem('moodboardTiles') || '[]'),
+    theme: localStorage.getItem('theme') || 'light'
+  };
+  
+  try {
+    const { error } = await supabase
+      .from('estate_data')
+      .upsert({ 
+        user_id: getUserId(), 
+        data: allData,
+        updated_at: new Date().toISOString() 
+      }, { onConflict: 'user_id' });
+    
+    if (error) {
+      console.error('Sync error:', error);
+      updateSyncStatus('offline');
+    } else {
+      console.log('✓ Synced to cloud');
+      updateSyncStatus('synced');
+    }
+  } catch (e) {
+    console.error('Sync failed:', e);
+    updateSyncStatus('offline');
+  }
+}
+
+// Load all data from cloud
+async function loadAllFromCloud() {
+  if (!syncEnabled || !supabase) return;
+  
+  try {
+    const { data, error } = await supabase
+      .from('estate_data')
+      .select('data, updated_at')
+      .eq('user_id', getUserId())
+      .single();
+    
+    if (error || !data) {
+      console.log('No cloud data found, using local');
+      return;
+    }
+    
+    const cloudData = data.data;
+    const localUpdated = localStorage.getItem('estate_last_sync');
+    const cloudUpdated = data.updated_at;
+    
+    // If cloud is newer, update local
+    if (!localUpdated || new Date(cloudUpdated) > new Date(localUpdated)) {
+      console.log('☁️ Loading from cloud...');
+      
+      if (cloudData.ledger) localStorage.setItem('ledger', JSON.stringify(cloudData.ledger));
+      if (cloudData.savingsGoals) localStorage.setItem('savingsGoals', JSON.stringify(cloudData.savingsGoals));
+      if (cloudData.emotionLog) localStorage.setItem('emotionLog', JSON.stringify(cloudData.emotionLog));
+      if (cloudData.journalDiary) localStorage.setItem('journalDiary', JSON.stringify(cloudData.journalDiary));
+      if (cloudData.agentTasks) localStorage.setItem('agentTasks', JSON.stringify(cloudData.agentTasks));
+      if (cloudData.agentHistory) localStorage.setItem('agentHistory', JSON.stringify(cloudData.agentHistory));
+      if (cloudData.investments) localStorage.setItem('investments', JSON.stringify(cloudData.investments));
+      if (cloudData.accountBalances) localStorage.setItem('accountBalances', JSON.stringify(cloudData.accountBalances));
+      if (cloudData.modules) localStorage.setItem('academicModules', JSON.stringify(cloudData.modules));
+      if (cloudData.contentStats) localStorage.setItem('contentStats', JSON.stringify(cloudData.contentStats));
+      if (cloudData.moodboardTiles) localStorage.setItem('moodboardTiles', JSON.stringify(cloudData.moodboardTiles));
+      
+      localStorage.setItem('estate_last_sync', cloudUpdated);
+      
+      // Refresh UI
+      location.reload();
+    }
+  } catch (e) {
+    console.error('Load from cloud failed:', e);
+  }
+}
+
+// Sync status indicator
+function updateSyncStatus(status) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  if (status === 'synced') {
+    el.innerHTML = '☁️';
+    el.title = 'Synced to cloud - click to sync now';
+    el.onclick = () => syncAllToCloud();
+  } else if (status === 'syncing') {
+    el.innerHTML = '⟳';
+    el.title = 'Syncing...';
+    el.onclick = null;
+  } else {
+    el.innerHTML = '📴';
+    el.title = 'Offline mode - data stored locally only';
+    el.onclick = null;
+  }
+}
+
+// Debounced sync
+let syncTimeout;
+function triggerSync() {
+  if (!syncEnabled) return;
+  clearTimeout(syncTimeout);
+  updateSyncStatus('syncing');
+  syncTimeout = setTimeout(syncAllToCloud, 3000);
+}
+
+// Override localStorage.setItem to trigger sync
+const originalSetItem = localStorage.setItem.bind(localStorage);
+localStorage.setItem = function(key, value) {
+  originalSetItem(key, value);
+  // Trigger sync for estate-related keys
+  const syncKeys = ['ledger', 'savingsGoals', 'emotionLog', 'journalDiary', 'agentTasks', 
+                    'agentHistory', 'investments', 'accountBalances', 'academicModules', 
+                    'contentStats', 'moodboardTiles'];
+  if (syncKeys.includes(key)) {
+    triggerSync();
+  }
+};
+
 // ─── THEME TOGGLE ───
 function toggleTheme(){
   const os=document.getElementById('os');
