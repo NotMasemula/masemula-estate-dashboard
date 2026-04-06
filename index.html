@@ -1,0 +1,2559 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1C1A17;--muted:#7A7570;--accent:#8B6F47;--border:#D8D2C8;
+  --card:#FFFFFF;--surface:#F0EDE7;--cream:#F7F4EF;--gold:#C9A84C;
+  --warm:#5C3317;--deep:#2C1A0E;--green:#3B6D11;--red:#993C1D;
+}
+/* Dark theme - warm brown inversion */
+.dark{
+  --ink:#F0EDE7;--muted:#A89080;--accent:#C9A84C;--border:#4A3828;
+  --card:#1A1210;--surface:#120E0B;--cream:#0E0A08;--gold:#C9A84C;
+  --deep:#0A0806;--green:#7FB239;--red:#D4563D;--warm:#C9A84C;
+}
+.dark #sidebar{background:var(--deep);border-color:var(--border)}
+.dark .topbar{background:var(--card);border-color:var(--border)}
+.dark .content{background:var(--cream)}
+.dark .card{background:var(--card);border-color:var(--border)}
+.dark .status-pill{background:rgba(127,178,57,0.15);color:var(--green)}
+.dark .b-acad{background:rgba(127,178,57,0.15);color:var(--green)}
+.dark .b-biz{background:rgba(201,168,76,0.15);color:var(--gold)}
+.dark .b-music{background:rgba(175,169,236,0.15);color:#AFA9EC}
+.dark .b-brand{background:rgba(212,86,61,0.15);color:var(--red)}
+.dark .b-fin{background:rgba(93,202,165,0.15);color:#5DCAA5}
+.dark .b-health{background:rgba(201,168,76,0.15);color:var(--accent)}
+.dark .b-urgent{background:rgba(212,86,61,0.2);color:#E86C4F}
+.dark .b-watch{background:rgba(201,168,76,0.2);color:var(--gold)}
+.dark .b-track{background:rgba(127,178,57,0.15);color:var(--green)}
+.dark #jarvis-canvas{background:#050403}
+.dark .stat{background:var(--surface)}
+.dark .module-card{background:var(--card);border-color:var(--border)}
+.dark .journal-card{background:var(--card);border-color:var(--border)}
+.dark .diary-entry{background:var(--card);border-color:var(--border)}
+.dark .ledger-input{background:var(--surface);border-color:var(--border);color:var(--ink)}
+.dark .mark-input{background:var(--surface);border-color:var(--border);color:var(--ink)}
+.dark .journal-textarea{background:var(--surface);border-color:var(--border);color:var(--ink)}
+.dark .stat-input{color:var(--ink);border-bottom-color:var(--border)}
+.dark .sel{background:var(--surface);color:var(--ink);border-color:var(--border)}
+.dark textarea{background:var(--surface);color:var(--ink);border-color:var(--border)}
+.dark select{background:var(--surface);color:var(--ink);border-color:var(--border)}
+.dark .theme-toggle{border-color:var(--border);color:var(--muted)}
+.dark .theme-toggle:hover{border-color:var(--gold);color:var(--gold)}
+.dark .vc{background:var(--card);border-color:var(--border)}
+.dark .day-block{background:var(--card);border-color:var(--border)}
+.dark .mb-tile{border-color:var(--border)}
+.dark .design-card{background:var(--card);border-color:var(--border)}
+.dark .emo-log{background:var(--surface)}
+.dark .inner-tabs{border-color:var(--border)}
+.dark .itab{color:var(--muted)}
+.dark .itab:hover,.dark .itab.active{color:var(--gold)}
+.dark .prog-bar{background:var(--border)}
+.dark .nav-tip{background:var(--deep);border-color:rgba(201,168,76,0.3)}
+html,body{background:transparent;font-family:'Jost',sans-serif;color:var(--ink);margin:0;padding:0;min-height:100vh}
+#os{display:flex;min-height:100vh;border:none;border-radius:0;background:var(--cream)}
+
+/* SIDEBAR */
+#sidebar{width:56px;background:var(--deep);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:6px;flex-shrink:0;position:fixed;left:0;top:0;height:100vh;z-index:100}
+.wordmark-v{font-family:'Cormorant Garamond',serif;font-size:11px;color:#C9A84C;letter-spacing:0.15em;writing-mode:vertical-rl;transform:rotate(180deg);margin-bottom:10px;font-weight:300}
+.nav-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;transition:all 0.2s;position:relative;color:#C49A6C;font-size:13px;border:0.5px solid transparent}
+.nav-icon:hover,.nav-icon.active{background:rgba(201,168,76,0.15);border-color:rgba(201,168,76,0.3);color:#C9A84C}
+.nav-icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nav-tip{position:absolute;left:46px;background:var(--deep);color:#C9A84C;font-size:10px;letter-spacing:0.06em;white-space:nowrap;padding:4px 8px;border-radius:4px;border:0.5px solid rgba(201,168,76,0.3);pointer-events:none;opacity:0;transition:opacity 0.2s;z-index:100;font-family:'Jost',sans-serif;font-weight:300}
+.nav-icon:hover .nav-tip{opacity:1}
+.sidebar-sep{width:24px;height:0.5px;background:rgba(201,168,76,0.2);margin:4px 0}
+
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;margin-left:56px;min-height:100vh}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:0.5px solid var(--border);background:var(--card)}
+.tb-left{display:flex;align-items:baseline;gap:10px}
+.tb-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;color:var(--ink)}
+.tb-sub{font-size:10px;color:var(--muted);letter-spacing:0.07em;text-transform:uppercase;font-weight:300}
+.tb-right{display:flex;align-items:center;gap:10px}
+.theme-toggle{background:none;border:0.5px solid var(--border);border-radius:6px;padding:6px 8px;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.theme-toggle:hover{border-color:var(--gold);color:var(--gold)}
+.status-pill{font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:10px;background:#EAF3DE;color:#3B6D11;font-weight:400}
+.time-tag{font-size:11px;color:var(--muted);font-weight:300}
+
+.content{flex:1;padding:18px;background:var(--cream)}
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-track{background:transparent}
+.content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* SECTIONS */
+.section{display:none}.section.active{display:block}
+
+/* CARDS */
+.card{background:var(--card);border:0.5px solid var(--border);border-radius:8px;padding:16px}
+.card-title{font-size:10px;font-weight:400;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.mb-10{margin-bottom:10px}.mb-16{margin-bottom:16px}
+.agent-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:14px}
+.agent-card{cursor:pointer;transition:box-shadow 0.2s}.agent-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.1)}
+
+/* ROUTINE */
+.day-nav{display:flex;background:var(--surface);border-radius:8px;overflow:hidden;margin-bottom:16px}
+.day-btn{flex:1;padding:10px 8px;text-align:center;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-right:1px solid var(--border);transition:all 0.2s}
+.day-btn:last-child{border-right:none}
+.day-btn:hover{background:var(--card)}
+.day-btn.selected{background:var(--gold);color:white}
+.day-btn.is-today::after{content:'•';display:block;font-size:8px;margin-top:2px;color:var(--gold)}
+.day-btn.selected.is-today::after{color:white}
+.routine-note{background:var(--surface);padding:12px 16px;border-left:3px solid var(--gold);margin-bottom:16px;font-size:12px;font-style:italic;color:var(--muted);line-height:1.6}
+.sched-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.sched-row:last-child{border-bottom:none}
+.sched-row.is-now{background:rgba(201,168,76,0.1);margin:0 -12px;padding:8px 12px;border-radius:4px}
+.sched-row.is-past{opacity:0.4}
+.sched-bar{width:4px;height:24px;border-radius:2px}
+.sched-bar.bar-health{background:#5DCAA5}.sched-bar.bar-school{background:#97C459}.sched-bar.bar-business{background:var(--gold)}.sched-bar.bar-creative{background:#AFA9EC}.sched-bar.bar-admin{background:#999}.sched-bar.bar-growth{background:#7A50A0}.sched-bar.bar-personal{background:#EF9F27}.sched-bar.bar-study{background:#7A50A0}.sched-bar.bar-break{background:var(--border)}
+.sched-time{font-family:'Courier New',monospace;font-size:10px;color:var(--muted);white-space:nowrap;width:90px}
+.sched-label{flex:1;font-size:12px;color:var(--ink)}
+.sched-badge{font-size:9px;letter-spacing:0.06em;text-transform:uppercase;padding:3px 8px;border-radius:4px}
+.sched-badge.bdg-health{background:rgba(93,202,165,0.15);color:#5DCAA5}.sched-badge.bdg-school{background:rgba(151,196,89,0.15);color:#97C459}.sched-badge.bdg-business{background:rgba(201,168,76,0.15);color:var(--gold)}.sched-badge.bdg-creative{background:rgba(175,169,236,0.15);color:#AFA9EC}.sched-badge.bdg-admin{background:rgba(150,150,150,0.15);color:#999}.sched-badge.bdg-growth{background:rgba(122,80,160,0.15);color:#7A50A0}.sched-badge.bdg-personal{background:rgba(239,159,39,0.15);color:#EF9F27}.sched-badge.bdg-study{background:rgba(122,80,160,0.15);color:#7A50A0}
+.habit-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.habit-row:last-child{border-bottom:none}
+.habit-name{font-size:12px;color:var(--ink)}
+.habit-ctrl{display:flex;align-items:center;gap:8px}
+.habit-check{width:20px;height:20px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;transition:all 0.2s}
+.habit-check.on{background:var(--gold);border-color:var(--gold);color:white}
+.habit-input{width:50px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center;background:var(--card);color:var(--ink)}
+.habit-unit{font-size:10px;color:var(--muted)}
+.flag-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.flag-row:last-child{border-bottom:none}
+.flag-icon{font-size:10px}.flag-icon.f-warn{color:#E04E4E}.flag-icon.f-ok{color:#5DCAA5}.flag-icon.f-info{color:var(--gold)}
+.flag-text{flex:1;font-size:11px;color:var(--ink);line-height:1.5}
+
+/* STAT BOXES */
+.stat{background:var(--surface);border-radius:8px;padding:12px}
+.stat-n{font-size:22px;font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--ink)}
+.stat-l{font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.stat-pos{color:#3B6D11}.stat-neg{color:#993C1D}
+.stat-input{font-size:20px;font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--ink);background:none;border:none;outline:none;width:100%;border-bottom:1px dashed var(--border);padding-bottom:2px}
+.stat-input::placeholder{color:var(--muted);font-size:16px}
+
+/* MODULES */
+.module-card{background:var(--card);border:0.5px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px}
+.module-code{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:2px}
+.module-name{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:400;color:var(--ink)}
+.module-lecturer{font-size:11px;color:var(--muted);margin-bottom:10px}
+.mark-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--border)}
+.mark-row:last-child{border-bottom:none}
+.mark-lbl{font-size:11px;color:var(--muted);flex:1}
+.mark-input{width:50px;font-family:'Jost',sans-serif;font-size:12px;text-align:center;padding:4px 6px;border:0.5px solid var(--border);border-radius:4px;background:var(--surface);color:var(--ink);outline:none}
+.mark-input:focus{border-color:var(--gold)}
+.mark-pct{font-size:11px;color:var(--accent);min-width:35px;text-align:right}
+.module-avg{margin-top:10px;font-size:12px;font-weight:400}
+
+/* JOURNAL CARDS */
+.journal-card{background:var(--card);border:0.5px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px}
+.journal-q{padding:12px 14px;cursor:pointer;transition:background 0.15s}
+.journal-q:hover{background:var(--surface)}
+.jq-num{font-size:10px;color:var(--gold);letter-spacing:0.06em;margin-bottom:3px;font-family:'Cormorant Garamond',serif;font-style:italic}
+.jq-text{font-size:12px;font-weight:300;color:var(--ink)}
+.journal-expand{display:none;padding:0 14px 14px}
+.journal-expand.open{display:block}
+.journal-textarea{width:100%;border:0.5px solid var(--border);background:var(--surface);padding:10px;font-family:'Jost',sans-serif;font-size:12px;font-weight:300;color:var(--ink);resize:none;outline:none;border-radius:6px;min-height:70px}
+
+/* DIARY ENTRIES */
+.diary-entry{background:var(--card);border:0.5px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px}
+.diary-date{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:400;color:var(--ink);margin-bottom:8px}
+.diary-content{font-size:12px;font-weight:300;color:var(--muted);line-height:1.7}
+
+/* LEDGER */
+.ledger-input{width:100%;padding:8px 10px;border:0.5px solid var(--border);border-radius:6px;background:var(--card);font-family:'Jost',sans-serif;font-size:12px;color:var(--ink);outline:none;margin-bottom:8px}
+.ledger-input:focus{border-color:var(--gold)}
+.ledger-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:12px}
+.ledger-row:last-child{border-bottom:none}
+.ledger-type{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ledger-in{background:var(--green)}
+.ledger-out{background:var(--red)}
+.ledger-desc{flex:1;font-weight:300}
+.ledger-cat{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em}
+.ledger-amt{font-family:'Cormorant Garamond',serif;font-size:14px;min-width:60px;text-align:right}
+
+/* PROGRESS */
+.prog-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--border)}
+.prog-row:last-child{border-bottom:none}
+.prog-label{font-size:12px;font-weight:300;flex:1}
+.prog-bar{width:80px;height:2px;background:var(--border);border-radius:1px;flex-shrink:0}
+.prog-fill{height:100%;border-radius:1px;background:var(--accent)}
+.prog-pct{font-size:11px;color:var(--muted);min-width:28px;text-align:right}
+
+/* BADGES */
+.badge{font-size:9px;letter-spacing:0.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;font-weight:400}
+.b-acad{background:#EAF3DE;color:#3B6D11}
+.b-biz{background:#FAEEDA;color:#854F0B}
+.b-music{background:#EEEDFE;color:#3C3489}
+.b-brand{background:#FAECE7;color:#993C1D}
+.b-fin{background:#E1F5EE;color:#0F6E56}
+.b-health{background:#F5F0E8;color:#5C3317}
+.b-urgent{background:#FCEBEB;color:#A32D2D}
+.b-watch{background:#FAEEDA;color:#854F0B}
+.b-track{background:#EAF3DE;color:#3B6D11}
+
+/* BUTTONS */
+.btn{font-size:10px;letter-spacing:0.07em;text-transform:uppercase;padding:6px 12px;border:0.5px solid var(--border);border-radius:3px;background:none;cursor:pointer;font-family:'Jost',sans-serif;color:var(--ink);transition:all 0.2s}
+.btn:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn-gold{border-color:var(--gold);color:var(--accent)}
+.btn-gold:hover{background:var(--gold);color:var(--deep);border-color:var(--gold)}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-bottom:14px}
+
+/* VENTURE CARDS */
+.vc{background:var(--card);border:0.5px solid var(--border);border-radius:8px;padding:14px}
+.vc-interactive{cursor:pointer;transition:all 0.2s}.vc-interactive:hover{border-color:var(--gold);box-shadow:0 4px 16px rgba(0,0,0,0.08)}
+.vc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.vc-name{font-size:14px;font-family:'Cormorant Garamond',serif;font-weight:400}
+.vc-stage{font-size:10px;color:var(--accent);letter-spacing:0.05em;text-transform:uppercase}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot-active{background:#639922}.dot-plan{background:#EF9F27}.dot-idea{background:#B4B2A9}
+.kpi-row{display:flex;gap:12px;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border)}
+.kpi-v{font-size:15px;font-family:'Cormorant Garamond',serif}
+.kpi-l{font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted)}
+.phase-step{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.phase-step:last-child{border-bottom:none}
+.phase-dot{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.phase-dot.done{background:#5DCAA5}
+.phase-dot.current{background:var(--gold);animation:pulse 2s infinite}
+
+/* ROUTINE/TIME */
+.day-block{background:var(--card);border:0.5px solid var(--border);border-radius:6px;padding:10px}
+.day-label{font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:8px}
+.time-slot{height:6px;border-radius:2px;margin-bottom:3px}
+.ts-school{background:#97C459}.ts-biz{background:#EF9F27}.ts-gym{background:#5DCAA5}
+.ts-music{background:#AFA9EC}.ts-free{background:var(--border)}.ts-deep{background:#C9A84C}
+
+/* FINANCE */
+.fin-bar{height:4px;background:var(--border);border-radius:2px;margin-top:6px}
+.fin-fill{height:100%;border-radius:2px;background:var(--accent)}
+
+/* HEADSPACE - EMOTION WHEEL */
+#emotion-wheel-svg{display:block;margin:0 auto}
+.emo-log{background:var(--surface);border-radius:8px;padding:12px;margin-top:12px}
+.emo-entry{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:12px;font-weight:300}
+.emo-entry:last-child{border-bottom:none}
+.emo-dot{width:8px;height:8px;border-radius:50%}
+
+/* JOURNAL */
+.journal-card{background:var(--card);border:0.5px solid var(--border);border-radius:8px;overflow:hidden}
+.journal-q{padding:14px;border-bottom:0.5px solid var(--border);cursor:pointer;transition:background 0.15s}
+.journal-q:hover{background:var(--surface)}
+.jq-num{font-size:10px;color:var(--accent);letter-spacing:0.06em;margin-bottom:4px;font-family:'Cormorant Garamond',serif;font-style:italic}
+.jq-text{font-size:13px;font-weight:300;color:var(--ink)}
+textarea.jentry{width:100%;border:none;background:var(--surface);padding:14px;font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:var(--ink);resize:none;outline:none;border-top:0.5px solid var(--border);min-height:90px;border-radius:0 0 8px 8px}
+
+/* MOODBOARD */
+.mb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mb-tile{border-radius:8px;overflow:hidden;position:relative;cursor:pointer}
+.mb-tile:hover .mb-overlay{opacity:1}
+.mb-overlay{position:absolute;inset:0;background:rgba(44,26,14,0.6);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#C9A84C}
+.mb-visual{width:100%;height:90px;display:flex;align-items:center;justify-content:center;font-size:24px}
+
+/* DESIGNS */
+.design-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.design-card{background:var(--card);border:0.5px solid var(--border);border-radius:8px;overflow:hidden}
+.design-header{padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.design-canvas{height:120px;display:flex;align-items:center;justify-content:center;background:var(--surface);font-size:11px;color:var(--muted);letter-spacing:0.05em}
+
+/* JARVIS ANIMATION */
+#jarvis-canvas{width:100%;height:520px;background:#0A0806;border-radius:8px;display:block}
+
+/* SCROLLABLE LISTS */
+.item-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:12px;font-weight:300}
+.item-row:last-child{border-bottom:none}
+.check{width:13px;height:13px;border:0.5px solid var(--border);border-radius:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;transition:all 0.2s}
+.check.done{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* SECTION HEADER */
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px}
+.sec-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400}
+.sec-sub{font-size:11px;color:var(--muted);font-weight:300}
+
+/* MUSIC SPECIFIC */
+.track-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border)}
+.track-row:last-child{border-bottom:none}
+.track-num{font-size:10px;color:var(--muted);width:16px;text-align:right}
+.track-name{font-size:13px;font-weight:300;flex:1}
+.track-stat{font-size:11px;color:var(--muted)}
+.play-btn{width:22px;height:22px;border-radius:50%;background:var(--surface);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:8px;color:var(--accent);flex-shrink:0}
+
+/* MASEMULA BRAND */
+.swatch-row{display:flex;gap:6px;margin-bottom:14px}
+.swatch{height:32px;flex:1;border-radius:4px;position:relative}
+.swatch-label{position:absolute;bottom:-16px;left:0;right:0;text-align:center;font-size:8px;color:var(--muted);letter-spacing:0.05em}
+
+/* DROPDOWN */
+select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(--border);background:var(--card);color:var(--ink);padding:4px 8px;border-radius:4px;outline:none;cursor:pointer}
+
+/* TABS WITHIN SECTION */
+.inner-tabs{display:flex;gap:0;border-bottom:0.5px solid var(--border);margin-bottom:16px}
+.itab{font-size:10px;letter-spacing:0.07em;text-transform:uppercase;padding:6px 12px;cursor:pointer;color:var(--muted);border-bottom:1px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:'Jost',sans-serif;transition:all 0.2s}
+.itab.active{color:var(--ink);border-bottom-color:var(--accent)}
+.itab:hover:not(.active){color:var(--ink)}
+.itab-panel{display:none}.itab-panel.active{display:block}
+
+/* PULSE */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.pulse{animation:pulse 2s ease-in-out infinite}
+</style>
+
+<div id="os">
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="wordmark-v">MASEMULA</div>
+  <div class="nav-icon active" onclick="nav('dashboard',this)" title="">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    <span class="nav-tip">Overview</span>
+  </div>
+  <div class="nav-icon" onclick="nav('ventures',this)">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+    <span class="nav-tip">Ventures</span>
+  </div>
+  <div class="nav-icon" onclick="nav('music',this)">
+    <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    <span class="nav-tip">Music</span>
+  </div>
+  <div class="nav-icon" onclick="nav('brand',this)">
+    <svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+    <span class="nav-tip">Masemula Brand</span>
+  </div>
+  <div class="nav-icon" onclick="nav('goals',this)">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+    <span class="nav-tip">Goals</span>
+  </div>
+  <div class="nav-icon" onclick="nav('time',this)">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+    <span class="nav-tip">Time</span>
+  </div>
+  <div class="nav-icon" onclick="nav('routine',this)">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span class="nav-tip">Routine</span>
+  </div>
+  <div class="nav-icon" onclick="nav('finance',this)">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+    <span class="nav-tip">Finance</span>
+  </div>
+  <div class="sidebar-sep"></div>
+  <div class="nav-icon" onclick="nav('headspace',this)">
+    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    <span class="nav-tip">Headspace</span>
+  </div>
+  <div class="nav-icon" onclick="nav('academics',this)">
+    <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+    <span class="nav-tip">Academics</span>
+  </div>
+  <div class="nav-icon" onclick="nav('journal',this)">
+    <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    <span class="nav-tip">Journal</span>
+  </div>
+  <div class="nav-icon" onclick="nav('content',this)">
+    <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    <span class="nav-tip">Content</span>
+  </div>
+  <div class="nav-icon" onclick="nav('moodboard',this)">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+    <span class="nav-tip">Vision Board</span>
+  </div>
+  <div class="nav-icon" onclick="nav('designs',this)">
+    <svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+    <span class="nav-tip">Designs</span>
+  </div>
+  <div class="nav-icon" onclick="nav('agents',this)">
+    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    <span class="nav-tip">Agents</span>
+  </div>
+  <div class="sidebar-sep"></div>
+  <div class="nav-icon" onclick="nav('jarvis',this)">
+    <svg viewBox="0 0 24 24"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg>
+    <span class="nav-tip">Jarvis Live</span>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main">
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-title" id="tb-title">Estate Overview</div>
+      <div class="tb-sub" id="tb-sub">Ntobeko Masemula · Johannesburg</div>
+    </div>
+    <div class="tb-right">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">
+        <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg id="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <span class="status-pill">System Online</span>
+      <span class="time-tag" id="live-time"></span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="section active" id="s-dashboard">
+      <div class="grid-4 mb-10">
+        <div class="stat"><div class="stat-n">4</div><div class="stat-l">Active ventures</div></div>
+        <div class="stat"><div class="stat-n stat-pos">R 2k</div><div class="stat-l">DS revenue</div></div>
+        <div class="stat"><div class="stat-n">6/7</div><div class="stat-l">Gym sessions</div></div>
+        <div class="stat"><div class="stat-n">18h</div><div class="stat-l">Deep work hrs</div></div>
+      </div>
+      <div class="grid-2 mb-10">
+        <div class="card">
+          <div class="card-title">Empire pillars</div>
+          <div class="prog-row"><div class="prog-label">Dropshipping</div><div class="prog-bar"><div class="prog-fill" style="width:55%"></div></div><div class="prog-pct">55%</div></div>
+          <div class="prog-row"><div class="prog-label">Music</div><div class="prog-bar"><div class="prog-fill" style="width:40%"></div></div><div class="prog-pct">40%</div></div>
+          <div class="prog-row"><div class="prog-label">Masemula Brand</div><div class="prog-bar"><div class="prog-fill" style="width:20%"></div></div><div class="prog-pct">20%</div></div>
+          <div class="prog-row"><div class="prog-label">Academic</div><div class="prog-bar"><div class="prog-fill" style="width:72%"></div></div><div class="prog-pct">72%</div></div>
+          <div class="prog-row"><div class="prog-label">Health</div><div class="prog-bar"><div class="prog-fill" style="width:85%"></div></div><div class="prog-pct">85%</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Today's priorities</div>
+          <div id="today-list"></div>
+          <div style="margin-top:12px">
+            <button class="btn btn-gold" onclick="sendPrompt('Build my morning briefing for today. I am Ntobeko Masemula. Today is '+new Date().toLocaleDateString('en-ZA',{weekday:\'long\',day:\'numeric\',month:\'long\'})+'.')">Morning briefing ↗</button>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Estate flags</div>
+          <div class="item-row"><span class="badge b-urgent">Urgent</span><span style="flex:1;font-size:12px">Register with SAMRO — royalties uncollected</span></div>
+          <div class="item-row"><span class="badge b-watch">Watch</span><span style="flex:1;font-size:12px">DS store setup — Store Ops not built yet</span></div>
+          <div class="item-row"><span class="badge b-track">On track</span><span style="flex:1;font-size:12px">Gym habit — 6 of 7 days this week</span></div>
+          <div class="item-row"><span class="badge b-track">On track</span><span style="flex:1;font-size:12px">Masemula concept development progressing</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Weekly targets</div>
+          <div class="prog-row"><div class="prog-label">Deep work hrs</div><div class="prog-bar"><div class="prog-fill" style="width:90%"></div></div><div class="prog-pct">18/20</div></div>
+          <div class="prog-row"><div class="prog-label">DS hours</div><div class="prog-bar"><div class="prog-fill" style="width:80%"></div></div><div class="prog-pct">8/10</div></div>
+          <div class="prog-row"><div class="prog-label">Music hours</div><div class="prog-bar"><div class="prog-fill" style="width:67%"></div></div><div class="prog-pct">4/6</div></div>
+          <div class="prog-row"><div class="prog-label">Reading</div><div class="prog-bar"><div class="prog-fill" style="width:57%"></div></div><div class="prog-pct">4/7</div></div>
+          <div class="prog-row"><div class="prog-label">Sleep 11:30pm</div><div class="prog-bar"><div class="prog-fill" style="width:71%"></div></div><div class="prog-pct">5/7</div></div>
+        </div>
+      </div>
+      <!-- Agents Overview -->
+      <div class="card" style="margin-top:10px">
+        <div class="card-title">Estate Agents</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <div onclick="nav('agents',document.querySelectorAll('.nav-icon')[12])" style="display:flex;align-items:center;gap:8px;background:var(--surface);padding:8px 12px;border-radius:6px;cursor:pointer">
+            <div class="agent-avatar" style="width:24px;height:24px;font-size:10px;background:var(--gold)">J</div>
+            <span style="font-size:11px">Jarvis</span>
+            <span style="font-size:9px;color:var(--green)">●</span>
+          </div>
+          <div onclick="nav('agents',document.querySelectorAll('.nav-icon')[12])" style="display:flex;align-items:center;gap:8px;background:var(--surface);padding:8px 12px;border-radius:6px;cursor:pointer">
+            <div class="agent-avatar" style="width:24px;height:24px;font-size:10px;background:#5DCAA5">F</div>
+            <span style="font-size:11px">Finance</span>
+            <span style="font-size:9px;color:var(--green)">●</span>
+          </div>
+          <div onclick="nav('agents',document.querySelectorAll('.nav-icon')[12])" style="display:flex;align-items:center;gap:8px;background:var(--surface);padding:8px 12px;border-radius:6px;cursor:pointer">
+            <div class="agent-avatar" style="width:24px;height:24px;font-size:10px;background:#AFA9EC">C</div>
+            <span style="font-size:11px">Content</span>
+            <span style="font-size:9px;color:var(--green)">●</span>
+          </div>
+          <div onclick="nav('agents',document.querySelectorAll('.nav-icon')[12])" style="display:flex;align-items:center;gap:8px;background:var(--surface);padding:8px 12px;border-radius:6px;cursor:pointer">
+            <div class="agent-avatar" style="width:24px;height:24px;font-size:10px;background:#EF9F27">D</div>
+            <span style="font-size:11px">DS Ops</span>
+            <span style="font-size:9px;color:var(--gold)">●</span>
+          </div>
+          <div onclick="nav('agents',document.querySelectorAll('.nav-icon')[12])" style="display:flex;align-items:center;gap:8px;background:var(--surface);padding:8px 12px;border-radius:6px;cursor:pointer">
+            <div class="agent-avatar" style="width:24px;height:24px;font-size:10px;background:#97C459">M</div>
+            <span style="font-size:11px">Music</span>
+            <span style="font-size:9px;color:var(--green)">●</span>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted)" id="dashboard-agent-tasks">Loading...</div>
+      </div>
+    </div>
+
+    <!-- ═══ VENTURES ═══ -->
+    <div class="section" id="s-ventures">
+      <div class="sec-head">
+        <div><div class="sec-title">Active Ventures</div><div class="sec-sub">R5,000 escalation threshold · R6,000 DS budget</div></div>
+        <button class="btn btn-gold" onclick="sendPrompt('I want to add a new business venture to the Masemula Estate. Guide me through defining the concept, stage, budget and first 3 action steps.')">+ New venture ↗</button>
+      </div>
+      <div class="grid-2 mb-10">
+        <div class="vc vc-interactive" onclick="showVentureDetails('ds')">
+          <div class="vc-top"><div><div class="vc-name">Dropshipping</div><div class="vc-stage">Active · Primary funding vehicle</div></div><div class="dot dot-active pulse"></div></div>
+          <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.7">Clean Desk Bundle · $55 sell price · $40 profit · 73% margin<br>Target: $4,000 total profit by Month 3–5</div>
+          <div class="kpi-row"><div class="kpi"><div class="kpi-v">R 2k</div><div class="kpi-l">Revenue</div></div><div class="kpi"><div class="kpi-v">R 6k</div><div class="kpi-l">Budget</div></div><div class="kpi"><div class="kpi-v">73%</div><div class="kpi-l">Margin</div></div></div>
+        </div>
+        <div class="vc vc-interactive" onclick="showVentureDetails('music')">
+          <div class="vc-top"><div><div class="vc-name">Music — Amapiano</div><div class="vc-stage">Active · 2 projects released</div></div><div class="dot dot-active"></div></div>
+          <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.7">Independent · Building audience &amp; revenue<br>SAMRO/SAMPRA registration urgent</div>
+          <div class="kpi-row"><div class="kpi"><div class="kpi-v">2</div><div class="kpi-l">Releases</div></div><div class="kpi"><div class="kpi-v">—</div><div class="kpi-l">Streams</div></div><div class="kpi"><div class="kpi-v">0</div><div class="kpi-l">Syncs</div></div></div>
+        </div>
+        <div class="vc vc-interactive" onclick="showVentureDetails('brand')">
+          <div class="vc-top"><div><div class="vc-name">Masemula</div><div class="vc-stage">Concept stage · Luxury menswear</div></div><div class="dot dot-plan"></div></div>
+          <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.7">Ralph Lauren / ALD positioning · SA heritage<br>Collection 1: "The Internal" — 6–10 pieces</div>
+          <div class="kpi-row"><div class="kpi"><div class="kpi-v">0</div><div class="kpi-l">Products</div></div><div class="kpi"><div class="kpi-v">6–10</div><div class="kpi-l">Planned</div></div><div class="kpi"><div class="kpi-v">Q4</div><div class="kpi-l">Target</div></div></div>
+        </div>
+        <div class="vc vc-interactive" onclick="showVentureDetails('events')">
+          <div class="vc-top"><div><div class="vc-name">Events &amp; Hosting</div><div class="vc-stage">Planning · Kea-led</div></div><div class="dot dot-plan"></div></div>
+          <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.7">Kea leads — support only, never override<br>Business Manager support role</div>
+          <div class="kpi-row"><div class="kpi"><div class="kpi-v">0</div><div class="kpi-l">Events</div></div><div class="kpi"><div class="kpi-v">—</div><div class="kpi-l">Revenue</div></div><div class="kpi"><div class="kpi-v">TBC</div><div class="kpi-l">Launch</div></div></div>
+        </div>
+      </div>
+      <!-- Venture Detail Panel -->
+      <div id="venture-detail" class="card" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title" id="venture-detail-title"></div>
+          <button class="btn" onclick="document.getElementById('venture-detail').style.display='none'">Close</button>
+        </div>
+        <div id="venture-detail-content"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Long-term portfolio</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <span class="badge b-biz" style="padding:4px 10px">Speaker Company</span>
+          <span class="badge b-biz" style="padding:4px 10px">YouTube / Streaming</span>
+          <span class="badge b-biz" style="padding:4px 10px">Gumball SA</span>
+          <span class="badge b-fin" style="padding:4px 10px">Construction</span>
+          <span class="badge b-fin" style="padding:4px 10px">Architecture</span>
+          <span class="badge b-fin" style="padding:4px 10px">Car Service Centres</span>
+          <span class="badge b-fin" style="padding:4px 10px">Landscaping</span>
+          <span class="badge b-fin" style="padding:4px 10px">Student Accommodation</span>
+          <span class="badge b-health" style="padding:4px 10px">Charity / Non-profit</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MUSIC ═══ -->
+    <div class="section" id="s-music">
+      <div class="sec-head">
+        <div><div class="sec-title">Music — Amapiano</div><div class="sec-sub">2 projects released · Independent</div></div>
+        <button class="btn btn-gold" onclick="sendPrompt('Run a full music business audit for Ntobeko Masemula. He makes Amapiano, has 2 projects out, is independent. Give me the 3 highest priority actions this week.')">Music audit ↗</button>
+      </div>
+      <div class="inner-tabs">
+        <button class="itab active" onclick="itab('music','pipeline',this)">Release pipeline</button>
+        <button class="itab" onclick="itab('music','revenue',this)">Revenue</button>
+        <button class="itab" onclick="itab('music','strategy',this)">Growth strategy</button>
+      </div>
+      <div class="itab-panel active" id="music-pipeline">
+        <div class="grid-2 mb-10">
+          <div class="card">
+            <div class="card-title">Next release — 4 week plan</div>
+            <div class="item-row"><span class="badge b-urgent">Week -4</span><span style="flex:1;font-size:12px">Pitch Spotify editorial + SubmitHub</span></div>
+            <div class="item-row"><span class="badge b-watch">Week -2</span><span style="flex:1;font-size:12px">Announce date, pre-save campaign</span></div>
+            <div class="item-row"><span class="badge b-watch">Week -1</span><span style="flex:1;font-size:12px">TikTok teasers — best 15 seconds</span></div>
+            <div class="item-row"><span class="badge b-track">Day 0</span><span style="flex:1;font-size:12px">Release everywhere simultaneously</span></div>
+            <div class="item-row"><span class="badge b-track">Week +2</span><span style="flex:1;font-size:12px">Sustained content, behind the scenes</span></div>
+          </div>
+          <div class="card">
+            <div class="card-title">DSP profiles — claim status</div>
+            <div class="item-row"><div class="check done">✓</div><span style="flex:1;font-size:12px">Spotify for Artists</span></div>
+            <div class="item-row"><div class="check" onclick="this.classList.toggle('done');this.textContent=this.classList.contains('done')?'✓':''"></div><span style="flex:1;font-size:12px">Apple Music for Artists</span></div>
+            <div class="item-row"><div class="check" onclick="this.classList.toggle('done');this.textContent=this.classList.contains('done')?'✓':''"></div><span style="flex:1;font-size:12px">Boomplay Artist Portal</span></div>
+            <div class="item-row"><div class="check" onclick="this.classList.toggle('done');this.textContent=this.classList.contains('done')?'✓':''"></div><span style="flex:1;font-size:12px">Audiomack</span></div>
+            <div class="item-row"><div class="check" onclick="this.classList.toggle('done');this.textContent=this.classList.contains('done')?'✓':''"></div><span style="flex:1;font-size:12px"><strong>SAMRO registration</strong> — urgent</span></div>
+            <div class="item-row"><div class="check" onclick="this.classList.toggle('done');this.textContent=this.classList.contains('done')?'✓':''"></div><span style="flex:1;font-size:12px"><strong>SAMPRA registration</strong> — urgent</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="itab-panel" id="music-revenue">
+        <div class="grid-3">
+          <div class="card"><div class="card-title">Streaming</div><div class="stat-n">R 0</div><div class="stat-l">Current MRR</div><div style="font-size:10px;color:var(--muted);margin-top:6px;font-weight:300">Claim profiles → grow streams</div></div>
+          <div class="card"><div class="card-title">Publishing (SAMRO)</div><div class="stat-n stat-neg">Unclaimed</div><div class="stat-l">Royalties</div><div style="font-size:10px;color:var(--red);margin-top:6px;font-weight:300">Register at samro.org.za now</div></div>
+          <div class="card"><div class="card-title">Sync licensing</div><div class="stat-n">0</div><div class="stat-l">Active placements</div><div style="font-size:10px;color:var(--muted);margin-top:6px;font-weight:300">Musicbed · Artlist · That Pitch</div></div>
+        </div>
+      </div>
+      <div class="itab-panel" id="music-strategy">
+        <div class="card">
+          <div class="card-title">6 revenue streams to build</div>
+          <div class="item-row"><span class="badge b-urgent">Now</span><span style="flex:1;font-size:12px">Streaming royalties — claim all DSP profiles</span></div>
+          <div class="item-row"><span class="badge b-urgent">Now</span><span style="flex:1;font-size:12px">Publishing — SAMRO + SAMPRA registration</span></div>
+          <div class="item-row"><span class="badge b-urgent">Now</span><span style="flex:1;font-size:12px">YouTube Content ID — set up via distributor</span></div>
+          <div class="item-row"><span class="badge b-watch">Month 2</span><span style="flex:1;font-size:12px">Sync licensing — prepare stems and WAV files</span></div>
+          <div class="item-row"><span class="badge b-watch">Early</span><span style="flex:1;font-size:12px">Live / DJ income — early bookings to fund ventures</span></div>
+          <div class="item-row"><span class="badge b-track">Month 6+</span><span style="flex:1;font-size:12px">Brand partnerships — build profile first</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ BRAND ═══ -->
+    <div class="section" id="s-brand">
+      <div class="sec-head">
+        <div><div class="sec-title">Masemula</div><div class="sec-sub">Luxury menswear · Concept stage · The Internal</div></div>
+        <button class="btn btn-gold" onclick="sendPrompt('Masemula brand development session. The brand is luxury menswear, Ralph Lauren and ALD adjacent, rooted in South African identity. Never trend-chase. Start building the brand identity document — positioning, tone of voice, visual direction.')">Brand session ↗</button>
+      </div>
+      <div class="inner-tabs">
+        <button class="itab active" onclick="itab('brand','identity',this)">Identity</button>
+        <button class="itab" onclick="itab('brand','collection',this)">Collection 1</button>
+        <button class="itab" onclick="itab('brand','guardrails',this)">Guardrails</button>
+      </div>
+      <div class="itab-panel active" id="brand-identity">
+        <div class="card mb-10">
+          <div class="card-title">Colour palette</div>
+          <div class="swatch-row" style="margin-bottom:24px">
+            <div class="swatch" style="background:#2C1A0E"><div class="swatch-label">Walnut</div></div>
+            <div class="swatch" style="background:#5C3317"><div class="swatch-label">Chestnut</div></div>
+            <div class="swatch" style="background:#C9A84C"><div class="swatch-label">Aged Gold</div></div>
+            <div class="swatch" style="background:#C49A6C"><div class="swatch-label">Amber Earth</div></div>
+            <div class="swatch" style="background:#F5F0E8;border:0.5px solid var(--border)"><div class="swatch-label">Ecru</div></div>
+            <div class="swatch" style="background:#E8D5B7;border:0.5px solid var(--border)"><div class="swatch-label">Warm Stone</div></div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">The name</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:300;line-height:1.8;color:var(--ink);font-style:italic">"A family name. No dictionary definition — but something more durable. A symbol of success born from quiet struggle. Earned from the inside out."</div>
+          </div>
+          <div class="card">
+            <div class="card-title">The customer</div>
+            <div style="font-size:12px;font-weight:300;line-height:1.9;color:var(--muted)">Carries himself with the highest self-respect<br>Reserved — impossible to ignore when entering a room<br>Critical thinker · Private · Small loyal circle<br>When they wear Masemula: <span style="color:var(--ink);font-style:italic">accomplished.</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="itab-panel" id="brand-collection">
+        <div class="card">
+          <div class="card-title">Collection 1 — "The Internal" · 6–10 pieces</div>
+          <div class="item-row"><span style="font-size:12px;font-family:'Cormorant Garamond',serif;flex:1">Structured overcoat</span><span style="font-size:11px;color:var(--muted)">Deep walnut brown</span></div>
+          <div class="item-row"><span style="font-size:12px;font-family:'Cormorant Garamond',serif;flex:1">Heavyweight cotton trousers</span><span style="font-size:11px;color:var(--muted)">Warm stone</span></div>
+          <div class="item-row"><span style="font-size:12px;font-family:'Cormorant Garamond',serif;flex:1">Tailored shirt</span><span style="font-size:11px;color:var(--muted)">Ecru with considered collar</span></div>
+          <div class="item-row"><span style="font-size:12px;font-family:'Cormorant Garamond',serif;flex:1">Knitwear</span><span style="font-size:11px;color:var(--muted)">Warm camel or oatmeal</span></div>
+          <div class="item-row"><span style="font-size:12px;font-family:'Cormorant Garamond',serif;flex:1">Leather accessory</span><span style="font-size:11px;color:var(--muted)">Deep chestnut — belt or card holder</span></div>
+        </div>
+      </div>
+      <div class="itab-panel" id="brand-guardrails">
+        <div class="card">
+          <div class="card-title">Non-negotiables — never break these</div>
+          <div class="item-row"><div class="check done">✓</div><span style="flex:1;font-size:12px">Never trend-chase. If the reason is trending, it does not belong here.</span></div>
+          <div class="item-row"><div class="check done">✓</div><span style="flex:1;font-size:12px">Never compromise quality for margin.</span></div>
+          <div class="item-row"><div class="check done">✓</div><span style="flex:1;font-size:12px">Never dilute for reach. Standards do not lower.</span></div>
+          <div class="item-row"><div class="check done">✓</div><span style="flex:1;font-size:12px">Every collaboration must elevate the brand — if not, decline.</span></div>
+          <div class="item-row"><div class="check done">✓</div><span style="flex:1;font-size:12px">South African heritage — always present, always intentional.</span></div>
+          <div class="item-row"><div class="check done">✓</div><span style="flex:1;font-size:12px">Substance-free — no alcohol, tobacco, drugs. In any form. Ever.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ GOALS ═══ -->
+    <div class="section" id="s-goals">
+      <div class="sec-head">
+        <div><div class="sec-title">Goals</div><div class="sec-sub">Long-term thinking over short-term gains</div></div>
+        <button class="btn btn-gold" onclick="sendPrompt('Help me define a new goal for the Masemula Estate. Ask me: the goal name, which pillar it falls under, what success looks like, timeline, and break it into 3–5 milestones.')">+ Add goal ↗</button>
+      </div>
+      <div id="goal-list"></div>
+    </div>
+
+    <!-- ═══ TIME ═══ -->
+    <div class="section" id="s-time">
+      <div class="sec-head">
+        <div><div class="sec-title">Time</div><div class="sec-sub">Gym 4am · Bed 11:30pm · School protected</div></div>
+        <button class="btn btn-gold" onclick="sendPrompt('Review my weekly time allocation as Ntobeko Masemula — 4am gym daily, university 5 days a week, dropshipping priority, music, Masemula. Suggest the optimal schedule for this week.')">Optimise week ↗</button>
+      </div>
+      <div class="inner-tabs">
+        <button class="itab active" onclick="itab('time','schedule',this)">Schedule</button>
+        <button class="itab" onclick="itab('time','focus',this)">Focus Timer</button>
+        <button class="itab" onclick="itab('time','briefing',this)">Briefing</button>
+      </div>
+      <div class="itab-panel active" id="time-schedule">
+      <div class="grid-4 mb-10" style="grid-template-columns:repeat(7,minmax(0,1fr))">
+        <div class="day-block"><div class="day-label">Mon</div><div class="time-slot ts-gym"></div><div class="time-slot ts-school"></div><div class="time-slot ts-school"></div><div class="time-slot ts-deep"></div><div class="time-slot ts-music"></div><div class="time-slot ts-biz"></div></div>
+        <div class="day-block"><div class="day-label">Tue</div><div class="time-slot ts-gym"></div><div class="time-slot ts-deep"></div><div class="time-slot ts-school"></div><div class="time-slot ts-school"></div><div class="time-slot ts-music"></div><div class="time-slot ts-free"></div></div>
+        <div class="day-block"><div class="day-label">Wed</div><div class="time-slot ts-gym"></div><div class="time-slot ts-school"></div><div class="time-slot ts-school"></div><div class="time-slot ts-school"></div><div class="time-slot ts-free"></div><div class="time-slot ts-free"></div></div>
+        <div class="day-block"><div class="day-label">Thu</div><div class="time-slot ts-gym"></div><div class="time-slot ts-deep"></div><div class="time-slot ts-school"></div><div class="time-slot ts-school"></div><div class="time-slot ts-free"></div><div class="time-slot ts-free"></div></div>
+        <div class="day-block"><div class="day-label">Fri</div><div class="time-slot ts-gym"></div><div class="time-slot ts-school"></div><div class="time-slot ts-school"></div><div class="time-slot ts-school"></div><div class="time-slot ts-free"></div><div class="time-slot ts-free"></div></div>
+        <div class="day-block"><div class="day-label">Sat</div><div class="time-slot ts-gym"></div><div class="time-slot ts-deep"></div><div class="time-slot ts-music"></div><div class="time-slot ts-biz"></div><div class="time-slot ts-free"></div><div class="time-slot ts-free"></div></div>
+        <div class="day-block"><div class="day-label">Sun</div><div class="time-slot ts-gym"></div><div class="time-slot ts-free"></div><div class="time-slot ts-music"></div><div class="time-slot ts-free"></div><div class="time-slot ts-free"></div><div class="time-slot ts-free"></div></div>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted)"><div style="width:8px;height:8px;border-radius:1px;background:#5DCAA5"></div>Gym</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted)"><div style="width:8px;height:8px;border-radius:1px;background:#97C459"></div>School</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted)"><div style="width:8px;height:8px;border-radius:1px;background:#C9A84C"></div>Deep work</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted)"><div style="width:8px;height:8px;border-radius:1px;background:#AFA9EC"></div>Music</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted)"><div style="width:8px;height:8px;border-radius:1px;background:#EF9F27"></div>Business</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Best work windows this week</div>
+        <div class="item-row"><span class="badge b-biz">Monday</span><span style="flex:1;font-size:12px">2:30pm – 11:30pm · Best business day of the week</span></div>
+        <div class="item-row"><span class="badge b-biz">Tuesday</span><span style="flex:1;font-size:12px">7:00am – 11:00am + 4:30pm – 7:00pm</span></div>
+        <div class="item-row"><span class="badge b-health">Wednesday</span><span style="flex:1;font-size:12px">Light only — heavy class day, protect energy</span></div>
+        <div class="item-row"><span class="badge b-biz">Saturday</span><span style="flex:1;font-size:12px">Full day · Prime deep work · DS priority block</span></div>
+        <div class="item-row"><span class="badge b-acad">Sunday</span><span style="flex:1;font-size:12px">Reading, planning, weekly review</span></div>
+      </div>
+      </div>
+      <div class="itab-panel" id="time-focus">
+        <div class="grid-2">
+          <div class="card" style="text-align:center">
+            <div class="card-title">Focus Timer</div>
+            <div style="position:relative;width:180px;height:180px;margin:20px auto">
+              <svg width="180" height="180" style="transform:rotate(-90deg)">
+                <circle cx="90" cy="90" r="80" fill="none" stroke="var(--border)" stroke-width="4"/>
+                <circle id="timer-ring" cx="90" cy="90" r="80" fill="none" stroke="var(--gold)" stroke-width="4" stroke-dasharray="502.65" stroke-dashoffset="0" stroke-linecap="round"/>
+              </svg>
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                <div id="timer-display" style="font-family:'Cormorant Garamond',serif;font-size:36px;color:var(--ink)">25:00</div>
+                <div id="timer-label" style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em">Ready</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:center;margin-bottom:14px">
+              <button class="btn" onclick="setTimer(25)">25 min</button>
+              <button class="btn" onclick="setTimer(52)">52 min</button>
+              <button class="btn" onclick="setTimer(90)">90 min</button>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:center">
+              <button class="btn btn-gold" id="timer-start" onclick="toggleTimer()">Start</button>
+              <button class="btn" onclick="resetTimer()">Reset</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Session Stats</div>
+            <div class="stat mb-10"><div class="stat-n" id="sessions-today">0</div><div class="stat-l">Sessions today</div></div>
+            <div class="stat mb-10"><div class="stat-n" id="minutes-today">0</div><div class="stat-l">Minutes focused</div></div>
+            <div class="stat"><div class="stat-n" id="sessions-week">0</div><div class="stat-l">Sessions this week</div></div>
+            <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border)">
+              <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px">Daily Target</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <div class="prog-bar" style="flex:1;height:4px"><div class="prog-fill" id="daily-prog" style="width:0%"></div></div>
+                <span style="font-size:11px;color:var(--muted)" id="daily-prog-text">0 / 4 sessions</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="itab-panel" id="time-briefing">
+        <div class="card">
+          <div class="card-title">Morning Briefing</div>
+          <div style="font-size:12px;color:var(--muted);font-weight:300;line-height:1.7;margin-bottom:14px">Generate your daily briefing based on today's schedule and priorities.</div>
+          <button class="btn btn-gold" onclick="generateBriefing()">Generate Today's Briefing</button>
+          <div id="briefing-output" style="margin-top:14px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ROUTINE ═══ -->
+    <div class="section" id="s-routine">
+      <div class="sec-head">
+        <div><div class="sec-title">Daily Routine</div><div class="sec-sub">4am gym · 11:30pm sleep · Protect the non-negotiables</div></div>
+        <button class="btn btn-gold" onclick="sendPrompt('Review my weekly routine completion. Generate flags for anything off track and suggest adjustments.')">Routine audit ↗</button>
+      </div>
+      <!-- Day Navigation -->
+      <div class="day-nav" id="routine-day-nav"></div>
+      <!-- Day Note -->
+      <div id="routine-note"></div>
+      <div class="grid-2" style="gap:16px">
+        <!-- Schedule Panel -->
+        <div class="card" style="max-height:500px;overflow-y:auto">
+          <div class="card-title">Today's Schedule <span id="routine-day-label" style="font-weight:300;color:var(--muted);margin-left:8px"></span></div>
+          <div id="routine-schedule"></div>
+        </div>
+        <!-- Habits & Tracking Panel -->
+        <div>
+          <div class="card mb-10">
+            <div class="card-title">Daily Habits</div>
+            <div id="routine-habits"></div>
+          </div>
+          <div class="card mb-10">
+            <div class="card-title">Streaks</div>
+            <div class="grid-3" style="gap:8px">
+              <div class="stat"><div class="stat-n" id="streak-gym">0</div><div class="stat-l">Gym streak</div></div>
+              <div class="stat"><div class="stat-n" id="streak-sleep">0</div><div class="stat-l">Sleep streak</div></div>
+              <div class="stat"><div class="stat-n" id="streak-week">0%</div><div class="stat-l">Week done</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Weekly Progress</div>
+            <div id="routine-weekly-prog"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Routine Flags -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Routine Flags</div>
+        <div id="routine-flags"></div>
+      </div>
+    </div>
+
+    <!-- ═══ FINANCE ═══ -->
+    <div class="section" id="s-finance">
+      <div class="sec-head">
+        <div><div class="sec-title">Finance</div><div class="sec-sub">R5,000 approval threshold · SARS compliant · No external debt</div></div>
+        <button class="btn btn-gold" onclick="sendPrompt('Set up a simple income and expense tracking structure for the Masemula Estate ventures — Dropshipping, Music and Masemula Brand. Create a basic P&L framework.')">Setup P&L ↗</button>
+      </div>
+      <div class="inner-tabs">
+        <button class="itab active" onclick="itab('finance','overview',this)">Overview</button>
+        <button class="itab" onclick="itab('finance','ledger',this)">Ledger</button>
+        <button class="itab" onclick="itab('finance','savings',this)">Savings</button>
+        <button class="itab" onclick="itab('finance','invest',this)">Investments</button>
+        <button class="itab" onclick="itab('finance','accounts',this)">Accounts</button>
+      </div>
+      <div class="itab-panel active" id="finance-overview">
+        <div class="grid-4 mb-10" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+          <div class="stat"><div class="stat-n" id="fin-total-in">R 0</div><div class="stat-l">Total income</div></div>
+          <div class="stat"><div class="stat-n stat-neg" id="fin-total-out">R 0</div><div class="stat-l">Total expenses</div></div>
+          <div class="stat"><div class="stat-n stat-pos" id="fin-net">R 0</div><div class="stat-l">Net position</div></div>
+        </div>
+        <div class="card mb-10">
+          <div class="card-title">DS budget breakdown</div>
+          <div class="prog-row"><div class="prog-label">Shopify (R190/mo)</div><div class="prog-bar"><div class="prog-fill" style="width:3%"></div></div><div class="prog-pct">R 190</div></div>
+          <div class="prog-row"><div class="prog-label">Domain</div><div class="prog-bar"><div class="prog-fill" style="width:3%"></div></div><div class="prog-pct">R 200</div></div>
+          <div class="prog-row"><div class="prog-label">Product samples</div><div class="prog-bar"><div class="prog-fill" style="width:13%"></div></div><div class="prog-pct">R 800</div></div>
+          <div class="prog-row"><div class="prog-label">Ad budget Month 1</div><div class="prog-bar"><div class="prog-fill" style="width:33%"></div></div><div class="prog-pct">R 2,000</div></div>
+          <div class="prog-row"><div class="prog-label">Ad budget Month 2</div><div class="prog-bar"><div class="prog-fill" style="width:25%"></div></div><div class="prog-pct">R 1,500</div></div>
+          <div class="prog-row"><div class="prog-label">Emergency buffer</div><div class="prog-bar"><div class="prog-fill" style="width:22%"></div></div><div class="prog-pct">R 1,310</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">ROAS rules</div>
+          <div class="item-row"><span class="badge b-urgent">Kill</span><span style="flex:1;font-size:12px">Below 1.5x — kill immediately</span></div>
+          <div class="item-row"><span class="badge b-watch">Tweak</span><span style="flex:1;font-size:12px">1.5x – 2x — adjust and test</span></div>
+          <div class="item-row"><span class="badge b-track">Maintain</span><span style="flex:1;font-size:12px">2x – 3x — hold and optimise</span></div>
+          <div class="item-row"><span class="badge b-acad">Scale</span><span style="flex:1;font-size:12px">3x+ — scale aggressively</span></div>
+        </div>
+      </div>
+      <div class="itab-panel" id="finance-ledger">
+        <div class="grid-2 mb-10">
+          <div class="card">
+            <div class="card-title">Add Income</div>
+            <input class="ledger-input" id="income-desc" placeholder="Description (e.g. DS sale)">
+            <input class="ledger-input" id="income-amt" type="number" placeholder="Amount (R)">
+            <select class="ledger-input" id="income-cat">
+              <option>Dropshipping</option><option>Music</option><option>Masemula Brand</option><option>Other</option>
+            </select>
+            <button class="btn btn-gold" style="width:100%;margin-top:8px" onclick="addLedgerEntry('income')">Add Income</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Add Expense</div>
+            <input class="ledger-input" id="expense-desc" placeholder="Description (e.g. Shopify)">
+            <input class="ledger-input" id="expense-amt" type="number" placeholder="Amount (R)">
+            <select class="ledger-input" id="expense-cat">
+              <option>Dropshipping</option><option>Music</option><option>Masemula Brand</option><option>Ads</option><option>Tools</option><option>Other</option>
+            </select>
+            <button class="btn" style="width:100%;margin-top:8px" onclick="addLedgerEntry('expense')">Add Expense</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Transaction History</div>
+          <div id="ledger-list"></div>
+        </div>
+      </div>
+      <div class="itab-panel" id="finance-savings">
+        <div class="card mb-10">
+          <div class="card-title">RS3 Income Target</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Target: R30,800/month by November 2027</div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:5px">Current monthly income</div>
+            <input class="ledger-input" id="rs3-income" type="number" placeholder="R 0" onchange="updateRS3Progress()">
+          </div>
+          <div class="prog-bar" style="width:100%;height:6px;margin-bottom:6px"><div class="prog-fill" id="rs3-income-bar" style="width:0%"></div></div>
+          <div style="font-size:11px;color:var(--muted)" id="rs3-income-text">R0 / R30,800</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Savings Goals</div>
+          <div id="savings-list"></div>
+          <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border)">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Add new goal</div>
+            <input class="ledger-input" id="savings-name" placeholder="Goal name">
+            <input class="ledger-input" id="savings-target" type="number" placeholder="Target (R)">
+            <button class="btn btn-gold" style="width:100%;margin-top:8px" onclick="addSavingsGoal()">Add Goal</button>
+          </div>
+        </div>
+      </div>
+      <div class="itab-panel" id="finance-invest">
+        <div class="grid-2 mb-10">
+          <div class="card">
+            <div class="card-title">Investment Portfolio</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Track automated trading & investments for passive income.</div>
+            <div id="invest-list">
+              <div class="item-row" style="border-bottom:0.5px solid var(--border);padding-bottom:8px;margin-bottom:8px">
+                <div style="flex:1"><div style="font-size:12px;font-weight:500">No investments yet</div><div style="font-size:10px;color:var(--muted)">Add your first investment to begin tracking</div></div>
+              </div>
+            </div>
+            <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border)">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Add investment</div>
+              <input class="ledger-input" id="invest-name" placeholder="Name (e.g. EasyEquities)">
+              <select class="ledger-input" id="invest-type">
+                <option>ETF</option><option>Stocks</option><option>Crypto</option><option>TFSA</option><option>Trading Bot</option><option>Other</option>
+              </select>
+              <input class="ledger-input" id="invest-amt" type="number" placeholder="Balance (R)">
+              <button class="btn btn-gold" style="width:100%;margin-top:8px" onclick="addInvestment()">Add Investment</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Performance Summary</div>
+            <div class="grid-2" style="gap:10px;margin-bottom:14px">
+              <div class="stat"><div class="stat-n" id="invest-total">R 0</div><div class="stat-l">Total invested</div></div>
+              <div class="stat"><div class="stat-n stat-pos" id="invest-return">R 0</div><div class="stat-l">Total returns</div></div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Automated Trading</div>
+            <div class="item-row"><span style="flex:1;font-size:12px">Status</span><span class="badge b-track">Planned</span></div>
+            <div class="item-row"><span style="flex:1;font-size:12px">Strategy</span><span style="font-size:11px;color:var(--muted)">TBD</span></div>
+            <div class="item-row"><span style="flex:1;font-size:12px">Platform</span><span style="font-size:11px;color:var(--muted)">TBD</span></div>
+            <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border);font-size:11px;color:var(--muted)">
+              Automated trading will be set up once ventures are profitable. Target: passive income stream.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="itab-panel" id="finance-accounts">
+        <div class="card mb-10">
+          <div class="card-title">Bank Accounts</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Track all financial accounts in one place. Follow the money.</div>
+          <div id="accounts-list">
+            <div class="item-row" style="padding:10px 0;border-bottom:0.5px solid var(--border)">
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:500">Primary Checking</div>
+                <div style="font-size:10px;color:var(--muted)">FNB / Capitec — Day-to-day</div>
+              </div>
+              <div class="stat" style="text-align:right">
+                <div class="stat-n account-bal" data-id="primary">R 0</div>
+                <div class="stat-l">Balance</div>
+              </div>
+            </div>
+            <div class="item-row" style="padding:10px 0;border-bottom:0.5px solid var(--border)">
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:500">Business Account</div>
+                <div style="font-size:10px;color:var(--muted)">Venture income & expenses</div>
+              </div>
+              <div class="stat" style="text-align:right">
+                <div class="stat-n account-bal" data-id="business">R 0</div>
+                <div class="stat-l">Balance</div>
+              </div>
+            </div>
+            <div class="item-row" style="padding:10px 0;border-bottom:0.5px solid var(--border)">
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:500">Savings / Emergency</div>
+                <div style="font-size:10px;color:var(--muted)">6-month runway buffer</div>
+              </div>
+              <div class="stat" style="text-align:right">
+                <div class="stat-n account-bal" data-id="savings">R 0</div>
+                <div class="stat-l">Balance</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Update Balances</div>
+            <div style="margin-bottom:10px"><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Primary</label><input class="ledger-input" id="bal-primary" type="number" placeholder="R"></div>
+            <div style="margin-bottom:10px"><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Business</label><input class="ledger-input" id="bal-business" type="number" placeholder="R"></div>
+            <div style="margin-bottom:10px"><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Savings</label><input class="ledger-input" id="bal-savings" type="number" placeholder="R"></div>
+            <button class="btn btn-gold" style="width:100%" onclick="updateAccountBalances()">Update All</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Total Net Worth</div>
+            <div class="stat" style="margin-bottom:14px"><div class="stat-n" id="total-net-worth">R 0</div><div class="stat-l">All accounts combined</div></div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Money flow rules</div>
+            <div class="item-row"><span style="font-size:11px">Income → Business → Reinvest / Personal</span></div>
+            <div class="item-row"><span style="font-size:11px">10% of profit → Savings always</span></div>
+            <div class="item-row"><span style="font-size:11px">No external debt</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ HEADSPACE ═══ -->
+    <div class="section" id="s-headspace">
+      <div class="sec-head">
+        <div><div class="sec-title">Headspace</div><div class="sec-sub">Emotional awareness · Daily journal · Inner work</div></div>
+      </div>
+      <div class="inner-tabs">
+        <button class="itab active" onclick="itab('hs','wheel',this)">Emotion check-in</button>
+        <button class="itab" onclick="itab('hs','journal',this)">Journal</button>
+        <button class="itab" onclick="itab('hs','log',this)">History</button>
+      </div>
+
+      <div class="itab-panel active" id="hs-wheel">
+        <div class="grid-2" style="align-items:start;gap:20px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:10px">Click your core emotion</div>
+            <canvas id="emo-canvas" width="440" height="440" style="cursor:pointer;border-radius:50%;max-width:100%"></canvas>
+            <div style="margin-top:10px;padding:10px;background:var(--surface);border-radius:6px;min-height:44px">
+              <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">Selected</div>
+              <div id="emo-selected" style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:400;color:var(--ink)">—</div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:10px">Log today's feeling</div>
+            <div style="margin-bottom:10px">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:5px">Intensity</div>
+              <input type="range" id="emo-intensity" min="1" max="10" value="5" style="width:100%">
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px"><span>Mild</span><span id="int-val">5</span><span>Intense</span></div>
+            </div>
+            <div style="margin-bottom:10px">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:5px">Note (optional)</div>
+              <textarea style="width:100%;height:60px;border:0.5px solid var(--border);background:var(--card);padding:8px;font-family:'Jost',sans-serif;font-size:12px;font-weight:300;color:var(--ink);resize:none;outline:none;border-radius:6px" id="emo-note" placeholder="What triggered this feeling?"></textarea>
+            </div>
+            <button class="btn btn-gold" style="width:100%" onclick="logEmotion()">Log emotion</button>
+            <div style="margin-top:12px">
+              <button class="btn" style="width:100%;font-size:10px" onclick="sendPrompt('I am feeling '+document.getElementById(\'emo-selected\').textContent+' with intensity '+document.getElementById(\'emo-intensity\').value+'/10. Help me process this emotion using the Masemula framework — what is it telling me, and how does it relate to what I am building?')">Process with Jarvis ↗</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="itab-panel" id="hs-journal">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:0.05em;margin-bottom:12px">Daily reflection framework — answer 1–3 prompts consistently</div>
+        <div class="journal-card mb-10">
+          <div class="journal-q" onclick="toggleJQ(this)"><div class="jq-num">01 · Morning</div><div class="jq-text">What is the one thing that, if I accomplish it today, will make this day feel successful?</div></div>
+          <div class="journal-q" onclick="toggleJQ(this)"><div class="jq-num">02 · Gratitude</div><div class="jq-text">What am I genuinely grateful for right now — not what I should be grateful for?</div></div>
+          <div class="journal-q" onclick="toggleJQ(this)"><div class="jq-num">03 · Identity</div><div class="jq-text">Who am I becoming? Is today's version of me closer to that person?</div></div>
+          <div class="journal-q" onclick="toggleJQ(this)"><div class="jq-num">04 · Empire</div><div class="jq-text">What did I do today that moved the estate forward — however small?</div></div>
+          <div class="journal-q" onclick="toggleJQ(this)"><div class="jq-num">05 · Evening</div><div class="jq-text">What would I do differently today if I had the chance? What does that tell me?</div></div>
+          <div class="journal-q" onclick="toggleJQ(this)"><div class="jq-num">06 · Relationships</div><div class="jq-text">Did I show up for Kea and the people I love the way I intended to?</div></div>
+          <div class="journal-q" onclick="toggleJQ(this)"><div class="jq-num">07 · Challenge</div><div class="jq-text">What is making me uncomfortable right now, and what is it asking me to do?</div></div>
+          <div class="journal-q" style="border-bottom:none" onclick="toggleJQ(this)"><div class="jq-num">08 · Legacy</div><div class="jq-text">Is the Masemula I am building today worth inheriting?</div></div>
+        </div>
+        <button class="btn btn-gold" onclick="sendPrompt('Help me journal. Ask me each of these 8 Masemula journal prompts one at a time, give me space to answer, and at the end give me a short reflection on what my answers reveal about where I am right now.')">Guided journal session ↗</button>
+      </div>
+
+      <div class="itab-panel" id="hs-log">
+        <div class="card">
+          <div class="card-title">Emotion log — this week</div>
+          <div id="emo-history">
+            <div class="emo-entry"><div class="emo-dot" style="background:#97C459"></div><span style="color:var(--muted);min-width:55px">Today</span><span style="flex:1">Proud · 7/10</span><span style="color:var(--muted);font-size:10px">After gym</span></div>
+            <div class="emo-entry"><div class="emo-dot" style="background:#AFA9EC"></div><span style="color:var(--muted);min-width:55px">Yesterday</span><span style="flex:1">Anxious · 5/10</span><span style="color:var(--muted);font-size:10px">DS store setup</span></div>
+            <div class="emo-entry"><div class="emo-dot" style="background:#EF9F27"></div><span style="color:var(--muted);min-width:55px">Mon</span><span style="flex:1">Energetic · 8/10</span><span style="color:var(--muted);font-size:10px">Deep work day</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ACADEMICS ═══ -->
+    <div class="section" id="s-academics">
+      <div class="sec-head">
+        <div><div class="sec-title">Academics</div><div class="sec-sub">School is priority one · No business overrides class or exams</div></div>
+        <button class="btn btn-gold" onclick="sendPrompt('I am a first-year university student. Help me create an effective study strategy for my upcoming exams. I have 7 modules including ECON112, MTHS114, STTN111, GEOG111, SBSS111, and ALDE111/112.')">Study strategy ↗</button>
+      </div>
+      <div class="inner-tabs">
+        <button class="itab active" onclick="itab('academics','modules',this)">Modules & Marks</button>
+        <button class="itab" onclick="itab('academics','plan',this)">Study Plan</button>
+        <button class="itab" onclick="itab('academics','notes',this)">Study Notes</button>
+      </div>
+      <div class="itab-panel active" id="academics-modules">
+        <div id="module-list"></div>
+      </div>
+      <div class="itab-panel" id="academics-plan">
+        <div class="card mb-10">
+          <div class="card-title">Weekly Study Allocation</div>
+          <div class="item-row"><span class="badge b-acad">Mon</span><span style="flex:1;font-size:12px">2:30pm class ends → Study 2:30–5pm (ECON/GEOG) + 8:30–10pm (SBSS)</span></div>
+          <div class="item-row"><span class="badge b-acad">Tue</span><span style="flex:1;font-size:12px">Morning: 7–10:30am MTHS114 + STTN111 (best window for hard subjects)</span></div>
+          <div class="item-row"><span class="badge b-health">Wed</span><span style="flex:1;font-size:12px">Heavy day — evening light review only 6:30–8:30pm. No new material.</span></div>
+          <div class="item-row"><span class="badge b-acad">Thu</span><span style="flex:1;font-size:12px">Morning 5:30–10:30am ALDE + GEOG. Evening 6:30–8:30pm light review.</span></div>
+          <div class="item-row"><span class="badge b-acad">Fri</span><span style="flex:1;font-size:12px">9–11am campus study. Evening off — no study Friday nights.</span></div>
+          <div class="item-row"><span class="badge b-biz">Sat</span><span style="flex:1;font-size:12px">2–5pm deep study block. Most difficult material. Past papers.</span></div>
+          <div class="item-row"><span class="badge b-health">Sun</span><span style="flex:1;font-size:12px">1–4pm reading and review. Week prep. Consolidation only.</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Study Principles</div>
+          <div class="item-row"><span style="color:var(--gold);margin-right:8px">◆</span><span style="flex:1;font-size:12px">Review notes within 24h of lecture — retention +60%</span></div>
+          <div class="item-row"><span style="color:var(--gold);margin-right:8px">◆</span><span style="flex:1;font-size:12px">Active recall over passive reading — test yourself</span></div>
+          <div class="item-row"><span style="color:var(--gold);margin-right:8px">◆</span><span style="flex:1;font-size:12px">Past papers are the most valuable resource for every module</span></div>
+          <div class="item-row"><span style="color:var(--gold);margin-right:8px">◆</span><span style="flex:1;font-size:12px">Maths & Stats require daily practice — not just before tests</span></div>
+        </div>
+      </div>
+      <div class="itab-panel" id="academics-notes">
+        <div class="card">
+          <div class="card-title">Generate Study Notes</div>
+          <div style="font-size:12px;color:var(--muted);font-weight:300;line-height:1.7;margin-bottom:14px">Select your module and enter a topic to generate structured study notes with Claude.</div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px">Module</div>
+            <select class="sel" id="study-module" style="width:100%">
+              <option>GEOG111 — Geography</option>
+              <option>SBSS111 — Social/Behavioural Sciences</option>
+              <option>ECON112 — Economics</option>
+              <option>ALDE111/112 — Language & Communication</option>
+              <option>MTHS114 — Mathematics</option>
+              <option>STTN111 — Statistics</option>
+            </select>
+          </div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px">Topic or paste notes</div>
+            <textarea style="width:100%;height:80px;border:0.5px solid var(--border);background:var(--card);padding:10px;font-family:'Jost',sans-serif;font-size:12px;font-weight:300;color:var(--ink);resize:none;outline:none;border-radius:6px" id="study-topic" placeholder="e.g. Supply and demand elasticity, or paste your lecture notes..."></textarea>
+          </div>
+          <button class="btn btn-gold" onclick="generateStudyNotes()">Generate Prompt</button>
+          <div id="study-output" style="margin-top:14px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ JOURNAL ═══ -->
+    <div class="section" id="s-journal">
+      <div class="sec-head">
+        <div><div class="sec-title">Journal</div><div class="sec-sub">10 prompts · Daily reflection · Saved to diary</div></div>
+        <button class="btn btn-gold" onclick="saveJournalEntry()">Save Entry</button>
+      </div>
+      <div class="inner-tabs">
+        <button class="itab active" onclick="itab('journal','write',this)">Write</button>
+        <button class="itab" onclick="itab('journal','diary',this)">Diary</button>
+      </div>
+      <div class="itab-panel active" id="journal-write">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Click any prompt to expand and write your reflection. Save when done.</div>
+        <div id="journal-prompts"></div>
+      </div>
+      <div class="itab-panel" id="journal-diary">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Your saved journal entries — newest first</div>
+        <div id="journal-diary-list"></div>
+      </div>
+    </div>
+
+    <!-- ═══ CONTENT ═══ -->
+    <div class="section" id="s-content">
+      <div class="sec-head">
+        <div><div class="sec-title">Content</div><div class="sec-sub">Social presence across ventures · Metrics tracking</div></div>
+        <button class="btn btn-gold" onclick="sendPrompt('I need a content strategy for my ventures: Dropshipping (TikTok focus), Music (all platforms), Masemula Brand (Instagram first). Create a content calendar for the next week.')">Content plan ↗</button>
+      </div>
+      <div class="inner-tabs">
+        <button class="itab active" onclick="itab('content','music-c',this)">Music</button>
+        <button class="itab" onclick="itab('content','masemula-c',this)">Masemula</button>
+        <button class="itab" onclick="itab('content','ds-c',this)">Dropshipping</button>
+        <button class="itab" onclick="itab('content','youtube-c',this)">YouTube</button>
+        <button class="itab" onclick="itab('content','events-c',this)">Events</button>
+      </div>
+      <div class="itab-panel active" id="content-music-c">
+        <div class="grid-2 mb-10">
+          <div class="card">
+            <div class="card-title">Spotify</div>
+            <div class="stat mb-10"><input class="stat-input" id="spotify-listeners" placeholder="—" onchange="saveStats()"><div class="stat-l">Monthly Listeners</div></div>
+            <div class="stat"><input class="stat-input" id="spotify-streams" placeholder="—" onchange="saveStats()"><div class="stat-l">Total Streams</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">TikTok Music</div>
+            <div class="stat mb-10"><input class="stat-input" id="tiktok-music-followers" placeholder="—" onchange="saveStats()"><div class="stat-l">Followers</div></div>
+            <div class="stat"><input class="stat-input" id="tiktok-music-views" placeholder="—" onchange="saveStats()"><div class="stat-l">Total Views</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Instagram Music</div>
+            <div class="stat mb-10"><input class="stat-input" id="ig-music-followers" placeholder="—" onchange="saveStats()"><div class="stat-l">Followers</div></div>
+            <div class="stat"><input class="stat-input" id="ig-music-reach" placeholder="—" onchange="saveStats()"><div class="stat-l">Weekly Reach</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">YouTube Music</div>
+            <div class="stat mb-10"><input class="stat-input" id="yt-music-subs" placeholder="—" onchange="saveStats()"><div class="stat-l">Subscribers</div></div>
+            <div class="stat"><input class="stat-input" id="yt-music-views" placeholder="—" onchange="saveStats()"><div class="stat-l">Total Views</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Weekly Posting Checklist</div>
+          <div id="checklist-music"></div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:10px;text-align:right" id="stats-updated">Last updated: —</div>
+      </div>
+      <div class="itab-panel" id="content-masemula-c">
+        <div class="grid-2 mb-10">
+          <div class="card">
+            <div class="card-title">Instagram Masemula</div>
+            <div class="stat mb-10"><input class="stat-input" id="ig-mas-followers" placeholder="—" onchange="saveStats()"><div class="stat-l">Followers</div></div>
+            <div class="stat"><input class="stat-input" id="ig-mas-engagement" placeholder="—" onchange="saveStats()"><div class="stat-l">Engagement Rate</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">TikTok Masemula</div>
+            <div class="stat mb-10"><input class="stat-input" id="tt-mas-followers" placeholder="—" onchange="saveStats()"><div class="stat-l">Followers</div></div>
+            <div class="stat"><input class="stat-input" id="tt-mas-views" placeholder="—" onchange="saveStats()"><div class="stat-l">Total Views</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Weekly Posting Checklist</div>
+          <div id="checklist-masemula"></div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted);font-style:italic">Content direction: editorial, lookbook-style, lifestyle. Never promotional. Always aspirational.</div>
+      </div>
+      <div class="itab-panel" id="content-ds-c">
+        <div class="card mb-10">
+          <div class="card-title">TikTok DS Store</div>
+          <div class="grid-2">
+            <div class="stat"><input class="stat-input" id="tt-ds-followers" placeholder="—" onchange="saveStats()"><div class="stat-l">Followers</div></div>
+            <div class="stat"><input class="stat-input" id="tt-ds-views" placeholder="—" onchange="saveStats()"><div class="stat-l">Total Views</div></div>
+          </div>
+        </div>
+        <div class="card mb-10">
+          <div class="card-title">TikTok Video Formula</div>
+          <div class="item-row"><span style="color:var(--green);margin-right:8px">1</span><span style="flex:1;font-size:12px">Messy desk shot (3–5 sec hook)</span></div>
+          <div class="item-row"><span style="color:var(--green);margin-right:8px">2</span><span style="flex:1;font-size:12px">Bundle reveal (2–3 sec)</span></div>
+          <div class="item-row"><span style="color:var(--green);margin-right:8px">3</span><span style="flex:1;font-size:12px">Install mat + cable kit (8–10 sec)</span></div>
+          <div class="item-row"><span style="color:var(--green);margin-right:8px">4</span><span style="flex:1;font-size:12px">Clean desk result + text overlay</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Weekly Posting Checklist</div>
+          <div id="checklist-ds"></div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted);font-style:italic">No paid ads until one video hits 5,000+ organic views.</div>
+      </div>
+      <div class="itab-panel" id="content-youtube-c">
+        <div class="card mb-10">
+          <div class="card-title">YouTube Channels Planned</div>
+          <div class="item-row"><span class="badge b-music">Music</span><span style="flex:1;font-size:12px">Official music videos, visualizers, behind the scenes</span></div>
+          <div class="item-row"><span class="badge b-brand">Masemula</span><span style="flex:1;font-size:12px">Brand films, lookbooks, creative direction</span></div>
+          <div class="item-row"><span class="badge b-biz">Business/DS</span><span style="flex:1;font-size:12px">Dropshipping journey, tutorials, income reports</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Weekly Posting Checklist</div>
+          <div id="checklist-youtube"></div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted);font-style:italic">YouTube channels to be launched after TikTok reaches 10K followers.</div>
+      </div>
+      <div class="itab-panel" id="content-events-c">
+        <div class="card mb-10">
+          <div class="card-title">Instagram Events & Hosting (Kea-led)</div>
+          <div class="grid-2">
+            <div class="stat"><input class="stat-input" id="ig-events-followers" placeholder="—" onchange="saveStats()"><div class="stat-l">Followers</div></div>
+            <div class="stat"><input class="stat-input" id="ig-events-reach" placeholder="—" onchange="saveStats()"><div class="stat-l">Reach</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Weekly Posting Checklist</div>
+          <div id="checklist-events"></div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted);font-style:italic">Kea leads all content direction for this channel. Support only — never override.</div>
+      </div>
+    </div>
+
+    <!-- ═══ MOODBOARD ═══ -->
+    <div class="section" id="s-moodboard">
+      <div class="sec-head">
+        <div><div class="sec-title">Vision Board</div><div class="sec-sub">The life I am building — not wishing for</div></div>
+        <button class="btn btn-gold" onclick="sendPrompt('Help me build a vivid vision of the life I am designing — the Masemula estate, the businesses, the home, the relationships, the legacy. Ask me questions and then paint the picture in detail.')">Define my vision ↗</button>
+      </div>
+      <div class="mb-grid mb-10">
+        <div class="mb-tile" style="grid-column:span 2;grid-row:span 1">
+          <div class="mb-visual" style="height:140px;background:linear-gradient(135deg,#2C1A0E 0%,#5C3317 50%,#C9A84C 100%);font-size:16px;flex-direction:column;gap:8px">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:#F5F0E8;font-weight:300;letter-spacing:0.1em">THE ESTATE</div>
+            <div style="font-size:10px;color:#C49A6C;letter-spacing:0.12em;text-transform:uppercase">Financial independence · Creative legacy</div>
+          </div>
+          <div class="mb-overlay">Edit vision</div>
+        </div>
+        <div class="mb-tile">
+          <div class="mb-visual" style="background:#EAF3DE;flex-direction:column">
+            <div style="font-size:28px">🏛</div>
+            <div style="font-size:10px;color:#3B6D11;letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">Masemula HQ</div>
+          </div>
+          <div class="mb-overlay">Add image</div>
+        </div>
+        <div class="mb-tile">
+          <div class="mb-visual" style="background:#EEEDFE;flex-direction:column">
+            <div style="font-size:28px">🎵</div>
+            <div style="font-size:10px;color:#3C3489;letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">Music legacy</div>
+          </div>
+          <div class="mb-overlay">Add image</div>
+        </div>
+        <div class="mb-tile">
+          <div class="mb-visual" style="background:#FAEEDA;flex-direction:column">
+            <div style="font-size:28px">🚗</div>
+            <div style="font-size:10px;color:#854F0B;letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">The garage</div>
+          </div>
+          <div class="mb-overlay">Add image</div>
+        </div>
+        <div class="mb-tile">
+          <div class="mb-visual" style="background:#E1F5EE;flex-direction:column">
+            <div style="font-size:28px">💍</div>
+            <div style="font-size:10px;color:#0F6E56;letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">Kea &amp; family</div>
+          </div>
+          <div class="mb-overlay">Add image</div>
+        </div>
+        <div class="mb-tile">
+          <div class="mb-visual" style="background:#FAECE7;flex-direction:column">
+            <div style="font-size:28px">🌍</div>
+            <div style="font-size:10px;color:#993C1D;letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">SA legacy</div>
+          </div>
+          <div class="mb-overlay">Add image</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Non-negotiable life standards</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <span class="badge b-health" style="padding:5px 12px">4am gym · daily</span>
+          <span class="badge b-brand" style="padding:5px 12px">Masemula is luxury · always</span>
+          <span class="badge b-fin" style="padding:5px 12px">School protected</span>
+          <span class="badge b-music" style="padding:5px 12px">Kea is priority</span>
+          <span class="badge b-acad" style="padding:5px 12px">Long-term always wins</span>
+          <span class="badge b-biz" style="padding:5px 12px">Quality over quantity</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ DESIGNS ═══ -->
+    <div class="section" id="s-designs">
+      <div class="sec-head">
+        <div><div class="sec-title">Designs &amp; Graphics</div><div class="sec-sub">Brand assets · Creative direction · Visual production tracking</div></div>
+        <button class="btn btn-gold" onclick="sendPrompt('I need help with design work for the Masemula Estate. Which business do you want to work on — Masemula brand, Music artwork, Dropshipping store, or Events?')">Design session ↗</button>
+      </div>
+      <div class="inner-tabs">
+        <button class="itab active" onclick="itab('des','masemula',this)">Masemula</button>
+        <button class="itab" onclick="itab('des','music',this)">Music</button>
+        <button class="itab" onclick="itab('des','ds',this)">Dropshipping</button>
+        <button class="itab" onclick="itab('des','events',this)">Events</button>
+      </div>
+      <div class="itab-panel active" id="des-masemula">
+        <div class="design-grid">
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Wordmark</span><span class="badge b-watch">In progress</span></div><div class="design-canvas" style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--deep);letter-spacing:0.2em;font-weight:300">MASEMULA</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Colour System</span><span class="badge b-track">Defined</span></div><div class="design-canvas" style="display:flex;gap:0;padding:0"><div style="flex:1;background:#2C1A0E"></div><div style="flex:1;background:#5C3317"></div><div style="flex:1;background:#C9A84C"></div><div style="flex:1;background:#F5F0E8"></div></div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Lookbook — Collection 1</span><span class="badge b-biz">Planned</span></div><div class="design-canvas">Lookbook direction in development</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Hangtag Design</span><span class="badge b-biz">Planned</span></div><div class="design-canvas">Hangtag concept TBD</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Brand Typography</span><span class="badge b-watch">In progress</span></div><div class="design-canvas" style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--ink);font-style:italic">Serif-led · Classical</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Social Media Templates</span><span class="badge b-biz">Planned</span></div><div class="design-canvas">Instagram grid concept TBD</div></div>
+        </div>
+      </div>
+      <div class="itab-panel" id="des-music">
+        <div class="design-grid">
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Cover Art — Project 1</span><span class="badge b-track">Released</span></div><div class="design-canvas">Uploaded to all DSPs</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Cover Art — Project 2</span><span class="badge b-track">Released</span></div><div class="design-canvas">Uploaded to all DSPs</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Next Release Artwork</span><span class="badge b-watch">In progress</span></div><div class="design-canvas">Art direction in development</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Artist Press Kit</span><span class="badge b-biz">Planned</span></div><div class="design-canvas">EPK + DSP banners TBD</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">YouTube Channel Art</span><span class="badge b-biz">Planned</span></div><div class="design-canvas">Banner + thumbnail templates</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Sync Submission Kit</span><span class="badge b-watch">In progress</span></div><div class="design-canvas">Stems + WAV files + metadata</div></div>
+        </div>
+      </div>
+      <div class="itab-panel" id="des-ds">
+        <div class="design-grid">
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Store Logo</span><span class="badge b-watch">In progress</span></div><div class="design-canvas" style="font-family:'Jost',sans-serif;font-size:14px;color:var(--ink)">Clean Desk Co.</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Product Photography</span><span class="badge b-biz">Awaiting samples</span></div><div class="design-canvas">Samples ordered first</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">TikTok Ad Creatives</span><span class="badge b-biz">Planned</span></div><div class="design-canvas">Post organic first · No paid until 5k views</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Meta Ad Templates</span><span class="badge b-biz">Planned</span></div><div class="design-canvas">Meta ads month 1–2</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Shopify Store Design</span><span class="badge b-watch">In progress</span></div><div class="design-canvas">Shopify Basic · Theme selection</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Email Templates (Klaviyo)</span><span class="badge b-biz">Planned</span></div><div class="design-canvas">Abandoned cart + welcome flows</div></div>
+        </div>
+      </div>
+      <div class="itab-panel" id="des-events">
+        <div class="design-grid">
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Event Brand Identity</span><span class="badge b-biz">Planned</span></div><div class="design-canvas">Kea leads creative direction</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Flyer Templates</span><span class="badge b-biz">Planned</span></div><div class="design-canvas">Direction TBD</div></div>
+          <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Instagram Stories</span><span class="badge b-biz">Planned</span></div><div class="design-canvas">Story template TBD</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ AGENTS ═══ -->
+    <div class="section" id="s-agents">
+      <div class="sec-head">
+        <div><div class="sec-title">Estate Agents</div><div class="sec-sub">Delegate tasks · Monitor progress · AI-powered managers</div></div>
+        <button class="btn btn-gold" onclick="addAgentTask()">+ New Task</button>
+      </div>
+      <div class="inner-tabs">
+        <button class="itab active" onclick="itab('agents','overview',this)">Overview</button>
+        <button class="itab" onclick="itab('agents','tasks',this)">Active Tasks</button>
+        <button class="itab" onclick="itab('agents','history',this)">History</button>
+      </div>
+      <div class="itab-panel active" id="agents-overview">
+        <div class="grid-3" style="gap:10px">
+          <div class="card agent-card" data-agent="jarvis">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div class="agent-avatar" style="background:var(--gold)">J</div>
+              <div><div style="font-size:14px;font-weight:400">Jarvis</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Chief of Staff</div></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px">Oversees all operations, morning briefings, schedule management, and cross-venture coordination.</div>
+            <div style="font-size:10px;color:var(--green)">● Online</div>
+          </div>
+          <div class="card agent-card" data-agent="finance">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div class="agent-avatar" style="background:#5DCAA5">F</div>
+              <div><div style="font-size:14px;font-weight:400">Finance Manager</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">CFO</div></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px">Tracks income, expenses, budgets. Manages RS3 savings, SARS compliance, and venture P&L.</div>
+            <div style="font-size:10px;color:var(--green)">● Online</div>
+          </div>
+          <div class="card agent-card" data-agent="content">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div class="agent-avatar" style="background:#AFA9EC">C</div>
+              <div><div style="font-size:14px;font-weight:400">Content Manager</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">CMO</div></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px">Plans content calendar, tracks social metrics, manages posting schedules across all ventures.</div>
+            <div style="font-size:10px;color:var(--green)">● Online</div>
+          </div>
+          <div class="card agent-card" data-agent="ds">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div class="agent-avatar" style="background:#EF9F27">D</div>
+              <div><div style="font-size:14px;font-weight:400">DS Operations</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Dropshipping</div></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px">Manages store setup, product sourcing, ad campaigns, and ROAS tracking for dropshipping.</div>
+            <div style="font-size:10px;color:var(--gold)">● Setup mode</div>
+          </div>
+          <div class="card agent-card" data-agent="music">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div class="agent-avatar" style="background:#97C459">M</div>
+              <div><div style="font-size:14px;font-weight:400">Music Manager</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">A&R + Distribution</div></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px">Handles release scheduling, DSP distribution, SAMRO/SAMPRA, sync licensing, and royalties.</div>
+            <div style="font-size:10px;color:var(--green)">● Online</div>
+          </div>
+          <div class="card agent-card" data-agent="brand">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div class="agent-avatar" style="background:var(--warm)">B</div>
+              <div><div style="font-size:14px;font-weight:400">Brand Manager</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Masemula Brand</div></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px">Oversees brand identity, collection development, visual direction, and brand partnerships.</div>
+            <div style="font-size:10px;color:var(--muted)">○ Standby</div>
+          </div>
+        </div>
+      </div>
+      <div class="itab-panel" id="agents-tasks">
+        <div class="card mb-10">
+          <div class="card-title">Delegate New Task</div>
+          <div class="grid-2" style="gap:10px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:5px">Assign to</div>
+              <select class="ledger-input" id="task-agent">
+                <option value="jarvis">Jarvis (Chief of Staff)</option>
+                <option value="finance">Finance Manager</option>
+                <option value="content">Content Manager</option>
+                <option value="ds">DS Operations</option>
+                <option value="music">Music Manager</option>
+                <option value="brand">Brand Manager</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:5px">Priority</div>
+              <select class="ledger-input" id="task-priority">
+                <option value="high">High</option>
+                <option value="medium" selected>Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:5px">Task description</div>
+            <textarea class="ledger-input" id="task-desc" style="height:60px;resize:none" placeholder="What do you need done?"></textarea>
+          </div>
+          <button class="btn btn-gold" style="width:100%;margin-top:10px" onclick="createAgentTask()">Delegate Task</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Active Tasks</div>
+          <div id="agent-tasks-list"></div>
+        </div>
+      </div>
+      <div class="itab-panel" id="agents-history">
+        <div class="card">
+          <div class="card-title">Completed Tasks</div>
+          <div id="agent-history-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ JARVIS LIVE ═══ -->
+    <div class="section" id="s-jarvis">
+      <canvas id="jarvis-canvas"></canvas>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end main -->
+</div><!-- end os -->
+
+<script>
+// ─── THEME TOGGLE ───
+function toggleTheme(){
+  const os=document.getElementById('os');
+  const isDark=os.classList.toggle('dark');
+  localStorage.setItem('theme',isDark?'dark':'light');
+  document.getElementById('icon-sun').style.display=isDark?'none':'block';
+  document.getElementById('icon-moon').style.display=isDark?'block':'none';
+}
+// Load saved theme
+(function(){
+  const saved=localStorage.getItem('theme');
+  if(saved==='dark'){
+    document.getElementById('os').classList.add('dark');
+    document.getElementById('icon-sun').style.display='none';
+    document.getElementById('icon-moon').style.display='block';
+  }
+})();
+
+// ─── LIVE TIME ───
+function tick(){
+  const d=new Date();
+  const el=document.getElementById('live-time');
+  if(el)el.textContent=d.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});
+}
+tick();setInterval(tick,10000);
+
+// ─── NAV ───
+const titles={dashboard:'Estate Overview',ventures:'Ventures',music:'Music',brand:'Masemula Brand',goals:'Goals & Milestones',time:'Time & Routine',routine:'Daily Routine',finance:'Finance',headspace:'Headspace',academics:'Academics',journal:'Journal',content:'Content',moodboard:'Vision Board',designs:'Designs & Graphics',agents:'Estate Agents',jarvis:'Jarvis Live'};
+function nav(id,el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-icon').forEach(n=>n.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('tb-title').textContent=titles[id]||id;
+  if(id==='jarvis')startJarvis();
+}
+
+// ─── INNER TABS ───
+function itab(group,id,el){
+  const section=document.getElementById('s-'+group)||document.getElementById('s-headspace');
+  section.querySelectorAll('.itab').forEach(t=>t.classList.remove('active'));
+  section.querySelectorAll('.itab-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  const p=document.getElementById(group+'-'+id);
+  if(p)p.classList.add('active');
+}
+
+// ─── VENTURE DETAILS ───
+const VENTURE_DATA={
+  ds:{
+    name:'Dropshipping — Clean Desk Co.',
+    phase:'Operational',
+    status:'active',
+    description:'E-commerce store selling desk organization bundles via TikTok organic marketing.',
+    phases:[
+      {name:'Niche Research',done:true},{name:'Product Selection',done:true},{name:'Store Setup',done:true},
+      {name:'Content Strategy',done:true},{name:'First Sales',done:true},{name:'Scale Testing',current:true},
+      {name:'Ad Launch',done:false},{name:'$4K Target',done:false}
+    ],
+    metrics:[
+      {label:'Revenue',value:'R 2,000',trend:'+'},
+      {label:'Budget',value:'R 6,000',trend:''},
+      {label:'Profit Margin',value:'73%',trend:''},
+      {label:'Orders',value:'12',trend:'+'},
+      {label:'Conversion Rate',value:'2.1%',trend:'+'},
+      {label:'ROAS',value:'2.4x',trend:'+'}
+    ],
+    tasks:['Launch 3 TikTok videos daily','Test new hook styles','Respond to all comments','Setup retargeting pixel']
+  },
+  music:{
+    name:'Music — Amapiano Production',
+    phase:'Growth',
+    status:'active',
+    description:'Independent Amapiano producer building catalog and audience. 2 projects released.',
+    phases:[
+      {name:'First Release',done:true},{name:'Distribution Setup',done:true},{name:'Profile Claims',current:true},
+      {name:'SAMRO/SAMPRA',done:false},{name:'10K Streams',done:false},{name:'First Sync',done:false}
+    ],
+    metrics:[
+      {label:'Releases',value:'2',trend:''},
+      {label:'Total Streams',value:'—',trend:''},
+      {label:'Monthly Listeners',value:'—',trend:''},
+      {label:'Revenue',value:'R 0',trend:''},
+      {label:'Sync Deals',value:'0',trend:''}
+    ],
+    tasks:['Register SAMRO','Claim Spotify/Apple profiles','Schedule next release','Build press kit']
+  },
+  brand:{
+    name:'Masemula — Luxury Menswear',
+    phase:'Concept',
+    status:'plan',
+    description:'Heritage-inspired SA luxury brand. Ralph Lauren/ALD positioning. First collection "The Internal".',
+    phases:[
+      {name:'Brand Identity',done:true},{name:'Concept Development',done:true},{name:'Collection Design',current:true},
+      {name:'Sampling',done:false},{name:'Photography',done:false},{name:'Launch',done:false}
+    ],
+    metrics:[
+      {label:'Products Designed',value:'0',trend:''},
+      {label:'Collection Size',value:'6–10 pieces',trend:''},
+      {label:'Target Launch',value:'Q4 2026',trend:''},
+      {label:'Investment',value:'TBD',trend:''}
+    ],
+    tasks:['Finalize collection pieces','Source fabric suppliers','Create moodboard','Design lookbook concept']
+  },
+  events:{
+    name:'Events & Hosting',
+    phase:'Planning',
+    status:'plan',
+    description:'Event planning and hosting business. Kea-led with Ntobeko as business manager/support.',
+    phases:[
+      {name:'Concept',done:true},{name:'Business Structure',current:true},{name:'First Event',done:false},
+      {name:'Revenue',done:false}
+    ],
+    metrics:[
+      {label:'Events',value:'0',trend:''},
+      {label:'Revenue',value:'—',trend:''},
+      {label:'Launch',value:'TBC',trend:''}
+    ],
+    tasks:['Support Kea with planning','Business registration research','Create social presence']
+  }
+};
+function showVentureDetails(id){
+  const v=VENTURE_DATA[id];
+  if(!v)return;
+  const panel=document.getElementById('venture-detail');
+  const title=document.getElementById('venture-detail-title');
+  const content=document.getElementById('venture-detail-content');
+  title.textContent=v.name;
+  const statusColor=v.status==='active'?'#639922':'#EF9F27';
+  let html=`
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+      <span style="width:8px;height:8px;border-radius:50%;background:${statusColor}"></span>
+      <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">${v.phase}</span>
+    </div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:16px">${v.description}</div>
+    <div class="grid-2" style="gap:16px">
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Build Progress</div>
+        ${v.phases.map(p=>`<div class="phase-step"><div class="phase-dot ${p.done?'done':p.current?'current':''}"></div><span style="font-size:12px;${p.done?'color:var(--muted)':''}">${p.name}</span></div>`).join('')}
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Metrics</div>
+        <div class="grid-2" style="gap:8px">
+          ${v.metrics.map(m=>`<div class="stat" style="padding:8px"><div class="stat-n" style="font-size:16px">${m.value}</div><div class="stat-l">${m.label}</div></div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Priority Tasks</div>
+      ${v.tasks.map(t=>`<div class="item-row"><div class="check" onclick="this.classList.toggle('done');this.textContent=this.classList.contains('done')?'✓':''"></div><span style="flex:1;font-size:12px">${t}</span></div>`).join('')}
+    </div>`;
+  content.innerHTML=html;
+  panel.style.display='block';
+  panel.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ─── TODAY PRIORITIES ───
+const todos=[
+  {t:'Morning SAMRO registration',d:false,cat:'Music'},
+  {t:'Dropshipping — store ops setup',d:false,cat:'Business'},
+  {t:'GEOG111 readings',d:true,cat:'School'},
+  {t:'Evening gym (4am done ✓)',d:true,cat:'Health'},
+];
+const tl=document.getElementById('today-list');
+if(tl)tl.innerHTML=todos.map((g,i)=>`<div class="item-row"><div class="check ${g.d?'done':''}" onclick="this.classList.toggle('done')">${g.d?'✓':''}</div><div style="flex:1;font-size:12px;font-weight:300;${g.d?'text-decoration:line-through;color:var(--muted)':''}">${g.t}</div><span style="font-size:9px;color:var(--accent)">${g.cat}</span></div>`).join('');
+
+// ─── GOALS ───
+const goals=[
+  {n:'Finish degree with distinction',p:'Academic',pct:38,badge:'b-acad',ms:['Sem 1 pass','Assignment 3','Exams','Graduate']},
+  {n:'Dropshipping to $4,000 profit',p:'Business',pct:8,badge:'b-biz',ms:['First sale','Break even','$1k profit','$4k target']},
+  {n:'SAMRO registered + royalties claimed',p:'Music',pct:5,badge:'b-music',ms:['Register SAMRO','Register SAMPRA','Claim royalties']},
+  {n:'Masemula — Collection 1 ready',p:'Brand',pct:20,badge:'b-brand',ms:['Identity doc','Suppliers','Samples','Launch']},
+  {n:'Gym 4am — 90 day streak',p:'Health',pct:60,badge:'b-health',ms:['30 days','60 days','90 days']},
+];
+const gl=document.getElementById('goal-list');
+if(gl)gl.innerHTML=goals.map(g=>`
+<div class="card mb-10">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div style="font-size:14px;font-family:'Cormorant Garamond',serif;font-weight:400">${g.n}</div>
+    <span class="badge ${g.badge}">${g.p}</span>
+  </div>
+  <div class="prog-row" style="border:none;padding:0;margin-bottom:8px">
+    <div class="prog-bar" style="flex:1;width:auto"><div class="prog-fill" style="width:${g.pct}%"></div></div>
+    <div class="prog-pct">${g.pct}%</div>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">${g.ms.map((m,i)=>`<div onclick="this.classList.toggle('done-ms')" style="font-size:10px;padding:3px 8px;border:0.5px solid var(--border);border-radius:10px;color:var(--muted);cursor:pointer;transition:all 0.2s" class="${i<Math.floor(g.pct/100*g.ms.length)?'done-ms':''}">${m}</div>`).join('')}</div>
+</div>`).join('');
+
+// ─── EMOTION WHEEL ───
+const emoData=[
+  {label:'Happy',color:'#F5F0C0',sub:['Joyful','Content','Playful','Excited','Proud','Accepted','Confident','Respected','Valued','Loving']},
+  {label:'Surprised',color:'#D4C5E8',sub:['Amazed','Confused','Startled','Eager','Energetic','Astonished','Perplexed','Shocked']},
+  {label:'Bad',color:'#B8E0D4',sub:['Bored','Busy','Stressed','Tired','Overwhelmed','Rushed','Apathetic','Indifferent']},
+  {label:'Fearful',color:'#C5D8F0',sub:['Scared','Anxious','Insecure','Weak','Rejected','Threatened','Worried','Inadequate']},
+  {label:'Angry',color:'#F0C5C5',sub:['Frustrated','Distant','Critical','Bitter','Mad','Furious','Jealous','Annoyed']},
+  {label:'Disgusted',color:'#D0D0D0',sub:['Disappointed','Awful','Disapproving','Repelled','Judgmental','Embarrassed']},
+  {label:'Sad',color:'#C5DCF0',sub:['Lonely','Vulnerable','Despair','Guilty','Depressed','Hurt','Grief','Powerless']},
+];
+let selectedEmo='';
+const ecanvas=document.getElementById('emo-canvas');
+if(ecanvas){
+  const ctx=ecanvas.getContext('2d');
+  const cx=220,cy=220,R=210,r=85;
+  const N=emoData.length;
+  function drawWheel(){
+    ctx.clearRect(0,0,440,440);
+    emoData.forEach((e,i)=>{
+      const a0=(i/N)*Math.PI*2-Math.PI/2;
+      const a1=((i+1)/N)*Math.PI*2-Math.PI/2;
+      // outer ring (sub-emotions)
+      const sub=e.sub;
+      sub.forEach((s,j)=>{
+        const sa0=a0+(j/sub.length)*(a1-a0);
+        const sa1=a0+((j+1)/sub.length)*(a1-a0);
+        ctx.beginPath();ctx.moveTo(cx,cy);
+        ctx.arc(cx,cy,R,sa0,sa1);ctx.closePath();
+        ctx.fillStyle=e.color+'99';ctx.fill();
+        ctx.strokeStyle='#fff';ctx.lineWidth=0.5;ctx.stroke();
+        // sub label
+        const am=(sa0+sa1)/2,rd=(r+R)*0.72;
+        ctx.save();ctx.translate(cx+Math.cos(am)*rd,cy+Math.sin(am)*rd);
+        ctx.rotate(am+Math.PI/2);ctx.textAlign='center';
+        ctx.fillStyle='#3C3322';ctx.font='10px Jost';ctx.fillText(s,0,0);ctx.restore();
+      });
+      // inner segment
+      ctx.beginPath();ctx.moveTo(cx,cy);
+      ctx.arc(cx,cy,r+44,a0,a1);ctx.closePath();
+      ctx.fillStyle=e.color;ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.stroke();
+      // inner label
+      const am=(a0+a1)/2;
+      ctx.save();ctx.translate(cx+Math.cos(am)*(r+22),cy+Math.sin(am)*(r+22));
+      ctx.rotate(am+Math.PI/2);ctx.textAlign='center';
+      ctx.fillStyle='#2C1A0E';ctx.font='bold 12px Jost';ctx.fillText(e.label,0,0);ctx.restore();
+    });
+    // center
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.fillStyle='#F7F4EF';ctx.fill();
+    ctx.strokeStyle=var_color('--border')||'#D8D2C8';ctx.lineWidth=0.5;ctx.stroke();
+    ctx.textAlign='center';ctx.fillStyle='#2C1A0E';
+    ctx.font='13px Cormorant Garamond';ctx.fillText('How am I',cx,cy-8);
+    ctx.font='13px Cormorant Garamond';ctx.fillText('feeling?',cx,cy+10);
+  }
+  function var_color(v){try{return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}catch(e){return '#D8D2C8'}}
+  drawWheel();
+  ecanvas.addEventListener('click',function(ev){
+    const rect=ecanvas.getBoundingClientRect();
+    const scaleX=440/rect.width,scaleY=440/rect.height;
+    const mx=(ev.clientX-rect.left)*scaleX,my=(ev.clientY-rect.top)*scaleY;
+    const dx=mx-cx,dy=my-cy;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<r)return;
+    let angle=Math.atan2(dy,dx)+Math.PI/2;
+    if(angle<0)angle+=Math.PI*2;
+    const idx=Math.floor((angle/(Math.PI*2))*N);
+    const e=emoData[idx%N];
+    if(dist>r && dist<r+44){
+      selectedEmo=e.label;
+    } else if(dist>=r+44 && dist<=R){
+      const a0=(idx/N)*Math.PI*2-Math.PI/2;
+      const a1=((idx+1)/N)*Math.PI*2-Math.PI/2;
+      const sub=e.sub;
+      let subAngle=Math.atan2(dy,dx);
+      if(subAngle<a0)subAngle+=Math.PI*2;
+      const sj=Math.floor(((subAngle-a0)/(a1-a0))*sub.length);
+      selectedEmo=sub[Math.min(sj,sub.length-1)]||e.label;
+    }
+    document.getElementById('emo-selected').textContent=selectedEmo||'—';
+  });
+  document.getElementById('emo-intensity').addEventListener('input',function(){document.getElementById('int-val').textContent=this.value});
+}
+
+// ─── LOG EMOTION ───
+const emoColors={'Happy':'#97C459','Surprised':'#AFA9EC','Bad':'#5DCAA5','Fearful':'#85B7EB','Angry':'#E24B4A','Disgusted':'#888780','Sad':'#378ADD'};
+let ecolorMap={};
+emoData.forEach(e=>{ecolorMap[e.label]=e.color;e.sub.forEach(s=>ecolorMap[s]=e.color)});
+function logEmotion(){
+  const sel=document.getElementById('emo-selected').textContent;
+  if(sel==='—')return;
+  const inten=document.getElementById('emo-intensity').value;
+  const note=document.getElementById('emo-note').value;
+  const hist=document.getElementById('emo-history');
+  const color=ecolorMap[sel]||'#C9A84C';
+  const row=document.createElement('div');row.className='emo-entry';
+  row.innerHTML=`<div class="emo-dot" style="background:${color}"></div><span style="color:var(--muted);min-width:55px">Now</span><span style="flex:1">${sel} · ${inten}/10</span><span style="color:var(--muted);font-size:10px">${note||'—'}</span>`;
+  hist.insertBefore(row,hist.firstChild);
+  document.getElementById('emo-note').value='';
+}
+
+// ─── JOURNAL EXPAND ───
+function toggleJQ(el){
+  const existing=el.nextElementSibling;
+  if(existing && existing.tagName==='TEXTAREA'){existing.remove();return}
+  const ta=document.createElement('textarea');ta.className='jentry';
+  ta.placeholder='Write freely — there is no wrong answer...';
+  el.parentNode.insertBefore(ta,el.nextSibling);ta.focus();
+}
+
+// milestone done styling
+document.addEventListener('click',function(e){
+  if(e.target.classList.contains('done-ms')||e.target.parentNode&&e.target.parentNode.classList&&e.target.parentNode.classList.contains('done-ms')){
+    e.target.style.background=e.target.style.background?'':'var(--ink)';
+    e.target.style.color=e.target.style.color?'':'#fff';
+    e.target.style.borderColor=e.target.style.borderColor?'':'var(--ink)';
+  }
+});
+
+// ─── JARVIS ANIMATION ───
+let jarvisRunning=false,jraf;
+function startJarvis(){
+  if(jarvisRunning)return;jarvisRunning=true;
+  const canvas=document.getElementById('jarvis-canvas');
+  if(!canvas)return;
+  canvas.width=canvas.offsetWidth||600;canvas.height=520;
+  const W=canvas.width,H=canvas.height;
+  const ctx=canvas.getContext('2d');
+  // workers, buildings, particles
+  const buildings=[
+    {x:60,y:H-120,w:80,h:110,label:'HQ',col:'#3D2810'},
+    {x:170,y:H-80,w:50,h:70,label:'Music',col:'#2A1E40'},
+    {x:240,y:H-100,w:70,h:90,label:'DS Store',col:'#1A3020'},
+    {x:330,y:H-140,w:60,h:130,label:'Masemula',col:'#3D2810'},
+    {x:410,y:H-90,w:55,h:80,label:'Events',col:'#2A1E40'},
+    {x:480,y:H-70,w:60,h:60,label:'Legal',col:'#1A2A3A'},
+  ];
+  const workers=[];
+  for(let i=0;i<14;i++){
+    workers.push({
+      x:Math.random()*W*0.8+30,y:H-30,
+      tx:Math.random()*W*0.8+30,
+      speed:0.3+Math.random()*0.7,
+      phase:Math.random()*Math.PI*2,
+      role:['DS','Music','Brand','Legal','Finance','Build'][i%6],
+      col:['#C9A84C','#AFA9EC','#C49A6C','#85B7EB','#5DCAA5','#97C459'][i%6]
+    });
+  }
+  const particles=[];
+  for(let i=0;i<40;i++){
+    particles.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+0.3,speed:0.2+Math.random()*0.5,col:['#C9A84C','#5C3317','#C49A6C','#2C1A0E'][i%4],angle:Math.random()*Math.PI*2});
+  }
+  // data streams
+  const streams=[];
+  for(let i=0;i<8;i++){
+    streams.push({x:Math.random()*W,y:Math.random()*H*0.6,dy:0.5+Math.random(),chars:'01MASEMULAREMUSE▲◆■',alpha:Math.random()});
+  }
+  let t=0;
+  function draw(){
+    t+=0.016;
+    ctx.fillStyle='rgba(10,8,6,0.18)';ctx.fillRect(0,0,W,H);
+    // grid
+    ctx.strokeStyle='rgba(92,51,23,0.08)';ctx.lineWidth=0.5;
+    for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+    for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+    // ground
+    ctx.fillStyle='#1A1008';ctx.fillRect(0,H-20,W,20);
+    ctx.fillStyle='#C9A84C22';ctx.fillRect(0,H-22,W,2);
+    // buildings
+    buildings.forEach((b,i)=>{
+      const glow=0.4+0.3*Math.sin(t*1.2+i);
+      ctx.fillStyle=b.col;ctx.fillRect(b.x,b.y,b.w,b.h);
+      // windows
+      for(let wy=b.y+8;wy<b.y+b.h-10;wy+=14){
+        for(let wx=b.x+6;wx<b.x+b.w-6;wx+=12){
+          const lit=Math.random()>0.3;
+          ctx.fillStyle=lit?`rgba(201,168,76,${glow})`:'rgba(92,51,23,0.2)';
+          ctx.fillRect(wx,wy,7,9);
+        }
+      }
+      ctx.strokeStyle=`rgba(201,168,76,${glow*0.6})`;ctx.lineWidth=0.5;ctx.strokeRect(b.x,b.y,b.w,b.h);
+      // label
+      ctx.fillStyle=`rgba(201,168,76,${glow})`;ctx.font='6px Jost';ctx.textAlign='center';
+      ctx.fillText(b.label,b.x+b.w/2,b.y-4);
+      // crane on HQ
+      if(i===0){
+        ctx.strokeStyle=`rgba(201,168,76,${glow})`;ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(b.x+b.w/2,b.y);ctx.lineTo(b.x+b.w/2,b.y-30);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(b.x+b.w/2-10,b.y-30);ctx.lineTo(b.x+b.w/2+30,b.y-30);ctx.stroke();
+        const hookX=b.x+b.w/2+20+10*Math.sin(t*0.8);
+        ctx.beginPath();ctx.moveTo(hookX,b.y-30);ctx.lineTo(hookX,b.y-18);ctx.stroke();
+        ctx.fillStyle=`rgba(197,159,76,${glow})`;ctx.fillRect(hookX-5,b.y-20,10,6);
+      }
+    });
+    // data streams
+    streams.forEach(s=>{
+      s.y+=s.dy;if(s.y>H)s.y=0;
+      ctx.fillStyle=`rgba(201,168,76,${s.alpha*0.4})`;
+      ctx.font='8px monospace';ctx.textAlign='left';
+      ctx.fillText(s.chars[Math.floor(t*8+s.x)%s.chars.length],s.x,s.y);
+    });
+    // connection lines between buildings
+    buildings.forEach((b,i)=>{
+      if(i<buildings.length-1){
+        const b2=buildings[i+1];
+        const prog=(Math.sin(t*1.5+i)+1)/2;
+        const lx=b.x+b.w/2+(b2.x+b2.w/2-b.x-b.w/2)*prog;
+        const ly=b.y+(b2.y-b.y)*prog-20*Math.sin(Math.PI*prog);
+        ctx.strokeStyle=`rgba(201,168,76,0.15)`;ctx.lineWidth=0.5;
+        ctx.beginPath();ctx.moveTo(b.x+b.w/2,b.y);ctx.lineTo(b2.x+b2.w/2,b2.y);ctx.stroke();
+        ctx.beginPath();ctx.arc(lx,ly,2.5,0,Math.PI*2);
+        ctx.fillStyle=`rgba(201,168,76,0.8)`;ctx.fill();
+      }
+    });
+    // workers
+    workers.forEach(w=>{
+      const dx=w.tx-w.x,dy2=w.ty-w.y;
+      const d=Math.sqrt(dx*dx+dy2*dy2);
+      if(d<2){w.tx=Math.random()*W*0.85+20;w.ty=H-20-Math.random()*10}
+      else{w.x+=dx/d*w.speed;w.y+=dy2/d*w.speed}
+      const bob=Math.sin(t*4+w.phase)*1.5;
+      ctx.fillStyle=w.col;
+      ctx.fillRect(w.x-2,w.y-8+bob,5,8);
+      ctx.beginPath();ctx.arc(w.x+0.5,w.y-10+bob,3,0,Math.PI*2);ctx.fill();
+      ctx.font='5px Jost';ctx.fillStyle='rgba(201,168,76,0.5)';ctx.textAlign='center';
+      ctx.fillText(w.role,w.x+0.5,w.y-15+bob);
+    });
+    // particles
+    particles.forEach(p=>{
+      p.x+=Math.cos(p.angle)*p.speed;p.y+=Math.sin(p.angle)*p.speed;
+      if(p.x<0||p.x>W)p.angle=Math.PI-p.angle;
+      if(p.y<0||p.y>H)p.angle=-p.angle;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=p.col+'55';ctx.fill();
+    });
+    // HUD overlays
+    ctx.font='7px Jost';ctx.textAlign='left';
+    const huds=[
+      {x:10,y:16,text:`◆ MASEMULA OS v1.0 · ${new Date().toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'})}`},
+      {x:10,y:28,text:'◆ VENTURES: 4 active · 9 pipeline'},
+      {x:10,y:40,text:'◆ DS ROAS: monitoring · Music: 2 releases'},
+      {x:10,y:52,text:'◆ AGENTS: 10 · THRESHOLD: R5,000'},
+    ];
+    huds.forEach(h=>{ctx.fillStyle='rgba(201,168,76,0.6)';ctx.fillText(h.text,h.x,h.y)});
+    // top bar sweep
+    const sweep=(t*60)%W;
+    const g=ctx.createLinearGradient(sweep-60,0,sweep,0);
+    g.addColorStop(0,'rgba(201,168,76,0)');g.addColorStop(1,'rgba(201,168,76,0.15)');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,2);
+    jraf=requestAnimationFrame(draw);
+  }
+  draw();
+}
+// stop jarvis when leaving
+document.querySelectorAll('.nav-icon').forEach(n=>n.addEventListener('click',()=>{if(!n.getAttribute('onclick').includes('jarvis')&&jarvisRunning){jarvisRunning=false;if(jraf)cancelAnimationFrame(jraf)}}));
+
+// ─── STUDY NOTES GENERATOR ───
+function generateStudyNotes(){
+  const mod=document.getElementById('study-module').value;
+  const topic=document.getElementById('study-topic').value.trim();
+  const el=document.getElementById('study-output');
+  if(!topic){el.innerHTML='<div style="font-size:12px;color:var(--red);font-style:italic">Enter a topic or paste notes first.</div>';return;}
+  const prompt=`I am a first-year university student studying ${mod}. Topic: "${topic}". Create comprehensive study notes with: 1) Key concepts and definitions, 2) Main theories/frameworks, 3) Examples and applications, 4) 10 self-test questions with answers, 5) A one-paragraph summary. Format clearly with headings.`;
+  el.innerHTML=`<div style="background:var(--surface);border-radius:6px;padding:14px;margin-top:10px">
+    <div style="font-size:11px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px">Claude Prompt</div>
+    <div id="study-prompt-text" style="font-size:12px;font-weight:300;color:var(--ink);line-height:1.7;user-select:all">${prompt}</div>
+    <button class="btn" style="margin-top:10px" onclick="copyStudyPrompt()">Copy Prompt</button>
+  </div>`;
+}
+function copyStudyPrompt(){
+  const text=document.getElementById('study-prompt-text').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.querySelector('#study-output .btn');
+    if(btn){btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy Prompt',1500);}
+  });
+}
+
+// ─── MORNING BRIEFING GENERATOR ───
+function generateBriefing(){
+  const el=document.getElementById('briefing-output');
+  const dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const d=new Date();
+  const day=dayNames[d.getDay()];
+  const dateStr=d.toLocaleDateString('en-ZA',{day:'numeric',month:'long',year:'numeric'});
+  const briefing=`<div style="background:var(--surface);border-radius:6px;padding:14px">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:400;color:var(--ink);margin-bottom:10px">${day} Briefing — ${dateStr}</div>
+    <div style="font-size:12px;font-weight:300;color:var(--ink);line-height:1.8">
+      <strong>Schedule:</strong> Gym 4am ✓ · Classes as per timetable · Deep work blocks protected<br>
+      <strong>Priorities:</strong> Dropshipping store setup · SAMRO registration · Study block<br>
+      <strong>Flags:</strong> Register SAMRO (urgent) · DS store ops not built yet<br><br>
+      <em style="color:var(--muted)">Focus on making today count. One day closer to the RS3.</em>
+    </div>
+    <button class="btn btn-gold" style="margin-top:12px" onclick="sendPrompt('Build my morning briefing for today. I am Ntobeko Masemula. Today is ${day}, ${dateStr}. Include my schedule, priorities, flags, and any reminders.')">Full briefing with Jarvis ↗</button>
+  </div>`;
+  el.innerHTML=briefing;
+}
+
+// ─── FOCUS TIMER ───
+let timerInterval=null;
+let timerSeconds=25*60;
+let timerRunning=false;
+let timerDuration=25;
+const CIRCUMFERENCE=2*Math.PI*80;
+
+function setTimer(mins){
+  if(timerRunning)return;
+  timerDuration=mins;
+  timerSeconds=mins*60;
+  updateTimerDisplay();
+}
+function updateTimerDisplay(){
+  const m=Math.floor(timerSeconds/60);
+  const s=timerSeconds%60;
+  document.getElementById('timer-display').textContent=`${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  const pct=timerSeconds/(timerDuration*60);
+  document.getElementById('timer-ring').style.strokeDashoffset=CIRCUMFERENCE*(1-pct);
+}
+function toggleTimer(){
+  if(timerRunning){
+    clearInterval(timerInterval);
+    timerRunning=false;
+    document.getElementById('timer-start').textContent='Resume';
+    document.getElementById('timer-label').textContent='Paused';
+  }else{
+    timerRunning=true;
+    document.getElementById('timer-start').textContent='Pause';
+    document.getElementById('timer-label').textContent='Focus';
+    timerInterval=setInterval(()=>{
+      timerSeconds--;
+      updateTimerDisplay();
+      if(timerSeconds<=0){
+        clearInterval(timerInterval);
+        timerRunning=false;
+        document.getElementById('timer-label').textContent='Done!';
+        document.getElementById('timer-start').textContent='Start';
+        completeSession();
+      }
+    },1000);
+  }
+}
+function resetTimer(){
+  clearInterval(timerInterval);
+  timerRunning=false;
+  timerSeconds=timerDuration*60;
+  updateTimerDisplay();
+  document.getElementById('timer-start').textContent='Start';
+  document.getElementById('timer-label').textContent='Ready';
+}
+function completeSession(){
+  const today=new Date().toDateString();
+  let stats=JSON.parse(localStorage.getItem('focusStats')||'{}');
+  if(!stats[today])stats[today]={sessions:0,minutes:0};
+  stats[today].sessions++;
+  stats[today].minutes+=timerDuration;
+  localStorage.setItem('focusStats',JSON.stringify(stats));
+  updateFocusStats();
+  timerSeconds=timerDuration*60;
+  updateTimerDisplay();
+}
+function updateFocusStats(){
+  const today=new Date().toDateString();
+  const stats=JSON.parse(localStorage.getItem('focusStats')||'{}');
+  const todayStats=stats[today]||{sessions:0,minutes:0};
+  document.getElementById('sessions-today').textContent=todayStats.sessions;
+  document.getElementById('minutes-today').textContent=todayStats.minutes;
+  // Week stats
+  let weekSessions=0;
+  const now=new Date();
+  for(let i=0;i<7;i++){
+    const d=new Date(now);d.setDate(d.getDate()-i);
+    const key=d.toDateString();
+    if(stats[key])weekSessions+=stats[key].sessions;
+  }
+  document.getElementById('sessions-week').textContent=weekSessions;
+  // Progress bar
+  const prog=Math.min(todayStats.sessions/4,1)*100;
+  document.getElementById('daily-prog').style.width=prog+'%';
+  document.getElementById('daily-prog-text').textContent=`${todayStats.sessions} / 4 sessions`;
+}
+// Init on load
+if(document.getElementById('timer-display'))updateFocusStats();
+
+// ─── MODULES & MARKS ───
+const MODULES=[
+  {code:'GEOG111',name:'Geography',lecturer:'Dr B',assessments:['Test 1','Test 2','Assignment 1','Assignment 2','Exam']},
+  {code:'SBSS111',name:'Social & Behavioural Sciences',lecturer:'Ms. GS Cornelius',assessments:['Test 1','Test 2','Assignment 1','Assignment 2','Exam']},
+  {code:'ECON112',name:'Economics',lecturer:'Ms. Mariska Aucamp',assessments:['Test 1','Test 2','Assignment 1','Exam']},
+  {code:'ALDE111',name:'Language & Communication A',lecturer:'Ms. KE Motlhankane',assessments:['Test 1','Assignment 1','Exam']},
+  {code:'ALDE112',name:'Language & Communication B',lecturer:'Mrs. GH Groenen',assessments:['Test 1','Assignment 1','Exam']},
+  {code:'MTHS114',name:'Mathematics',lecturer:'Dr GT Marewo',assessments:['Test 1','Test 2','Test 3','Exam']},
+  {code:'STTN111',name:'Statistics',lecturer:'Dr CJL Van Heerden',assessments:['Test 1','Test 2','Assignment 1','Exam']},
+];
+let moduleMarks=JSON.parse(localStorage.getItem('moduleMarks')||'{}');
+function renderModules(){
+  const el=document.getElementById('module-list');if(!el)return;
+  el.innerHTML=MODULES.map(m=>{
+    const marks=moduleMarks[m.code]||{};
+    const vals=Object.values(marks).map(v=>parseFloat(v)).filter(v=>!isNaN(v));
+    const avg=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
+    const avgColor=avg>=75?'var(--green)':avg>=50?'var(--gold)':'var(--red)';
+    return`<div class="module-card">
+      <div class="module-code">${m.code}</div>
+      <div class="module-name">${m.name}</div>
+      <div class="module-lecturer">${m.lecturer}</div>
+      ${m.assessments.map(a=>`<div class="mark-row"><span class="mark-lbl">${a}</span><input class="mark-input" type="number" min="0" max="100" placeholder="—" value="${marks[a]||''}" onchange="saveMark('${m.code}','${a}',this.value)"><span class="mark-pct">${marks[a]?marks[a]+'%':''}</span></div>`).join('')}
+      ${avg!==null?`<div class="module-avg" style="color:${avgColor}">Current average: ${avg}%</div>`:''}
+    </div>`;
+  }).join('');
+}
+function saveMark(code,assessment,val){
+  if(!moduleMarks[code])moduleMarks[code]={};
+  moduleMarks[code][assessment]=val;
+  localStorage.setItem('moduleMarks',JSON.stringify(moduleMarks));
+  setTimeout(renderModules,50);
+}
+// Init modules
+renderModules();
+
+// ─── JOURNAL PROMPTS ───
+const JOURNAL_PROMPTS=[
+  {num:'i',title:'Morning intention',q:'What is my single most important outcome today?'},
+  {num:'ii',title:'Gratitude',q:'What am I grateful for right now?'},
+  {num:'iii',title:'Identity',q:'Who am I becoming? How did I show up as that person today?'},
+  {num:'iv',title:'Empire',q:'What did I build towards the estate today?'},
+  {num:'v',title:'Evening reflection',q:'What went well? What would I do differently?'},
+  {num:'vi',title:'Relationships',q:'How did I show up for Kea, family, or friends today?'},
+  {num:'vii',title:'Challenge',q:'What challenged me? How did I respond?'},
+  {num:'viii',title:'Legacy',q:'If this were my last day, what would I want people to remember?'},
+  {num:'ix',title:'Discipline',q:'Did I follow through on my commitments? Where did I slip?'},
+  {num:'x',title:'RS3 Vision',q:'How does today connect to the RS3 in November 2027?'},
+];
+let journalAnswers={};
+function renderJournalPrompts(){
+  const el=document.getElementById('journal-prompts');if(!el)return;
+  el.innerHTML=JOURNAL_PROMPTS.map((p,i)=>`
+    <div class="journal-card">
+      <div class="journal-q" onclick="toggleJournalCard(${i})">
+        <div class="jq-num">${p.num}. ${p.title}</div>
+        <div class="jq-text">${p.q}</div>
+      </div>
+      <div class="journal-expand" id="journal-expand-${i}">
+        <textarea class="journal-textarea" id="journal-ans-${i}" placeholder="Write your reflection..." onchange="journalAnswers[${i}]=this.value">${journalAnswers[i]||''}</textarea>
+      </div>
+    </div>
+  `).join('');
+}
+function toggleJournalCard(i){
+  const el=document.getElementById('journal-expand-'+i);
+  if(el)el.classList.toggle('open');
+}
+function saveJournalEntry(){
+  // Collect all answers
+  JOURNAL_PROMPTS.forEach((_,i)=>{
+    const ta=document.getElementById('journal-ans-'+i);
+    if(ta&&ta.value.trim())journalAnswers[i]=ta.value.trim();
+  });
+  const answered=Object.keys(journalAnswers).filter(k=>journalAnswers[k]);
+  if(answered.length===0){alert('Write at least one reflection first.');return;}
+  const entry={
+    date:new Date().toISOString(),
+    answers:JOURNAL_PROMPTS.map((p,i)=>journalAnswers[i]?{prompt:p.title,text:journalAnswers[i]}:null).filter(Boolean)
+  };
+  let diary=JSON.parse(localStorage.getItem('journalDiary')||'[]');
+  diary.unshift(entry);
+  localStorage.setItem('journalDiary',JSON.stringify(diary));
+  journalAnswers={};
+  renderJournalPrompts();
+  renderJournalDiary();
+  alert('Journal entry saved! Check the Diary tab.');
+}
+function renderJournalDiary(){
+  const el=document.getElementById('journal-diary-list');if(!el)return;
+  const diary=JSON.parse(localStorage.getItem('journalDiary')||'[]');
+  if(diary.length===0){
+    el.innerHTML='<div class="card" style="text-align:center;padding:30px"><div style="font-family:\'Cormorant Garamond\',serif;font-size:16px;color:var(--muted);font-style:italic">No journal entries yet.</div><div style="font-size:12px;color:var(--muted);margin-top:8px">Write in the Write tab and click Save Entry to create your first reflection.</div></div>';
+    return;
+  }
+  el.innerHTML=diary.map((e,idx)=>{
+    const d=new Date(e.date);
+    const dateStr=d.toLocaleDateString('en-ZA',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const timeStr=d.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});
+    const content=e.answers.map(a=>`<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px">${a.prompt}</div><div style="font-size:12px;font-weight:300;color:var(--ink);line-height:1.7">${a.text}</div></div>`).join('');
+    return`<div class="diary-entry">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div><div class="diary-date">${dateStr}</div><div style="font-size:10px;color:var(--muted)">${timeStr} · ${e.answers.length} prompt${e.answers.length>1?'s':''}</div></div>
+        <button class="btn" style="font-size:9px;padding:4px 8px" onclick="deleteJournalEntry(${idx})">Delete</button>
+      </div>
+      <div>${content}</div>
+    </div>`;
+  }).join('');
+}
+function deleteJournalEntry(idx){
+  if(!confirm('Delete this journal entry?'))return;
+  let diary=JSON.parse(localStorage.getItem('journalDiary')||'[]');
+  diary.splice(idx,1);
+  localStorage.setItem('journalDiary',JSON.stringify(diary));
+  renderJournalDiary();
+}
+// Init journal
+renderJournalPrompts();
+renderJournalDiary();
+
+// ─── CONTENT STATS ───
+function loadStats(){
+  const stats=JSON.parse(localStorage.getItem('contentStats')||'{}');
+  Object.keys(stats).forEach(k=>{
+    const el=document.getElementById(k);
+    if(el)el.value=stats[k];
+  });
+  const updated=localStorage.getItem('statsUpdated');
+  if(updated){
+    const el=document.getElementById('stats-updated');
+    if(el)el.textContent='Last updated: '+new Date(updated).toLocaleDateString('en-ZA');
+  }
+}
+function saveStats(){
+  const fields=['spotify-listeners','spotify-streams','tiktok-music-followers','tiktok-music-views','ig-music-followers','ig-music-reach','yt-music-subs','yt-music-views','ig-mas-followers','ig-mas-engagement','tt-mas-followers','tt-mas-views','tt-ds-followers','tt-ds-views','ig-events-followers','ig-events-reach'];
+  const stats={};
+  fields.forEach(f=>{
+    const el=document.getElementById(f);
+    if(el&&el.value)stats[f]=el.value;
+  });
+  localStorage.setItem('contentStats',JSON.stringify(stats));
+  localStorage.setItem('statsUpdated',new Date().toISOString());
+  const el=document.getElementById('stats-updated');
+  if(el)el.textContent='Last updated: '+new Date().toLocaleDateString('en-ZA');
+}
+loadStats();
+
+/* ═══ CONTENT CHECKLISTS ═══ */
+const CONTENT_CHECKLISTS={
+  music:[
+    {id:'cm1',text:'Post studio snippet teaser (TikTok)'},
+    {id:'cm2',text:'Behind the scenes production clip'},
+    {id:'cm3',text:'Engage comments on last 3 posts'},
+    {id:'cm4',text:'Share story — music journey update'},
+    {id:'cm5',text:'Instagram reel with track preview'},
+    {id:'cm6',text:'Reply to all DMs'}
+  ],
+  masemula:[
+    {id:'cb1',text:'Editorial lifestyle photo (IG feed)'},
+    {id:'cb2',text:'Inspiration moodboard story'},
+    {id:'cb3',text:'Quote post — brand philosophy'},
+    {id:'cb4',text:'TikTok aesthetic video'},
+    {id:'cb5',text:'Engage with 10 target accounts'}
+  ],
+  ds:[
+    {id:'cd1',text:'TikTok #1 — Hook + desk setup'},
+    {id:'cd2',text:'TikTok #2 — Trending audio version'},
+    {id:'cd3',text:'TikTok #3 — Customer testimonial/UGC'},
+    {id:'cd4',text:'Respond to all comments'},
+    {id:'cd5',text:'Check trending sounds (save 3)'},
+    {id:'cd6',text:'Engage competitor content'},
+    {id:'cd7',text:'Story — behind the scenes packing'}
+  ],
+  youtube:[
+    {id:'cy1',text:'Plan next video topic'},
+    {id:'cy2',text:'Script/outline draft'},
+    {id:'cy3',text:'Record B-roll footage'},
+    {id:'cy4',text:'Thumbnail concepts (3 options)'},
+    {id:'cy5',text:'Upload & optimize SEO'}
+  ],
+  events:[
+    {id:'ce1',text:'Post event teaser (Kea reviews)'},
+    {id:'ce2',text:'Story poll — event ideas'},
+    {id:'ce3',text:'Engage local vendors & venues'},
+    {id:'ce4',text:'Recap/throwback post'}
+  ]
+};
+function getChecklistKey(){const d=new Date(),w=Math.ceil((d-new Date(d.getFullYear(),0,1))/604800000);return'mev4_cl_'+d.getFullYear()+'_'+w;}
+let contentChecks=JSON.parse(localStorage.getItem(getChecklistKey())||'{}');
+function saveContentChecks(){localStorage.setItem(getChecklistKey(),JSON.stringify(contentChecks));}
+function toggleContentCheck(id){contentChecks[id]=!contentChecks[id];saveContentChecks();renderAllChecklists();}
+function renderChecklist(category,containerId){
+  const el=document.getElementById(containerId);if(!el)return;
+  const items=CONTENT_CHECKLISTS[category]||[];
+  el.innerHTML=items.map(it=>`<div class="item-row" style="padding:8px 0"><div class="check${contentChecks[it.id]?' done':''}" onclick="toggleContentCheck('${it.id}')">${contentChecks[it.id]?'✓':''}</div><span style="flex:1;font-size:12px${contentChecks[it.id]?';text-decoration:line-through;opacity:0.6':''}">${it.text}</span></div>`).join('');
+}
+function renderAllChecklists(){
+  renderChecklist('music','checklist-music');
+  renderChecklist('masemula','checklist-masemula');
+  renderChecklist('ds','checklist-ds');
+  renderChecklist('youtube','checklist-youtube');
+  renderChecklist('events','checklist-events');
+}
+renderAllChecklists();
+
+// ─── FINANCE LEDGER ───
+let ledger=JSON.parse(localStorage.getItem('financeLedger')||'[]');
+let savingsGoals=JSON.parse(localStorage.getItem('savingsGoals')||'[]');
+
+function addLedgerEntry(type){
+  const descEl=document.getElementById(type+'-desc');
+  const amtEl=document.getElementById(type+'-amt');
+  const catEl=document.getElementById(type+'-cat');
+  const desc=descEl.value.trim();
+  const amt=parseFloat(amtEl.value);
+  const cat=catEl.value;
+  if(!desc||isNaN(amt)||amt<=0){alert('Enter description and amount');return;}
+  ledger.unshift({type,desc,amt,cat,date:new Date().toISOString()});
+  localStorage.setItem('financeLedger',JSON.stringify(ledger));
+  descEl.value='';amtEl.value='';
+  renderLedger();
+  updateFinanceTotals();
+}
+function renderLedger(){
+  const el=document.getElementById('ledger-list');if(!el)return;
+  if(ledger.length===0){
+    el.innerHTML='<div style="font-size:12px;color:var(--muted);font-style:italic;padding:10px 0">No transactions yet.</div>';
+    return;
+  }
+  el.innerHTML=ledger.slice(0,20).map(e=>{
+    const d=new Date(e.date);
+    const dateStr=d.toLocaleDateString('en-ZA',{day:'numeric',month:'short'});
+    return`<div class="ledger-row">
+      <div class="ledger-type ${e.type==='income'?'ledger-in':'ledger-out'}"></div>
+      <div class="ledger-desc">${e.desc}</div>
+      <div class="ledger-cat">${e.cat}</div>
+      <div class="ledger-amt" style="color:${e.type==='income'?'var(--green)':'var(--red)'}">R ${e.amt.toLocaleString()}</div>
+    </div>`;
+  }).join('');
+}
+function updateFinanceTotals(){
+  const income=ledger.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+  const expense=ledger.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const net=income-expense;
+  const inEl=document.getElementById('fin-total-in');
+  const outEl=document.getElementById('fin-total-out');
+  const netEl=document.getElementById('fin-net');
+  if(inEl)inEl.textContent='R '+income.toLocaleString();
+  if(outEl)outEl.textContent='R '+expense.toLocaleString();
+  if(netEl){
+    netEl.textContent='R '+net.toLocaleString();
+    netEl.className='stat-n '+(net>=0?'stat-pos':'stat-neg');
+  }
+}
+function updateRS3Progress(){
+  const el=document.getElementById('rs3-income');
+  const val=parseFloat(el.value)||0;
+  const target=30800;
+  const pct=Math.min(val/target*100,100);
+  const bar=document.getElementById('rs3-income-bar');
+  const text=document.getElementById('rs3-income-text');
+  if(bar)bar.style.width=pct+'%';
+  if(text)text.textContent='R'+val.toLocaleString()+' / R'+target.toLocaleString();
+  localStorage.setItem('rs3Income',val);
+}
+function addSavingsGoal(){
+  const nameEl=document.getElementById('savings-name');
+  const targetEl=document.getElementById('savings-target');
+  const name=nameEl.value.trim();
+  const target=parseFloat(targetEl.value);
+  if(!name||isNaN(target)||target<=0){alert('Enter goal name and target');return;}
+  savingsGoals.push({name,target,current:0});
+  localStorage.setItem('savingsGoals',JSON.stringify(savingsGoals));
+  nameEl.value='';targetEl.value='';
+  renderSavingsGoals();
+}
+function updateSavingsGoal(i,val){
+  savingsGoals[i].current=parseFloat(val)||0;
+  localStorage.setItem('savingsGoals',JSON.stringify(savingsGoals));
+  renderSavingsGoals();
+}
+function renderSavingsGoals(){
+  const el=document.getElementById('savings-list');if(!el)return;
+  if(savingsGoals.length===0){
+    el.innerHTML='<div style="font-size:12px;color:var(--muted);font-style:italic">No savings goals yet.</div>';
+    return;
+  }
+  el.innerHTML=savingsGoals.map((g,i)=>{
+    const pct=Math.min(g.current/g.target*100,100);
+    return`<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${g.name}</span><span style="color:var(--muted)">R${g.current.toLocaleString()} / R${g.target.toLocaleString()}</span></div>
+      <div class="prog-bar" style="width:100%;height:4px"><div class="prog-fill" style="width:${pct}%"></div></div>
+      <input class="ledger-input" type="number" style="margin-top:6px;width:120px" placeholder="Update current" onchange="updateSavingsGoal(${i},this.value)">
+    </div>`;
+  }).join('');
+}
+// Init finance
+renderLedger();
+updateFinanceTotals();
+renderSavingsGoals();
+const savedRS3=localStorage.getItem('rs3Income');
+if(savedRS3){
+  const el=document.getElementById('rs3-income');
+  if(el){el.value=savedRS3;updateRS3Progress();}
+}
+
+// ─── INVESTMENTS ───
+let investments=JSON.parse(localStorage.getItem('investments')||'[]');
+function addInvestment(){
+  const name=document.getElementById('invest-name').value.trim();
+  const type=document.getElementById('invest-type').value;
+  const amt=parseFloat(document.getElementById('invest-amt').value);
+  if(!name||isNaN(amt)){alert('Enter name and amount');return;}
+  investments.push({id:Date.now(),name,type,amount:amt,returns:0});
+  localStorage.setItem('investments',JSON.stringify(investments));
+  document.getElementById('invest-name').value='';
+  document.getElementById('invest-amt').value='';
+  renderInvestments();
+}
+function renderInvestments(){
+  const el=document.getElementById('invest-list');if(!el)return;
+  if(investments.length===0){
+    el.innerHTML='<div class="item-row" style="border-bottom:0.5px solid var(--border);padding-bottom:8px;margin-bottom:8px"><div style="flex:1"><div style="font-size:12px;font-weight:500">No investments yet</div><div style="font-size:10px;color:var(--muted)">Add your first investment to begin tracking</div></div></div>';
+    document.getElementById('invest-total').textContent='R 0';
+    document.getElementById('invest-return').textContent='R 0';
+    return;
+  }
+  let total=0,returns=0;
+  el.innerHTML=investments.map(inv=>{
+    total+=inv.amount;returns+=inv.returns;
+    return`<div class="item-row" style="border-bottom:0.5px solid var(--border);padding-bottom:8px;margin-bottom:8px">
+      <div style="flex:1"><div style="font-size:12px;font-weight:500">${inv.name}</div><div style="font-size:10px;color:var(--muted)">${inv.type}</div></div>
+      <div style="text-align:right"><div style="font-size:14px;font-family:'Cormorant Garamond',serif">R ${inv.amount.toLocaleString()}</div></div>
+      <button class="btn" style="margin-left:8px;font-size:10px" onclick="removeInvestment(${inv.id})">×</button>
+    </div>`;
+  }).join('');
+  document.getElementById('invest-total').textContent='R '+total.toLocaleString();
+  document.getElementById('invest-return').textContent='R '+returns.toLocaleString();
+}
+function removeInvestment(id){
+  investments=investments.filter(i=>i.id!==id);
+  localStorage.setItem('investments',JSON.stringify(investments));
+  renderInvestments();
+}
+renderInvestments();
+
+// ─── BANK ACCOUNTS ───
+let accountBalances=JSON.parse(localStorage.getItem('accountBalances')||'{"primary":0,"business":0,"savings":0}');
+function updateAccountBalances(){
+  accountBalances.primary=parseFloat(document.getElementById('bal-primary').value)||0;
+  accountBalances.business=parseFloat(document.getElementById('bal-business').value)||0;
+  accountBalances.savings=parseFloat(document.getElementById('bal-savings').value)||0;
+  localStorage.setItem('accountBalances',JSON.stringify(accountBalances));
+  renderAccountBalances();
+}
+function renderAccountBalances(){
+  const bals=document.querySelectorAll('.account-bal');
+  bals.forEach(el=>{
+    const id=el.dataset.id;
+    if(accountBalances[id]!==undefined)el.textContent='R '+accountBalances[id].toLocaleString();
+  });
+  const total=accountBalances.primary+accountBalances.business+accountBalances.savings;
+  const nw=document.getElementById('total-net-worth');
+  if(nw)nw.textContent='R '+total.toLocaleString();
+  // Pre-fill inputs
+  const p=document.getElementById('bal-primary');if(p&&accountBalances.primary)p.value=accountBalances.primary;
+  const b=document.getElementById('bal-business');if(b&&accountBalances.business)b.value=accountBalances.business;
+  const s=document.getElementById('bal-savings');if(s&&accountBalances.savings)s.value=accountBalances.savings;
+}
+renderAccountBalances();
+
+/* ═══ AGENTS ═══ */
+let agentTasks=JSON.parse(localStorage.getItem('agentTasks')||'[]');
+let agentHistory=JSON.parse(localStorage.getItem('agentHistory')||'[]');
+const agentNames={jarvis:'Jarvis',finance:'Finance Manager',content:'Content Manager',ds:'DS Operations',music:'Music Manager',brand:'Brand Manager'};
+function createAgentTask(){
+  const agent=document.getElementById('task-agent').value;
+  const priority=document.getElementById('task-priority').value;
+  const desc=document.getElementById('task-desc').value.trim();
+  if(!desc)return alert('Please enter a task description');
+  const task={id:Date.now(),agent,priority,desc,status:'pending',created:new Date().toISOString()};
+  agentTasks.push(task);
+  localStorage.setItem('agentTasks',JSON.stringify(agentTasks));
+  document.getElementById('task-desc').value='';
+  renderAgentTasks();updateDashboardAgents();
+}
+function completeAgentTask(id){
+  const idx=agentTasks.findIndex(t=>t.id===id);
+  if(idx>-1){
+    const task=agentTasks.splice(idx,1)[0];
+    task.status='done';task.completed=new Date().toISOString();
+    agentHistory.unshift(task);
+    localStorage.setItem('agentTasks',JSON.stringify(agentTasks));
+    localStorage.setItem('agentHistory',JSON.stringify(agentHistory));
+    renderAgentTasks();renderAgentHistory();updateDashboardAgents();
+  }
+}
+function deleteAgentTask(id){
+  agentTasks=agentTasks.filter(t=>t.id!==id);
+  localStorage.setItem('agentTasks',JSON.stringify(agentTasks));
+  renderAgentTasks();updateDashboardAgents();
+}
+function renderAgentTasks(){
+  const el=document.getElementById('agent-tasks-list');
+  if(!el)return;
+  if(agentTasks.length===0){el.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:30px">No active tasks. Delegate something to your agents!</div>';return;}
+  el.innerHTML=agentTasks.map(t=>{
+    const priColor=t.priority==='high'?'#E04E4E':t.priority==='medium'?'var(--gold)':'#97C459';
+    return `<div class="task-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="width:6px;height:6px;border-radius:50%;background:${priColor}"></div>
+      <div style="flex:1">
+        <div style="font-size:12px">${t.desc}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${agentNames[t.agent]} · ${new Date(t.created).toLocaleDateString()}</div>
+      </div>
+      <button onclick="completeAgentTask(${t.id})" class="btn" style="font-size:10px">Done</button>
+      <button onclick="deleteAgentTask(${t.id})" class="btn" style="font-size:10px;opacity:0.6">×</button>
+    </div>`;
+  }).join('');
+}
+function renderAgentHistory(){
+  const el=document.getElementById('agent-history-list');
+  if(!el)return;
+  if(agentHistory.length===0){el.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:30px">Completed tasks will appear here.</div>';return;}
+  el.innerHTML=agentHistory.slice(0,20).map(t=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+    <div style="width:6px;height:6px;border-radius:50%;background:var(--green)"></div>
+    <div style="flex:1">
+      <div style="font-size:12px;text-decoration:line-through;opacity:0.7">${t.desc}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">${agentNames[t.agent]} · Completed ${new Date(t.completed).toLocaleDateString()}</div>
+    </div>
+  </div>`).join('');
+}
+function addAgentTask(){itab('agents','tasks',document.querySelectorAll('#s-agents .itab')[1]);}
+function updateDashboardAgents(){
+  const el=document.getElementById('dashboard-agent-tasks');
+  if(!el)return;
+  const activeCount=agentTasks.length;
+  el.textContent=activeCount>0?`${activeCount} active task${activeCount>1?'s':''} delegated`:'No active tasks — your agents are standing by';
+}
+// Init agents
+renderAgentTasks();renderAgentHistory();updateDashboardAgents();
+
+/* ═══ ROUTINE ═══ */
+const DAYS_FULL=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const DAYS_SHORT=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const CAT_LBL={health:'Health',school:'School',business:'Business',creative:'Creative',admin:'Admin',growth:'Growth',personal:'Personal',study:'Study'};
+const BAR_C={health:'bar-health',school:'bar-school',business:'bar-business',creative:'bar-creative',admin:'bar-admin',growth:'bar-growth',personal:'bar-personal',break:'bar-break',study:'bar-study'};
+const BDG_C={health:'bdg-health',school:'bdg-school',business:'bdg-business',creative:'bdg-creative',admin:'bdg-admin',growth:'bdg-growth',personal:'bdg-personal',study:'bdg-study'};
+const NOTES_DAY={2:'The hardest day of the week. This evening is for recovery and light review only — no deep work. Rest is not absence of productivity. It is preparation for it.',3:'Heavy class day. The evening belongs to light review and time with Kea. Protect it.',4:'Friday is earned. The week has asked much. Your evening is yours — protect it.',5:'Prime day. No lectures, no campus, no excuses. This is where the empire advances.',6:'Recovery and intention. Plan the week ahead with clarity before Monday arrives.'};
+const SCHEDULE={0:[{s:'04:00',e:'05:30',l:'Gym',c:'health'},{s:'05:30',e:'07:00',l:'Shower · Breakfast · Morning briefing review',c:'health'},{s:'07:00',e:'07:30',l:'Travel to campus',c:'admin'},{s:'07:30',e:'09:00',l:'GEOG111 — Language · Dr B',c:'school'},{s:'09:00',e:'09:15',l:'Break',c:'break'},{s:'09:15',e:'10:45',l:'SBSS111 — Ms. GS Cornelius',c:'school'},{s:'10:45',e:'11:00',l:'Break',c:'break'},{s:'11:00',e:'12:30',l:'ECON112 — Mariska Aucamp',c:'school'},{s:'12:30',e:'12:45',l:'Lunch',c:'health'},{s:'12:45',e:'14:15',l:'ALDE112 — Ms. KE Motlhankane',c:'school'},{s:'14:15',e:'14:30',l:'Travel home',c:'admin'},{s:'14:30',e:'17:00',l:'Deep work — Dropshipping (priority)',c:'business'},{s:'17:00',e:'17:30',l:'Break & snack',c:'health'},{s:'17:30',e:'19:00',l:'Study block — ECON112 + GEOG111',c:'study'},{s:'19:00',e:'20:00',l:'Deep work — Music production',c:'creative'},{s:'20:00',e:'20:30',l:'Dinner',c:'health'},{s:'20:30',e:'22:00',l:'Masemula · Reading · Planning + Study SBSS111',c:'business'},{s:'22:00',e:'22:45',l:'Wind-down — no screens',c:'health'},{s:'22:45',e:'23:30',l:'Reading — non-fiction · biography · strategy',c:'growth'},{s:'23:30',e:'00:00',l:'Sleep',c:'health'}],1:[{s:'04:00',e:'05:30',l:'Gym',c:'health'},{s:'05:30',e:'07:00',l:'Shower · Breakfast · Morning briefing review',c:'health'},{s:'07:00',e:'10:30',l:'Deep work — Dropshipping (priority) + Study MTHS114 + STTN111',c:'business'},{s:'10:30',e:'11:00',l:'Travel to campus',c:'admin'},{s:'11:00',e:'12:30',l:'MTHS114 — Dr GT Marewo',c:'school'},{s:'12:30',e:'12:45',l:'Lunch',c:'health'},{s:'12:45',e:'14:15',l:'GEOG111 — Language · Dr B',c:'school'},{s:'14:15',e:'14:30',l:'Break',c:'break'},{s:'14:30',e:'16:00',l:'STTN111 — Dr CJL Van Heerden',c:'school'},{s:'16:00',e:'16:30',l:'Travel home',c:'admin'},{s:'16:30',e:'19:00',l:'Deep work — Music or Masemula',c:'creative'},{s:'19:00',e:'19:30',l:'Dinner',c:'health'},{s:'19:30',e:'22:00',l:'Reading · Planning · Estate review',c:'growth'},{s:'22:00',e:'22:45',l:'Wind-down',c:'health'},{s:'22:45',e:'23:30',l:'Reading',c:'growth'},{s:'23:30',e:'00:00',l:'Sleep',c:'health'}],2:[{s:'04:00',e:'05:30',l:'Gym',c:'health'},{s:'05:30',e:'08:45',l:'Shower · Breakfast · Light prep — no deep work',c:'health'},{s:'08:45',e:'09:15',l:'Travel to campus',c:'admin'},{s:'09:15',e:'10:45',l:'ECON112 — Mariska Aucamp',c:'school'},{s:'10:45',e:'11:00',l:'Break',c:'break'},{s:'11:00',e:'12:30',l:'SBSS111 — Ms. GS Cornelius',c:'school'},{s:'12:30',e:'14:30',l:'Lunch + recovery break',c:'health'},{s:'14:30',e:'16:00',l:'SBSS111 — Ms. GS Cornelius',c:'school'},{s:'16:00',e:'16:15',l:'Break',c:'break'},{s:'16:15',e:'17:45',l:'SBSS111 — Ms. GS Cornelius',c:'school'},{s:'17:45',e:'18:30',l:'Travel home + decompress',c:'admin'},{s:'18:30',e:'20:30',l:'Light review — today\'s notes only, no new material',c:'study'},{s:'20:30',e:'21:00',l:'Dinner',c:'health'},{s:'21:00',e:'22:30',l:'Reading or downtime — no deep work on heavy days',c:'growth'},{s:'22:30',e:'23:30',l:'Wind-down · sleep',c:'health'}],3:[{s:'04:00',e:'05:30',l:'Gym',c:'health'},{s:'05:30',e:'10:30',l:'Shower · Breakfast · Deep work — Dropshipping + Study ALDE111 + GEOG111',c:'business'},{s:'10:30',e:'11:00',l:'Travel to campus',c:'admin'},{s:'11:00',e:'12:30',l:'ALDE111 — Mrs. GH Groenen',c:'school'},{s:'12:30',e:'12:45',l:'Lunch',c:'health'},{s:'12:45',e:'14:15',l:'MTHS114 — Dr GT Marewo',c:'school'},{s:'14:15',e:'14:30',l:'Break',c:'break'},{s:'14:30',e:'16:00',l:'GEOG111 — Language · Dr B',c:'school'},{s:'16:00',e:'16:15',l:'Break',c:'break'},{s:'16:15',e:'17:45',l:'GEOG111 — Language · Dr B',c:'school'},{s:'17:45',e:'18:30',l:'Travel home + decompress',c:'admin'},{s:'18:30',e:'20:30',l:'Light work — review · Kea time',c:'admin'},{s:'20:30',e:'21:00',l:'Dinner',c:'health'},{s:'21:00',e:'22:30',l:'Reading or downtime',c:'growth'},{s:'22:30',e:'23:30',l:'Wind-down · sleep',c:'health'}],4:[{s:'04:00',e:'05:30',l:'Gym',c:'health'},{s:'05:30',e:'07:00',l:'Shower · Breakfast · Morning briefing',c:'health'},{s:'07:00',e:'07:30',l:'Travel to campus',c:'admin'},{s:'07:30',e:'09:00',l:'STTN111 — Dr CJL Van Heerden',c:'school'},{s:'09:00',e:'11:00',l:'Study block on campus — past papers + practice',c:'study'},{s:'11:00',e:'12:30',l:'SBSS111 — Ms. GS Cornelius',c:'school'},{s:'12:30',e:'14:30',l:'Lunch + break',c:'health'},{s:'14:30',e:'16:00',l:'MTHS114 — Dr GT Marewo',c:'school'},{s:'16:00',e:'16:15',l:'Break',c:'break'},{s:'16:15',e:'17:45',l:'MTHS114 — Dr GT Marewo',c:'school'},{s:'17:45',e:'18:30',l:'Travel home',c:'admin'},{s:'18:30',e:'20:00',l:'Weekly review + Estate digest prep',c:'admin'},{s:'20:00',e:'20:30',l:'Dinner',c:'health'},{s:'20:30',e:'23:30',l:'Personal time — Kea · social · rest',c:'personal'},{s:'23:30',e:'00:00',l:'Sleep',c:'health'}],5:[{s:'04:00',e:'05:30',l:'Gym',c:'health'},{s:'05:30',e:'07:00',l:'Shower · Breakfast · Weekly digest review (PA compiled)',c:'health'},{s:'07:00',e:'10:00',l:'Deep work — Dropshipping (biggest task of the week)',c:'business'},{s:'10:00',e:'10:30',l:'Break',c:'break'},{s:'10:30',e:'13:00',l:'Deep work — Music production / creative work',c:'creative'},{s:'13:00',e:'14:00',l:'Lunch + rest',c:'health'},{s:'14:00',e:'17:00',l:'Deep work — Masemula · brand planning + Saturday study block',c:'business'},{s:'17:00',e:'23:30',l:'Personal time — Kea · friends · social',c:'personal'},{s:'23:30',e:'00:00',l:'Sleep',c:'health'}],6:[{s:'04:00',e:'05:30',l:'Gym (optional — may push to 6am on Sundays)',c:'health'},{s:'05:30',e:'08:00',l:'Slower morning — longer breakfast, no rush',c:'health'},{s:'08:00',e:'10:00',l:'Weekly planning — review last week · plan next week',c:'admin'},{s:'10:00',e:'12:00',l:'Church · family · personal time',c:'personal'},{s:'12:00',e:'13:00',l:'Lunch',c:'health'},{s:'13:00',e:'16:00',l:'Reading + study block — business · biography · past papers',c:'growth'},{s:'16:00',e:'18:00',l:'Music or creative exploration (low pressure)',c:'creative'},{s:'18:00',e:'19:00',l:'Dinner + wind-down prep for the week',c:'health'},{s:'19:00',e:'22:00',l:'Kea time · personal',c:'personal'},{s:'22:00',e:'23:30',l:'Wind-down · sleep',c:'health'}]};
+const toMin=t=>{if(!t||t==='00:00')return 0;const[h,m]=t.split(':').map(Number);return h*60+m;};
+const getTodayIndex=()=>{const d=new Date().getDay();return d===0?6:d-1;};
+const getWeekKey=()=>{const d=new Date(),j=new Date(d.getFullYear(),0,1),w=Math.ceil(((d-j)/864e5+j.getDay()+1)/7);return'mev4_w'+d.getFullYear()+'_'+w;};
+const emptyWeek=()=>({gym:[0,0,0,0,0,0,0],read:[0,0,0,0,0,0,0],sleep:[0,0,0,0,0,0,0],drop:[0,0,0,0,0,0,0],music:[0,0,0,0,0,0,0],deep:[0,0,0,0,0,0,0],study:[0,0,0,0,0,0,0]});
+let weekData=JSON.parse(localStorage.getItem(getWeekKey())||'null')||emptyWeek();
+let selectedDay=getTodayIndex();
+function saveWeekData(){localStorage.setItem(getWeekKey(),JSON.stringify(weekData));}
+function renderRoutineDayNav(){
+  const ti=getTodayIndex();
+  document.getElementById('routine-day-nav').innerHTML=DAYS_SHORT.map((d,i)=>`<div class="day-btn${i===ti?' is-today':''}${i===selectedDay?' selected':''}" onclick="selectDay(${i})">${d}</div>`).join('');
+}
+function selectDay(i){
+  selectedDay=i;
+  renderRoutineDayNav();
+  renderRoutineNote();
+  renderRoutineSchedule();
+  renderRoutineHabits();
+  document.getElementById('routine-day-label').textContent=DAYS_FULL[i];
+}
+function renderRoutineNote(){
+  const note=NOTES_DAY[selectedDay];
+  document.getElementById('routine-note').innerHTML=note?`<div class="routine-note">${note}</div>`:'';
+}
+function renderRoutineSchedule(){
+  const blocks=SCHEDULE[selectedDay];
+  const now=new Date(),nm=now.getHours()*60+now.getMinutes();
+  const isToday=selectedDay===getTodayIndex();
+  document.getElementById('routine-schedule').innerHTML=blocks.map(b=>{
+    const sm=toMin(b.s),em=b.e==='00:00'?1440:toMin(b.e);
+    const isNow=isToday&&nm>=sm&&nm<em;
+    const isPast=isToday&&nm>=em;
+    const isBrk=b.c==='break';
+    const cls='sched-row'+(isNow?' is-now':isPast?' is-past':'');
+    const bdg=!isBrk&&CAT_LBL[b.c]?`<span class="sched-badge ${BDG_C[b.c]}">${CAT_LBL[b.c]}</span>`:'';
+    return`<div class="${cls}"><div class="sched-bar ${BAR_C[b.c]||'bar-break'}"></div><div class="sched-time">${b.s}–${b.e}${isNow?' ◆':''}</div><div class="sched-label">${b.l}</div>${bdg}</div>`;
+  }).join('');
+}
+function renderRoutineHabits(){
+  const d=selectedDay;
+  const chk=(k)=>`<div class="habit-check${weekData[k][d]?' on':''}" onclick="toggleHabit('${k}',${d})">${weekData[k][d]?'✓':''}</div>`;
+  const inp=(k)=>`<input class="habit-input" type="number" min="0" max="18" step="0.5" value="${weekData[k][d]||0}" onchange="setHabitHrs('${k}',${d},this.value)"><span class="habit-unit">hrs</span>`;
+  document.getElementById('routine-habits').innerHTML=`
+    <div class="habit-row"><span class="habit-name">Gym (4am)</span><div class="habit-ctrl">${chk('gym')}</div></div>
+    <div class="habit-row"><span class="habit-name">Reading — 1hr minimum</span><div class="habit-ctrl">${chk('read')}</div></div>
+    <div class="habit-row"><span class="habit-name">Sleep by 23:30</span><div class="habit-ctrl">${chk('sleep')}</div></div>
+    <div class="habit-row"><span class="habit-name">Dropshipping work</span><div class="habit-ctrl">${inp('drop')}</div></div>
+    <div class="habit-row"><span class="habit-name">Music</span><div class="habit-ctrl">${inp('music')}</div></div>
+    <div class="habit-row"><span class="habit-name">Study (outside class)</span><div class="habit-ctrl">${inp('study')}</div></div>
+    <div class="habit-row"><span class="habit-name">Deep work total</span><div class="habit-ctrl">${inp('deep')}</div></div>`;
+  updateStreaks();
+}
+function toggleHabit(k,d){weekData[k][d]=weekData[k][d]?0:1;saveWeekData();renderRoutineHabits();renderRoutineWeeklyProg();renderRoutineFlags();}
+function setHabitHrs(k,d,v){weekData[k][d]=parseFloat(v)||0;saveWeekData();renderRoutineWeeklyProg();renderRoutineFlags();}
+function updateStreaks(){
+  let gs=0,ss=0;
+  for(let i=getTodayIndex();i>=0;i--){if(weekData.gym[i])gs++;else break;}
+  for(let i=getTodayIndex();i>=0;i--){if(weekData.sleep[i])ss++;else break;}
+  let done=0,tot=0;
+  for(let i=0;i<=getTodayIndex();i++){if(weekData.gym[i])done++;if(weekData.read[i])done++;if(weekData.sleep[i])done++;tot+=3;}
+  document.getElementById('streak-gym').textContent=gs;
+  document.getElementById('streak-sleep').textContent=ss;
+  document.getElementById('streak-week').textContent=(tot>0?Math.round(done/tot*100):0)+'%';
+}
+function renderRoutineWeeklyProg(){
+  const sum=a=>parseFloat(a.reduce((x,y)=>x+y,0).toFixed(1)),cnt=a=>a.filter(Boolean).length;
+  const items=[
+    {n:'Gym sessions',k:'gym',t:7,mn:5,bool:true,u:'sessions'},
+    {n:'Deep work',k:'deep',t:20,mn:15,u:'hrs'},
+    {n:'Study (outside class)',k:'study',t:21,mn:15,u:'hrs'},
+    {n:'Reading',k:'read',t:7,mn:7,bool:true,u:'days'},
+    {n:'Dropshipping',k:'drop',t:10,mn:7,u:'hrs'},
+    {n:'Music',k:'music',t:6,mn:4,u:'hrs'},
+    {n:'Sleep target',k:'sleep',t:7,mn:5,bool:true,u:'nights'}
+  ];
+  document.getElementById('routine-weekly-prog').innerHTML=items.map(it=>{
+    const v=it.bool?cnt(weekData[it.k]):sum(weekData[it.k]);
+    const pct=Math.min(100,Math.round(v/it.t*100));
+    const clr=v>=it.t?'#5DCAA5':v>=it.mn?'var(--gold)':'#E04E4E';
+    const dsp=it.bool?v:v.toFixed(1);
+    return`<div class="prog-row" style="margin-bottom:8px"><div class="prog-label">${it.n}</div><div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${clr}"></div></div><div style="font-size:10px;color:var(--muted);min-width:60px;text-align:right">${dsp}/${it.t}</div></div>`;
+  }).join('');
+}
+function renderRoutineFlags(){
+  const sum=a=>parseFloat(a.reduce((x,y)=>x+y,0).toFixed(1)),cnt=a=>a.filter(Boolean).length,fl=[];
+  const ti=getTodayIndex();
+  let ss=0;for(let i=6;i>=0;i--){if(!weekData.sleep[i])ss++;else break;}
+  const gym=cnt(weekData.gym),dr=sum(weekData.drop),mu=sum(weekData.music),dw=sum(weekData.deep),rd=cnt(weekData.read),st=sum(weekData.study);
+  if(7-gym>=3)fl.push({t:'w',m:`Gym missed on ${7-gym} day${7-gym>1?'s':''} this week`});
+  if(ss>=3)fl.push({t:'w',m:`Sleep target missed ${ss} nights in a row`});
+  if(dr<7&&ti>=4)fl.push({t:'w',m:`Dropshipping below minimum — ${dr}h of 7h`});
+  if(mu===0&&ti>=2)fl.push({t:'i',m:'No music work logged yet this week'});
+  if(rd<3&&ti>=3)fl.push({t:'i',m:`Reading low — ${rd} day${rd!==1?'s':''} logged`});
+  if(dw<15&&ti>=5)fl.push({t:'w',m:`Deep work below minimum — ${dw}h of 15h`});
+  if(st<15&&ti>=5)fl.push({t:'w',m:`Study hours low — ${st}h of 15h minimum outside class`});
+  if(gym>=5)fl.push({t:'o',m:`Gym on track — ${gym} sessions this week`});
+  if(dr>=7)fl.push({t:'o',m:`Dropshipping on target — ${dr}h`});
+  if(mu>=4)fl.push({t:'o',m:`Music target reached — ${mu}h`});
+  const el=document.getElementById('routine-flags');
+  if(!fl.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">All clear. The week is in order.</div>';return;}
+  const ic={w:'◈',o:'◆',i:'◇'},cc={w:'f-warn',o:'f-ok',i:'f-info'};
+  el.innerHTML=fl.map(f=>`<div class="flag-row"><span class="flag-icon ${cc[f.t]}">${ic[f.t]}</span><span class="flag-text">${f.m}</span></div>`).join('');
+}
+// Init routine
+renderRoutineDayNav();renderRoutineNote();renderRoutineSchedule();renderRoutineHabits();renderRoutineWeeklyProg();renderRoutineFlags();
+document.getElementById('routine-day-label').textContent=DAYS_FULL[selectedDay];
+</script>
