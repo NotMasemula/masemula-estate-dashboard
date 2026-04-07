@@ -9,13 +9,7 @@
 <meta http-equiv="Expires" content="0">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
 <title>Masemula Estate OS</title>
-<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script>
-// Fallback if first CDN fails
-if (typeof window.supabase === 'undefined') {
-  document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>');
-}
-</script>
+<!-- Using direct REST API instead of Supabase JS (works on all browsers including Safari) -->
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -1550,30 +1544,28 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 </div><!-- end os -->
 
 <script>
-// ═══ SUPABASE SYNC ═══
+// ═══ SUPABASE SYNC (REST API - works on all browsers) ═══
 const SUPABASE_URL = 'https://romytadgdnpphqzlseaa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ggs07ym7m21ZKiTwQdB94g_lFACej5D';
 const SYNC_USER_ID = 'ntobeko-masemula-estate';
-let supabaseClient = null;
 let syncEnabled = false;
 let syncTimeout = null;
 let isSyncing = false;
-let cloudLoaded = false;  // Prevents sync during initial load
+let cloudLoaded = false;
 
-console.log('🔧 Estate OS: Supabase module loaded');
+console.log('🔧 Estate OS: REST API sync loaded');
 
 // Intercept localStorage to auto-trigger sync on any save
 const originalSetItem = localStorage.setItem.bind(localStorage);
 localStorage.setItem = function(key, value) {
   originalSetItem(key, value);
-  // Only trigger sync for user data changes AFTER cloud has loaded
   if (!key.startsWith('estate_') && syncEnabled && !isSyncing && cloudLoaded) {
     console.log('☁️ Auto-sync triggered by:', key);
     triggerSync();
   }
 };
 
-// Sync when page visibility changes (user switches tabs/apps on mobile)
+// Sync when page visibility changes (mobile)
 document.addEventListener('visibilitychange', function() {
   if (document.visibilityState === 'hidden' && syncEnabled && cloudLoaded) {
     console.log('☁️ Page hidden - syncing...');
@@ -1585,91 +1577,60 @@ document.addEventListener('visibilitychange', function() {
   }
 });
 
-// Initialize Supabase
-let initRetries = 0;
+// Initialize sync (no library needed - uses fetch)
 async function initSupabase() {
-  console.log('🔧 InitSupabase starting... (attempt ' + (initRetries + 1) + ')');
+  console.log('🔧 Initializing REST API sync...');
   
   if (!SUPABASE_KEY || SUPABASE_KEY.length < 10) {
-    console.log('⚠️ Supabase key not set - running in offline mode');
+    console.log('⚠️ Supabase key not set - offline mode');
     updateSyncStatus('offline');
     return;
   }
   
   try {
-    console.log('🔧 Checking for Supabase library...');
-    
-    // Safari fix: Check if supabase loaded from CDN
-    if (typeof window.supabase === 'undefined') {
-      initRetries++;
-      if (initRetries < 5) {
-        console.log('⚠️ Supabase not loaded yet - retry ' + initRetries + '/5...');
-        setTimeout(initSupabase, 1500);
-        return;
-      } else {
-        console.log('❌ Supabase failed to load after 5 attempts');
-        updateSyncStatus('offline');
-        const btn = document.getElementById('sync-btn');
-        if (btn) {
-          btn.textContent = '❌ Load Failed';
-          btn.style.background = '#c33';
-        }
-        return;
-      }
-    }
-    
-    const createClient = window.supabase.createClient;
-    if (!createClient) {
-      console.log('⚠️ Supabase createClient not found');
-      updateSyncStatus('offline');
-      return;
-    }
-    
-    console.log('🔧 Creating Supabase client...');
-    supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-    
-    // Test connection with a simple query
+    // Test connection with a simple fetch
     console.log('🔧 Testing database connection...');
-    const { error } = await supabaseClient.from('estate_data').select('user_id').limit(1);
+    const testUrl = `${SUPABASE_URL}/rest/v1/estate_data?select=user_id&limit=1`;
+    const response = await fetch(testUrl, {
+      method: 'GET',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      }
+    });
     
-    if (error) {
-      console.log('⚠️ Database error:', error.message);
+    if (!response.ok) {
+      console.log('⚠️ Database connection failed:', response.status);
       updateSyncStatus('offline');
       return;
     }
     
     syncEnabled = true;
-    console.log('☁️ Supabase sync enabled!');
+    console.log('☁️ REST API sync enabled!');
     updateSyncStatus('synced');
     
-    // Update sync button to show connected
     const btn = document.getElementById('sync-btn');
     if (btn) btn.style.background = 'var(--gold)';
     
-    // Load cloud data - this is the source of truth
+    // Load cloud data first
     await loadAllFromCloud();
     
-    // Mark cloud as loaded - NOW user changes will trigger sync
+    // Now enable sync
     cloudLoaded = true;
     console.log('☁️ Ready - changes will now sync to cloud');
     
   } catch (e) {
-    console.error('Supabase init failed:', e);
+    console.error('Sync init failed:', e);
     updateSyncStatus('offline');
   }
 }
 
-// Start initialization after page loads (longer delay for Safari)
-setTimeout(initSupabase, 1000);
+// Start initialization after page loads
+setTimeout(initSupabase, 500);
 
-// Fixed user ID for cross-device sync (all devices use same ID)
-function getUserId() {
-  return SYNC_USER_ID;
-}
-
-// Sync all estate data to cloud
+// Sync all estate data to cloud using REST API
 async function syncAllToCloud() {
-  if (!syncEnabled || !supabaseClient || isSyncing) return;
+  if (!syncEnabled || isSyncing) return;
   
   isSyncing = true;
   updateSyncStatus('syncing');
@@ -1694,16 +1655,25 @@ async function syncAllToCloud() {
   };
   
   try {
-    const { error } = await supabaseClient
-      .from('estate_data')
-      .upsert({ 
-        user_id: SYNC_USER_ID, 
+    const url = `${SUPABASE_URL}/rest/v1/estate_data`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({
+        user_id: SYNC_USER_ID,
         data: allData,
-        updated_at: new Date().toISOString() 
-      }, { onConflict: 'user_id' });
+        updated_at: new Date().toISOString()
+      })
+    });
     
-    if (error) {
-      console.error('☁️ Sync error:', error.message);
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('☁️ Sync error:', response.status, errText);
       updateSyncStatus('offline');
     } else {
       console.log('☁️ Synced to cloud at', new Date().toLocaleTimeString());
@@ -1718,35 +1688,41 @@ async function syncAllToCloud() {
   }
 }
 
-// Load all data from cloud
+// Load all data from cloud using REST API
 async function loadAllFromCloud() {
-  if (!syncEnabled || !supabaseClient) return false;
+  if (!syncEnabled) return false;
   
   isSyncing = true;
   
   try {
-    const { data, error } = await supabaseClient
-      .from('estate_data')
-      .select('data, updated_at')
-      .eq('user_id', SYNC_USER_ID)
-      .maybeSingle();
+    const url = `${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${SYNC_USER_ID}&select=data,updated_at`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      }
+    });
     
-    if (error) {
-      console.log('☁️ Load error:', error.message);
+    if (!response.ok) {
+      console.log('☁️ Load error:', response.status);
       isSyncing = false;
       return false;
     }
     
-    if (!data || !data.data) {
+    const results = await response.json();
+    
+    if (!results || results.length === 0 || !results[0].data) {
       console.log('☁️ No cloud data found - this device will create initial sync');
       isSyncing = false;
       return false;
     }
     
+    const data = results[0];
     const cloudData = data.data;
     console.log('☁️ Loading cloud data from:', data.updated_at);
     
-    // Load all cloud data to localStorage (cloud is truth)
+    // Load all cloud data to localStorage
     if (cloudData.ledger) localStorage.setItem('ledger', JSON.stringify(cloudData.ledger));
     if (cloudData.savingsGoals) localStorage.setItem('savingsGoals', JSON.stringify(cloudData.savingsGoals));
     if (cloudData.emotionLog) localStorage.setItem('emotionLog', JSON.stringify(cloudData.emotionLog));
@@ -1766,7 +1742,7 @@ async function loadAllFromCloud() {
     localStorage.setItem('estate_last_sync', data.updated_at);
     console.log('☁️ Cloud data loaded successfully!');
     
-    // Re-render UI after a short delay to ensure render functions are defined
+    // Re-render UI
     setTimeout(() => {
       if (typeof renderJournalDiary === 'function') renderJournalDiary();
       if (typeof renderLedger === 'function') renderLedger();
@@ -1814,7 +1790,6 @@ function updateSyncStatus(status) {
       btn.disabled = true;
     }
   } else {
-    // offline
     if (el) {
       el.innerHTML = '📴';
       el.title = 'Offline - tap Sync to retry';
@@ -1828,35 +1803,32 @@ function updateSyncStatus(status) {
   }
 }
 
-// Manual sync function - for troubleshooting
+// Manual sync function
 async function manualSync() {
   const btn = document.getElementById('sync-btn');
   
-  // Immediate feedback
   if (btn) {
     btn.textContent = '⟳ Working...';
     btn.style.background = '#888';
   }
   
   try {
-    // Check if Supabase is ready
-    if (!supabaseClient) {
-      alert('❌ Sync not connected!\n\nThe sync service did not initialize. Please:\n1. Check your internet connection\n2. Refresh the page\n3. Try again');
-      if (btn) { btn.textContent = '↻ Sync'; btn.style.background = 'var(--gold)'; }
-      return;
+    if (!syncEnabled) {
+      // Try to reconnect
+      await initSupabase();
+      if (!syncEnabled) {
+        alert('❌ Cannot connect to sync service.\n\nPlease check your internet connection.');
+        if (btn) { btn.textContent = '↻ Retry'; btn.style.background = 'var(--gold)'; }
+        return;
+      }
     }
     
     console.log('🔧 Manual sync: pushing to cloud...');
-    
-    // Push local data to cloud
     await syncAllToCloud();
     
     console.log('🔧 Manual sync: pulling from cloud...');
-    
-    // Pull cloud data
     await loadAllFromCloud();
     
-    // Success feedback
     if (btn) { 
       btn.textContent = '✓ Done!'; 
       btn.style.background = '#4CAF50';
@@ -1870,19 +1842,19 @@ async function manualSync() {
     
   } catch (err) {
     console.error('Manual sync error:', err);
-    alert('❌ Sync failed!\n\nError: ' + err.message + '\n\nPlease check your internet connection.');
+    alert('❌ Sync failed!\n\nError: ' + err.message);
     if (btn) { btn.textContent = '↻ Sync'; btn.style.background = 'var(--gold)'; }
   }
 }
-}
 
-// Debounced sync - waits 2 seconds after last change before syncing
+// Debounced sync
 function triggerSync() {
   if (!syncEnabled || isSyncing) return;
   clearTimeout(syncTimeout);
   updateSyncStatus('syncing');
   syncTimeout = setTimeout(syncAllToCloud, 2000);
 }
+</script>
 
 // ─── THEME TOGGLE ───
 function toggleTheme(){
