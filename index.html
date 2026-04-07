@@ -619,11 +619,67 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
         <button class="btn btn-gold" onclick="sendPrompt('Run a full music business audit for Ntobeko Masemula. He makes Amapiano, has 2 projects out, is independent. Give me the 3 highest priority actions this week.')">Music audit ↗</button>
       </div>
       <div class="inner-tabs">
-        <button class="itab active" onclick="itab('music','pipeline',this)">Release pipeline</button>
+        <button class="itab active" onclick="itab('music','listen',this)">Listen</button>
+        <button class="itab" onclick="itab('music','pipeline',this)">Release pipeline</button>
         <button class="itab" onclick="itab('music','revenue',this)">Revenue</button>
         <button class="itab" onclick="itab('music','strategy',this)">Growth strategy</button>
       </div>
-      <div class="itab-panel active" id="music-pipeline">
+      <div class="itab-panel active" id="music-listen">
+        <div class="card mb-10" style="text-align:center;padding:40px 20px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:24px;margin-bottom:8px">🎵 Apple Music Player</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6">Embed your music directly from Apple Music. Follow the steps below to add your artist profile or playlist.</div>
+          
+          <div id="apple-music-embed-container" style="max-width:660px;margin:0 auto 30px;min-height:450px;background:var(--surface);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center">
+            <!-- Embedded player will appear here -->
+            <div style="padding:60px 40px;text-align:center">
+              <div style="font-size:80px;margin-bottom:20px;opacity:0.3">🎧</div>
+              <div style="font-size:14px;color:var(--muted);margin-bottom:20px">No music embedded yet</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.6;max-width:300px;margin:0 auto">Follow the instructions below to add your Apple Music artist profile, album, or playlist</div>
+            </div>
+          </div>
+
+          <div style="text-align:left;max-width:600px;margin:0 auto;background:var(--surface);padding:20px;border-radius:8px">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:16px;margin-bottom:12px;font-weight:500">How to embed your music:</div>
+            
+            <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:15px">
+              <strong style="color:var(--ink)">Option 1: Artist Profile</strong><br>
+              1. Go to <a href="https://music.apple.com" target="_blank" style="color:var(--gold);text-decoration:none">music.apple.com</a> and search for your artist name<br>
+              2. Copy the URL from your artist page<br>
+              3. Go to <a href="https://tools.applemediaservices.com/embed" target="_blank" style="color:var(--gold);text-decoration:none">Apple Music Embed Tool</a><br>
+              4. Paste your URL and customize the player<br>
+              5. Copy the iframe code and update this dashboard's HTML
+            </div>
+
+            <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:15px">
+              <strong style="color:var(--ink)">Option 2: Specific Album/Song</strong><br>
+              1. Find your album or song on Apple Music<br>
+              2. Click the "..." menu → Share → Copy Link<br>
+              3. Use the <a href="https://tools.applemediaservices.com/embed" target="_blank" style="color:var(--gold);text-decoration:none">embed tool</a> to generate code<br>
+              4. Replace the placeholder iframe below
+            </div>
+
+            <div style="font-size:12px;color:var(--muted);line-height:1.8">
+              <strong style="color:var(--ink)">Quick Start:</strong><br>
+              Look for <code style="background:var(--card);padding:2px 6px;border-radius:3px;font-size:10px">id="apple-music-embed-container"</code> in the HTML and paste your embed iframe inside it.
+            </div>
+          </div>
+
+          <div style="margin-top:20px">
+            <a href="https://music.apple.com" target="_blank" class="btn" style="display:inline-block;text-decoration:none;margin-right:10px">Open Apple Music</a>
+            <a href="https://tools.applemediaservices.com/embed" target="_blank" class="btn btn-gold" style="display:inline-block;text-decoration:none">Get Embed Code</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Alternative: Apple Music Web Player</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:15px;line-height:1.6">
+            If you want a full Apple Music experience with search and playlists, you can use the official web player in an iframe:
+          </div>
+          <iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;margin:0 auto;display:block" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/za/browse"></iframe>
+          <div style="font-size:10px;color:var(--muted);margin-top:10px;text-align:center">Full Apple Music catalog — requires Apple Music subscription to play</div>
+        </div>
+      </div>
+      <div class="itab-panel" id="music-pipeline">
         <div class="grid-2 mb-10">
           <div class="card">
             <div class="card-title">Next release — 4 week plan</div>
