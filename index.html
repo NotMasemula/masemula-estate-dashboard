@@ -1544,111 +1544,15 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 </div><!-- end os -->
 
 <script>
-// ═══ SUPABASE SYNC v8 - Key-based sync with Realtime ═══
+// ═══ SUPABASE SYNC v8 - Works with existing table structure ═══
 const SUPABASE_URL = 'https://romytadgdnpphqzlseaa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ggs07ym7m21ZKiTwQdB94g_lFACej5D';
+const USER_ID = 'ntobeko-masemula-estate';
 let syncEnabled = false;
 let isSyncing = false;
 let cloudStore = {}; // In-memory cache of cloud data
 
-console.log('🔧 Estate OS v8: Key-based sync with Realtime');
-
-// ═══ UNIVERSAL SAVE/LOAD FUNCTIONS ═══
-// Save data to Supabase (with localStorage fallback)
-async function saveData(key, value) {
-  // Always save to localStorage first (offline cache)
-  localStorage.setItem(key, JSON.stringify(value));
-  cloudStore[key] = value;
-  
-  if (!syncEnabled) {
-    console.log(`💾 Saved "${key}" locally (offline)`);
-    return;
-  }
-  
-  setSyncStatus('saving');
-  
-  try {
-    // Check if key exists
-    const checkUrl = `${SUPABASE_URL}/rest/v1/estate_data?key=eq.${encodeURIComponent(key)}&select=key`;
-    const checkResp = await fetch(checkUrl, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
-    const existing = await checkResp.json();
-    
-    const payload = { key, value, updated_at: new Date().toISOString() };
-    
-    if (existing && existing.length > 0) {
-      // Update existing
-      await fetch(`${SUPABASE_URL}/rest/v1/estate_data?key=eq.${encodeURIComponent(key)}`, {
-        method: 'PATCH',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({ value, updated_at: new Date().toISOString() })
-      });
-    } else {
-      // Insert new
-      await fetch(`${SUPABASE_URL}/rest/v1/estate_data`, {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify(payload)
-      });
-    }
-    
-    console.log(`☁️ Saved "${key}" to cloud`);
-    setSyncStatus('synced');
-  } catch (err) {
-    console.warn(`⚠️ Cloud save failed for "${key}":`, err);
-    setSyncStatus('offline');
-  }
-}
-
-// Load data from Supabase (with localStorage fallback)
-async function loadData(key, fallback = null) {
-  // Return from memory cache if available
-  if (cloudStore[key] !== undefined) {
-    return cloudStore[key];
-  }
-  
-  // Try localStorage first (fast)
-  const local = localStorage.getItem(key);
-  if (local) {
-    try {
-      cloudStore[key] = JSON.parse(local);
-      return cloudStore[key];
-    } catch (e) {
-      return local; // Return as string if not JSON
-    }
-  }
-  
-  // If online, try cloud
-  if (syncEnabled) {
-    try {
-      const url = `${SUPABASE_URL}/rest/v1/estate_data?key=eq.${encodeURIComponent(key)}&select=value`;
-      const resp = await fetch(url, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-      });
-      const data = await resp.json();
-      if (data && data.length > 0 && data[0].value !== undefined) {
-        cloudStore[key] = data[0].value;
-        localStorage.setItem(key, JSON.stringify(data[0].value));
-        return data[0].value;
-      }
-    } catch (err) {
-      console.warn(`⚠️ Cloud load failed for "${key}":`, err);
-    }
-  }
-  
-  return fallback;
-}
+console.log('🔧 Estate OS v8: Cloud sync with Realtime');
 
 // ═══ SYNC STATUS INDICATOR ═══
 function setSyncStatus(state) {
@@ -1670,134 +1574,249 @@ function setSyncStatus(state) {
   }
 }
 
-// ═══ LOAD ALL DATA ON STARTUP ═══
+// ═══ UNIVERSAL SAVE FUNCTION ═══
+async function saveData(key, value) {
+  // Always save to localStorage first (offline cache)
+  localStorage.setItem(key, JSON.stringify(value));
+  cloudStore[key] = value;
+  
+  if (!syncEnabled || isSyncing) {
+    console.log(`💾 Saved "${key}" locally`);
+    return;
+  }
+  
+  // Debounce cloud saves
+  clearTimeout(window['saveTimeout_' + key]);
+  window['saveTimeout_' + key] = setTimeout(() => syncToCloud(), 1000);
+}
+
+// ═══ UNIVERSAL LOAD FUNCTION ═══
+function loadData(key, fallback = null) {
+  // Return from memory cache if available
+  if (cloudStore[key] !== undefined) {
+    return cloudStore[key];
+  }
+  
+  // Try localStorage
+  const local = localStorage.getItem(key);
+  if (local) {
+    try {
+      cloudStore[key] = JSON.parse(local);
+      return cloudStore[key];
+    } catch (e) {
+      return local;
+    }
+  }
+  
+  return fallback;
+}
+
+// ═══ SYNC ALL DATA TO CLOUD ═══
+async function syncToCloud() {
+  if (!syncEnabled || isSyncing) return false;
+  
+  isSyncing = true;
+  setSyncStatus('saving');
+  
+  try {
+    // Gather all data
+    const allData = {
+      journalDiary: JSON.parse(localStorage.getItem('journalDiary') || '[]'),
+      financeLedger: JSON.parse(localStorage.getItem('financeLedger') || '[]'),
+      savingsGoals: JSON.parse(localStorage.getItem('savingsGoals') || '[]'),
+      emotionLog: JSON.parse(localStorage.getItem('emotionLog') || '[]'),
+      investments: JSON.parse(localStorage.getItem('investments') || '[]'),
+      agentTasks: JSON.parse(localStorage.getItem('agentTasks') || '[]'),
+      agentHistory: JSON.parse(localStorage.getItem('agentHistory') || '[]'),
+      accountBalances: JSON.parse(localStorage.getItem('accountBalances') || '{}'),
+      moduleMarks: JSON.parse(localStorage.getItem('moduleMarks') || '{}'),
+      contentStats: JSON.parse(localStorage.getItem('contentStats') || '{}'),
+      moodboardTiles: JSON.parse(localStorage.getItem('moodboardTiles') || '[]'),
+      academicModules: JSON.parse(localStorage.getItem('academicModules') || '[]'),
+      rs3Income: localStorage.getItem('rs3Income') || '',
+      theme: localStorage.getItem('theme') || 'light',
+      syncedAt: new Date().toISOString()
+    };
+    
+    // Use PATCH to update existing record
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${USER_ID}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        data: allData,
+        updated_at: new Date().toISOString()
+      })
+    });
+    
+    if (response.ok) {
+      console.log('☁️ Synced to cloud');
+      setSyncStatus('synced');
+      isSyncing = false;
+      return true;
+    } else {
+      throw new Error('Sync failed: ' + response.status);
+    }
+  } catch (err) {
+    console.error('☁️ Sync error:', err);
+    setSyncStatus('offline');
+    isSyncing = false;
+    return false;
+  }
+}
+
+// ═══ LOAD ALL DATA FROM CLOUD ═══
+async function loadFromCloud() {
+  if (!syncEnabled) return false;
+  
+  isSyncing = true;
+  setSyncStatus('loading');
+  
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${USER_ID}&select=data,updated_at`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Load failed');
+    
+    const results = await response.json();
+    if (!results || results.length === 0 || !results[0].data) {
+      console.log('☁️ No cloud data - will sync local data');
+      isSyncing = false;
+      setSyncStatus('synced');
+      return false;
+    }
+    
+    const cloudData = results[0].data;
+    console.log('☁️ Loaded cloud data from:', results[0].updated_at);
+    
+    // Hydrate localStorage and cloudStore
+    const keys = ['journalDiary', 'financeLedger', 'savingsGoals', 'emotionLog', 'investments',
+                  'agentTasks', 'agentHistory', 'accountBalances', 'moduleMarks', 'contentStats',
+                  'moodboardTiles', 'academicModules', 'rs3Income', 'theme'];
+    
+    keys.forEach(key => {
+      if (cloudData[key] !== undefined) {
+        cloudStore[key] = cloudData[key];
+        if (typeof cloudData[key] === 'object') {
+          localStorage.setItem(key, JSON.stringify(cloudData[key]));
+        } else {
+          localStorage.setItem(key, cloudData[key]);
+        }
+      }
+    });
+    
+    // Re-render all sections
+    renderAllSections();
+    
+    isSyncing = false;
+    setSyncStatus('synced');
+    return true;
+    
+  } catch (err) {
+    console.error('☁️ Load error:', err);
+    isSyncing = false;
+    setSyncStatus('offline');
+    return false;
+  }
+}
+
+// ═══ INITIALIZE DASHBOARD ═══
 async function initDashboard() {
   setSyncStatus('loading');
   
   try {
     // Test connection
-    const testResp = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?select=key&limit=1`, {
+    const testResp = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?select=user_id&limit=1`, {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
     
-    if (!testResp.ok) {
-      throw new Error('Connection failed');
-    }
+    if (!testResp.ok) throw new Error('Connection failed');
     
     syncEnabled = true;
     console.log('☁️ Connected to Supabase');
     
-    // Fetch ALL keys in one query
-    const url = `${SUPABASE_URL}/rest/v1/estate_data?select=key,value`;
-    const resp = await fetch(url, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
+    // Load from cloud
+    await loadFromCloud();
     
-    if (resp.ok) {
-      const rows = await resp.json();
-      console.log(`☁️ Loaded ${rows.length} keys from cloud`);
-      
-      // Hydrate cloudStore and localStorage
-      rows.forEach(row => {
-        if (row.key && row.value !== undefined) {
-          cloudStore[row.key] = row.value;
-          localStorage.setItem(row.key, JSON.stringify(row.value));
-        }
-      });
-      
-      // Re-render all sections
-      renderAllSections();
-    }
-    
-    // Setup Realtime subscription
+    // Setup Realtime
     setupRealtime();
     
-    setSyncStatus('synced');
-    
   } catch (err) {
-    console.warn('⚠️ Could not connect to cloud, using local data:', err);
+    console.warn('⚠️ Offline mode:', err.message);
     syncEnabled = false;
     setSyncStatus('offline');
-    // Still render from localStorage
     renderAllSections();
   }
 }
 
 // ═══ REALTIME SYNC ═══
-let realtimeSocket = null;
+let realtimeWs = null;
+let heartbeatInterval = null;
 
 function setupRealtime() {
-  if (realtimeSocket) return;
+  if (realtimeWs) return;
   
   try {
-    // Supabase Realtime via WebSocket
-    const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + '/realtime/v1/websocket?apikey=' + SUPABASE_KEY + '&vsn=1.0.0';
-    realtimeSocket = new WebSocket(wsUrl);
+    const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + 
+      '/realtime/v1/websocket?apikey=' + SUPABASE_KEY + '&vsn=1.0.0';
     
-    realtimeSocket.onopen = () => {
+    realtimeWs = new WebSocket(wsUrl);
+    
+    realtimeWs.onopen = () => {
       console.log('🔌 Realtime connected');
-      // Subscribe to estate_data changes
-      const joinMsg = {
+      // Subscribe to changes
+      realtimeWs.send(JSON.stringify({
         topic: 'realtime:public:estate_data',
         event: 'phx_join',
         payload: { config: { postgres_changes: [{ event: '*', schema: 'public', table: 'estate_data' }] } },
         ref: '1'
-      };
-      realtimeSocket.send(JSON.stringify(joinMsg));
+      }));
+      
+      // Heartbeat
+      heartbeatInterval = setInterval(() => {
+        if (realtimeWs.readyState === WebSocket.OPEN) {
+          realtimeWs.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: Date.now().toString() }));
+        }
+      }, 30000);
     };
     
-    realtimeSocket.onmessage = (event) => {
+    realtimeWs.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
-        if (msg.event === 'postgres_changes' && msg.payload?.data?.record) {
-          const { key, value } = msg.payload.data.record;
-          console.log('🔄 Realtime update:', key);
-          cloudStore[key] = value;
-          localStorage.setItem(key, JSON.stringify(value));
-          reloadSection(key, value);
+        if (msg.event === 'postgres_changes' && msg.payload?.data?.record?.user_id === USER_ID) {
+          console.log('🔄 Remote update detected');
+          // Reload from cloud
+          loadFromCloud();
         }
       } catch (e) {}
     };
     
-    realtimeSocket.onclose = () => {
-      console.log('🔌 Realtime disconnected, reconnecting...');
-      realtimeSocket = null;
+    realtimeWs.onclose = () => {
+      console.log('🔌 Realtime disconnected');
+      clearInterval(heartbeatInterval);
+      realtimeWs = null;
+      // Reconnect after 3 seconds
       setTimeout(setupRealtime, 3000);
     };
     
-    // Keep alive
-    setInterval(() => {
-      if (realtimeSocket && realtimeSocket.readyState === WebSocket.OPEN) {
-        realtimeSocket.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: Date.now().toString() }));
-      }
-    }, 30000);
+    realtimeWs.onerror = () => {
+      realtimeWs.close();
+    };
     
   } catch (err) {
     console.warn('⚠️ Realtime setup failed:', err);
   }
 }
 
-// Re-render only the affected section
-function reloadSection(key, value) {
-  switch (key) {
-    case 'journalDiary': if (typeof renderJournalDiary === 'function') renderJournalDiary(); break;
-    case 'financeLedger': if (typeof renderLedger === 'function') renderLedger(); break;
-    case 'savingsGoals': if (typeof renderSavingsGoals === 'function') renderSavingsGoals(); break;
-    case 'emotionLog': if (typeof renderEmotionLog === 'function') renderEmotionLog(); break;
-    case 'investments': if (typeof renderInvestments === 'function') renderInvestments(); break;
-    case 'agentTasks': if (typeof renderAgentTasks === 'function') renderAgentTasks(); break;
-    case 'moduleMarks': if (typeof renderModuleMarks === 'function') renderModuleMarks(); break;
-    case 'accountBalances': if (typeof renderAccountBalances === 'function') renderAccountBalances(); break;
-    case 'theme': 
-      if (value === 'dark') document.getElementById('os').classList.add('dark');
-      else document.getElementById('os').classList.remove('dark');
-      break;
-    default:
-      console.log('No renderer for:', key);
-  }
-}
-
-// Render all sections from cloudStore/localStorage
+// ═══ RENDER ALL SECTIONS ═══
 function renderAllSections() {
   setTimeout(() => {
     if (typeof renderJournalDiary === 'function') renderJournalDiary();
@@ -1815,72 +1834,27 @@ async function manualSync() {
   const btn = document.getElementById('sync-btn');
   if (btn) { btn.textContent = '⟳ Syncing...'; btn.style.background = '#888'; }
   
-  setSyncStatus('loading');
-  
   try {
-    // Push all local data to cloud
-    const keys = ['journalDiary', 'financeLedger', 'savingsGoals', 'emotionLog', 'investments', 
-                  'agentTasks', 'agentHistory', 'accountBalances', 'moduleMarks', 'contentStats',
-                  'moodboardTiles', 'academicModules', 'rs3Income', 'theme'];
+    // First push local to cloud
+    await syncToCloud();
     
-    for (const key of keys) {
-      const local = localStorage.getItem(key);
-      if (local) {
-        try {
-          const value = JSON.parse(local);
-          await saveData(key, value);
-        } catch (e) {
-          await saveData(key, local);
-        }
-      }
-    }
-    
-    // Pull latest from cloud
-    await initDashboard();
+    // Then pull cloud (to get any changes from other devices)
+    await loadFromCloud();
     
     if (btn) { 
       btn.textContent = '✓ Done!'; 
       btn.style.background = '#4CAF50';
-      setTimeout(() => { btn.textContent = '↻ Sync'; btn.style.background = 'var(--gold)'; }, 2000);
+      setTimeout(() => { btn.textContent = '↻ Sync'; btn.style.background = 'var(--gold)'; btn.style.color = '#000'; }, 2000);
     }
     
   } catch (err) {
     console.error('Sync error:', err);
-    setSyncStatus('offline');
     if (btn) { btn.textContent = '⚠️ Failed'; btn.style.background = '#c33'; }
   }
 }
 
-// ═══ MIGRATE LOCAL DATA TO CLOUD ═══
-async function migrateToCloud() {
-  if (!syncEnabled) {
-    alert('Cannot migrate - not connected to cloud');
-    return;
-  }
-  
-  const keys = Object.keys(localStorage).filter(k => !k.startsWith('estate_'));
-  console.log(`Migrating ${keys.length} keys to cloud...`);
-  
-  for (const key of keys) {
-    try {
-      const raw = localStorage.getItem(key);
-      let value;
-      try { value = JSON.parse(raw); } catch (e) { value = raw; }
-      await saveData(key, value);
-      console.log(`✓ Migrated: ${key}`);
-    } catch (err) {
-      console.warn(`✗ Failed: ${key}`, err);
-    }
-  }
-  
-  console.log('Migration complete!');
-  alert('Migration complete! All local data has been synced to cloud.');
-}
-
 // Start on page load
 document.addEventListener('DOMContentLoaded', initDashboard);
-
-// Also try after a delay (for dynamic content)
 setTimeout(initDashboard, 500);
 
 // ─── THEME TOGGLE ───
