@@ -1601,10 +1601,19 @@ setTimeout(async function initSupabase() {
     console.log('☁️ Supabase sync enabled!');
     updateSyncStatus('synced');
     
-    // Load cloud data on init
-    await loadAllFromCloud();
+    // Load cloud data on init - cloud is truth
+    const loaded = await loadAllFromCloud();
     
-    // Do initial sync to push any local data
+    // If we loaded new data and haven't reloaded yet, reload to show it
+    if (loaded && !sessionStorage.getItem('cloud_loaded')) {
+      sessionStorage.setItem('cloud_loaded', 'true');
+      console.log('☁️ Reloading to show cloud data...');
+      location.reload();
+      return;
+    }
+    sessionStorage.removeItem('cloud_loaded');
+    
+    // Sync local data to cloud after load
     setTimeout(() => syncAllToCloud(), 2000);
   } catch (e) {
     console.error('Supabase init failed:', e);
