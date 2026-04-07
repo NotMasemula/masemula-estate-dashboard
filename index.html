@@ -1561,7 +1561,6 @@ function setSyncStatus(state) {
   const states = {
     synced: { icon: '🟢', text: '↻ Sync', bg: 'var(--gold)', title: 'Synced' },
     saving: { icon: '🟡', text: '⟳ Saving...', bg: '#888', title: 'Saving...' },
-    loading: { icon: '⏳', text: '⟳ Loading...', bg: '#888', title: 'Loading...' },
     offline: { icon: '🔴', text: '⚠️ Offline', bg: '#c33', title: 'Offline' }
   };
   const s = states[state] || states.offline;
@@ -1570,7 +1569,7 @@ function setSyncStatus(state) {
     btn.textContent = s.text; 
     btn.style.background = s.bg;
     btn.style.color = state === 'synced' ? '#000' : '#fff';
-    btn.disabled = (state === 'saving' || state === 'loading');
+    btn.disabled = (state === 'saving');
   }
 }
 
@@ -1670,11 +1669,10 @@ async function syncToCloud(updateStatus = true) {
 }
 
 // ═══ LOAD ALL DATA FROM CLOUD ═══
-async function loadFromCloud() {
+async function loadFromCloud(showStatus = true) {
   if (!syncEnabled) return false;
   
   isSyncing = true;
-  setSyncStatus('loading');
   
   try {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${USER_ID}&select=data,updated_at`, {
@@ -1690,7 +1688,6 @@ async function loadFromCloud() {
     if (!results || results.length === 0 || !results[0].data) {
       console.log('☁️ No cloud data - will sync local data');
       isSyncing = false;
-      setSyncStatus('synced');
       return false;
     }
     
@@ -1718,21 +1715,20 @@ async function loadFromCloud() {
     renderAllSections();
     
     isSyncing = false;
-    setSyncStatus('synced');
     return true;
     
   } catch (err) {
     console.error('☁️ Load error:', err);
     isSyncing = false;
-    setSyncStatus('offline');
+    if (showStatus) setSyncStatus('offline');
     return false;
   }
 }
 
 // ═══ INITIALIZE DASHBOARD ═══
 async function initDashboard() {
-  // Test connection only - don't auto-load data
   try {
+    // Test connection
     const testResp = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?select=user_id&limit=1`, {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
@@ -1740,22 +1736,150 @@ async function initDashboard() {
     if (!testResp.ok) throw new Error('Connection failed');
     
     syncEnabled = true;
-    console.log('☁️ Connected to Supabase (manual sync mode)');
+    console.log('☁️ Connected to Supabase');
+    
+    // Load data from cloud on initial page load
+    await loadFromCloud();
+    
+    // Setup Realtime subscription for live updates
+    setupRealtime();
+    
     setSyncStatus('synced');
     
   } catch (err) {
     console.warn('⚠️ Offline mode:', err.message);
     syncEnabled = false;
     setSyncStatus('offline');
+    renderAllSections();
   }
-  
-  // Always render from local data on page load
-  renderAllSections();
 }
 
-// ═══ REALTIME SYNC - DISABLED (Manual sync only) ═══
-// Realtime auto-updates removed per user request
-// All UI updates now happen only when user presses sync button
+// ═══ REALTIME SYNC ═══
+let realtimeWs = null;
+let heartbeatInterval = null;
+
+function setupRealtime() {
+  if (realtimeWs) return;
+  
+  try {
+    const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + 
+      '/realtime/v1/websocket?apikey=' + SUPABASE_KEY + '&vsn=1.0.0';
+    
+    realtimeWs = new WebSocket(wsUrl);
+    
+    realtimeWs.onopen = () => {
+      console.log('🔌 Realtime connected');
+      
+      // Subscribe to estate_data changes
+      realtimeWs.send(JSON.stringify({
+        topic: 'realtime:public:estate_data',
+        event: 'phx_join',
+        payload: { config: { postgres_changes: [{ event: '*', schema: 'public', table: 'estate_data' }] } },
+        ref: '1'
+      }));
+      
+      // Heartbeat to keep connection alive
+      heartbeatInterval = setInterval(() => {
+        if (realtimeWs.readyState === WebSocket.OPEN) {
+          realtimeWs.send(JSON.stringify({ 
+            topic: 'phoenix', 
+            event: 'heartbeat', 
+            payload: {}, 
+            ref: Date.now().toString() 
+          }));
+        }
+      }, 30000);
+    };
+    
+    realtimeWs.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        
+        // Handle Realtime updates from other devices
+        if (msg.event === 'postgres_changes' && msg.payload?.data?.record?.user_id === USER_ID) {
+          const cloudData = msg.payload.data.record.data;
+          console.log('🔄 Realtime update received');
+          
+          // Update affected sections silently in background
+          if (cloudData) {
+            const keys = Object.keys(cloudData);
+            keys.forEach(key => {
+              if (cloudData[key] !== undefined) {
+                cloudStore[key] = cloudData[key];
+                localStorage.setItem(key, JSON.stringify(cloudData[key]));
+                // Silently update only the affected section
+                reloadSection(key, cloudData[key]);
+              }
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Realtime message error:', e);
+      }
+    };
+    
+    realtimeWs.onclose = () => {
+      console.log('🔌 Realtime disconnected, reconnecting...');
+      clearInterval(heartbeatInterval);
+      heartbeatInterval = null;
+      realtimeWs = null;
+      
+      // Reconnect after 3 seconds
+      setTimeout(() => {
+        if (syncEnabled) {
+          setupRealtime();
+        }
+      }, 3000);
+    };
+    
+    realtimeWs.onerror = (err) => {
+      console.warn('⚠️ Realtime error:', err);
+      realtimeWs.close();
+    };
+    
+  } catch (err) {
+    console.warn('⚠️ Realtime setup failed:', err);
+  }
+}
+
+// ═══ RELOAD SECTION - Silent background update ═══
+function reloadSection(key, value) {
+  // Silently update only the affected UI section
+  switch (key) {
+    case 'journalDiary':
+      if (typeof renderJournalDiary === 'function') renderJournalDiary();
+      break;
+    case 'financeLedger':
+      if (typeof renderLedger === 'function') renderLedger();
+      break;
+    case 'savingsGoals':
+      if (typeof renderSavingsGoals === 'function') renderSavingsGoals();
+      break;
+    case 'emotionLog':
+      if (typeof renderEmotionLog === 'function') renderEmotionLog();
+      break;
+    case 'investments':
+      if (typeof renderInvestments === 'function') renderInvestments();
+      break;
+    case 'agentTasks':
+    case 'agentHistory':
+      if (typeof renderAgentTasks === 'function') renderAgentTasks();
+      break;
+    case 'moduleMarks':
+      if (typeof renderModuleMarks === 'function') renderModuleMarks();
+      break;
+    case 'accountBalances':
+      if (typeof renderAccountBalances === 'function') renderAccountBalances();
+      break;
+    case 'theme':
+      if (value === 'dark') document.getElementById('os').classList.add('dark');
+      else document.getElementById('os').classList.remove('dark');
+      break;
+    default:
+      // Silently ignore unknown keys
+      break;
+  }
+}
 
 // ═══ RENDER ALL SECTIONS ═══
 function renderAllSections() {
@@ -1783,11 +1907,11 @@ async function manualSync() {
   try {
     console.log('🔄 Manual sync started');
     
-    // First push local changes to cloud
-    await syncToCloud();
+    // First push local changes to cloud (with status update)
+    await syncToCloud(true);
     
-    // Then pull latest data from cloud
-    await loadFromCloud();
+    // Then pull latest data from cloud and re-render all sections
+    await loadFromCloud(true);
     
     setSyncStatus('synced');
     console.log('✅ Manual sync complete');
@@ -1817,12 +1941,9 @@ async function manualSync() {
     }
   }
 }
-    
-  } catch (err) {
-    console.error('Sync error:', err);
-    if (btn) { btn.textContent = '⚠️ Failed'; btn.style.background = '#c33'; }
-  }
-}
+
+// Start on page load
+document.addEventListener('DOMContentLoaded', initDashboard);
 
 // Start on page load
 document.addEventListener('DOMContentLoaded', initDashboard);
