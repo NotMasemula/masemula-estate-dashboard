@@ -1692,6 +1692,7 @@ async function syncToCloud(updateStatus = true) {
       contentStats: loadData('contentStats', {}),
       moodboardTiles: loadData('moodboardTiles', []),
       academicModules: loadData('academicModules', []),
+      personalProjects: loadData('personalProjects', []),
       rs3Income: loadData('rs3Income', ''),
       theme: loadData('theme', 'light'),
       syncedAt: new Date().toISOString()
@@ -1757,7 +1758,7 @@ async function loadFromCloud(showStatus = true) {
     // Hydrate localStorage and cloudStore
     const keys = ['journalDiary', 'financeLedger', 'savingsGoals', 'emotionLog', 'investments',
                   'agentTasks', 'agentHistory', 'accountBalances', 'moduleMarks', 'contentStats',
-                  'moodboardTiles', 'academicModules', 'rs3Income', 'theme'];
+                  'moodboardTiles', 'academicModules', 'personalProjects', 'rs3Income', 'theme'];
     
     for (const key of keys) {
       if (cloudData[key] !== undefined) {
@@ -1931,6 +1932,9 @@ function reloadSection(key, value) {
     case 'accountBalances':
       if (typeof renderAccountBalances === 'function') renderAccountBalances();
       break;
+    case 'personalProjects':
+      if (typeof renderPersonalProjects === 'function') renderPersonalProjects();
+      break;
     case 'theme':
       if (value === 'dark') document.getElementById('os').classList.add('dark');
       else document.getElementById('os').classList.remove('dark');
@@ -1950,6 +1954,7 @@ function renderAllSections() {
     if (typeof renderAgentTasks === 'function') renderAgentTasks();
     if (typeof renderEmotionLog === 'function') renderEmotionLog();
     if (typeof renderInvestments === 'function') renderInvestments();
+    if (typeof renderPersonalProjects === 'function') renderPersonalProjects();
     console.log('🎨 UI rendered');
   }, 100);
 }
@@ -2086,6 +2091,9 @@ async function updateProjectStatus(id, newStatus) {
 }
 
 function renderPersonalProjects() {
+  // Reload from storage to ensure we have latest data
+  personalProjects = loadData('personalProjects', []);
+  
   const el = document.getElementById('personal-projects-list');
   if (!el) return;
   
