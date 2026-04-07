@@ -1551,6 +1551,7 @@ let supabaseClient = null;
 let syncEnabled = false;
 let syncTimeout = null;
 let isSyncing = false;
+let cloudLoaded = false;  // Prevents sync during initial load
 
 console.log('🔧 Estate OS: Supabase module loaded');
 
@@ -1558,8 +1559,8 @@ console.log('🔧 Estate OS: Supabase module loaded');
 const originalSetItem = localStorage.setItem.bind(localStorage);
 localStorage.setItem = function(key, value) {
   originalSetItem(key, value);
-  // Don't trigger sync for internal sync keys or during cloud load
-  if (!key.startsWith('estate_') && syncEnabled && !isSyncing) {
+  // Only trigger sync for user data changes AFTER cloud has loaded
+  if (!key.startsWith('estate_') && syncEnabled && !isSyncing && cloudLoaded) {
     triggerSync();
   }
 };
@@ -1601,20 +1602,13 @@ setTimeout(async function initSupabase() {
     console.log('☁️ Supabase sync enabled!');
     updateSyncStatus('synced');
     
-    // Load cloud data on init - cloud is truth
-    const loaded = await loadAllFromCloud();
+    // Load cloud data - this is the source of truth
+    await loadAllFromCloud();
     
-    // If we loaded new data and haven't reloaded yet, reload to show it
-    if (loaded && !sessionStorage.getItem('cloud_loaded')) {
-      sessionStorage.setItem('cloud_loaded', 'true');
-      console.log('☁️ Reloading to show cloud data...');
-      location.reload();
-      return;
-    }
-    sessionStorage.removeItem('cloud_loaded');
+    // Mark cloud as loaded - NOW user changes will trigger sync
+    cloudLoaded = true;
+    console.log('☁️ Ready - changes will now sync to cloud');
     
-    // Sync local data to cloud after load
-    setTimeout(() => syncAllToCloud(), 2000);
   } catch (e) {
     console.error('Supabase init failed:', e);
     updateSyncStatus('offline');
@@ -1725,14 +1719,16 @@ async function loadAllFromCloud() {
     localStorage.setItem('estate_last_sync', data.updated_at);
     console.log('☁️ Cloud data loaded successfully!');
     
-    // Re-render UI components to show cloud data
-    if (typeof renderJournalDiary === 'function') renderJournalDiary();
-    if (typeof renderLedger === 'function') renderLedger();
-    if (typeof renderSavingsGoals === 'function') renderSavingsGoals();
-    if (typeof renderAgentTasks === 'function') renderAgentTasks();
-    if (typeof renderEmotionLog === 'function') renderEmotionLog();
-    if (typeof renderInvestments === 'function') renderInvestments();
-    console.log('☁️ UI refreshed with cloud data');
+    // Re-render UI after a short delay to ensure render functions are defined
+    setTimeout(() => {
+      if (typeof renderJournalDiary === 'function') renderJournalDiary();
+      if (typeof renderLedger === 'function') renderLedger();
+      if (typeof renderSavingsGoals === 'function') renderSavingsGoals();
+      if (typeof renderAgentTasks === 'function') renderAgentTasks();
+      if (typeof renderEmotionLog === 'function') renderEmotionLog();
+      if (typeof renderInvestments === 'function') renderInvestments();
+      console.log('☁️ UI refreshed with cloud data');
+    }, 100);
     
     isSyncing = false;
     return true;
