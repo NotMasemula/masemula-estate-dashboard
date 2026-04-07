@@ -1761,6 +1761,8 @@ async function initDashboard() {
 // ═══ REALTIME SYNC ═══
 let realtimeWs = null;
 let heartbeatInterval = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_DELAY = 30000; // 30 seconds max
 
 function setupRealtime() {
   if (realtimeWs) return;
@@ -1771,8 +1773,16 @@ function setupRealtime() {
     
     realtimeWs = new WebSocket(wsUrl);
     
-    realtimeWs.onopen = () => {
+    realtimeWs.onopen = async () => {
       console.log('🔌 Realtime connected');
+      reconnectAttempts = 0; // Reset on successful connection
+      
+      // Refetch latest data to catch any missed updates
+      if (syncEnabled) {
+        console.log('🔄 Refetching data after reconnection...');
+        await loadFromCloud();
+      }
+      
       // Subscribe to changes
       realtimeWs.send(JSON.stringify({
         topic: 'realtime:public:estate_data',
@@ -1801,14 +1811,25 @@ function setupRealtime() {
     };
     
     realtimeWs.onclose = () => {
-      console.log('🔌 Realtime disconnected');
+      console.log('🔌 Realtime disconnected, attempting reconnection...');
       clearInterval(heartbeatInterval);
+      heartbeatInterval = null;
       realtimeWs = null;
-      // Reconnect after 3 seconds
-      setTimeout(setupRealtime, 3000);
+      
+      // Exponential backoff: 3s, 6s, 12s, 24s, 30s (max)
+      reconnectAttempts++;
+      const delay = Math.min(3000 * Math.pow(2, reconnectAttempts - 1), MAX_RECONNECT_DELAY);
+      console.log(`⏱️ Reconnecting in ${delay / 1000}s (attempt ${reconnectAttempts})...`);
+      
+      setTimeout(() => {
+        if (syncEnabled) {
+          setupRealtime();
+        }
+      }, delay);
     };
     
-    realtimeWs.onerror = () => {
+    realtimeWs.onerror = (err) => {
+      console.warn('⚠️ Realtime error:', err);
       realtimeWs.close();
     };
     
