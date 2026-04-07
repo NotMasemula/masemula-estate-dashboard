@@ -516,51 +516,98 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
     <!-- ═══ VENTURES ═══ -->
     <div class="section" id="s-ventures">
       <div class="sec-head">
-        <div><div class="sec-title">Active Ventures</div><div class="sec-sub">R5,000 escalation threshold · R6,000 DS budget</div></div>
+        <div><div class="sec-title">Ventures</div><div class="sec-sub">Business ventures · Personal projects · Long-term portfolio</div></div>
         <button class="btn btn-gold" onclick="sendPrompt('I want to add a new business venture to the Masemula Estate. Guide me through defining the concept, stage, budget and first 3 action steps.')">+ New venture ↗</button>
       </div>
-      <div class="grid-2 mb-10">
-        <div class="vc vc-interactive" onclick="showVentureDetails('ds')">
-          <div class="vc-top"><div><div class="vc-name">Dropshipping</div><div class="vc-stage">Active · Primary funding vehicle</div></div><div class="dot dot-active pulse"></div></div>
-          <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.7">Clean Desk Bundle · $55 sell price · $40 profit · 73% margin<br>Target: $4,000 total profit by Month 3–5</div>
-          <div class="kpi-row"><div class="kpi"><div class="kpi-v">R 2k</div><div class="kpi-l">Revenue</div></div><div class="kpi"><div class="kpi-v">R 6k</div><div class="kpi-l">Budget</div></div><div class="kpi"><div class="kpi-v">73%</div><div class="kpi-l">Margin</div></div></div>
+      <div class="inner-tabs">
+        <button class="itab active" onclick="itab('ventures','active',this)">Active Ventures</button>
+        <button class="itab" onclick="itab('ventures','personal',this)">Personal Projects</button>
+        <button class="itab" onclick="itab('ventures','portfolio',this)">Long-term Portfolio</button>
+      </div>
+      <div class="itab-panel active" id="ventures-active">
+        <div class="grid-2 mb-10">
+          <div class="vc vc-interactive" onclick="showVentureDetails('ds')">
+            <div class="vc-top"><div><div class="vc-name">Dropshipping</div><div class="vc-stage">Active · Primary funding vehicle</div></div><div class="dot dot-active pulse"></div></div>
+            <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.7">Clean Desk Bundle · $55 sell price · $40 profit · 73% margin<br>Target: $4,000 total profit by Month 3–5</div>
+            <div class="kpi-row"><div class="kpi"><div class="kpi-v">R 2k</div><div class="kpi-l">Revenue</div></div><div class="kpi"><div class="kpi-v">R 6k</div><div class="kpi-l">Budget</div></div><div class="kpi"><div class="kpi-v">73%</div><div class="kpi-l">Margin</div></div></div>
+          </div>
+          <div class="vc vc-interactive" onclick="showVentureDetails('music')">
+            <div class="vc-top"><div><div class="vc-name">Music — Amapiano</div><div class="vc-stage">Active · 2 projects released</div></div><div class="dot dot-active"></div></div>
+            <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.7">Independent · Building audience &amp; revenue<br>SAMRO/SAMPRA registration urgent</div>
+            <div class="kpi-row"><div class="kpi"><div class="kpi-v">2</div><div class="kpi-l">Releases</div></div><div class="kpi"><div class="kpi-v">—</div><div class="kpi-l">Streams</div></div><div class="kpi"><div class="kpi-v">0</div><div class="kpi-l">Syncs</div></div></div>
+          </div>
+          <div class="vc vc-interactive" onclick="showVentureDetails('brand')">
+            <div class="vc-top"><div><div class="vc-name">Masemula</div><div class="vc-stage">Concept stage · Luxury menswear</div></div><div class="dot dot-plan"></div></div>
+            <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.7">Ralph Lauren / ALD positioning · SA heritage<br>Collection 1: "The Internal" — 6–10 pieces</div>
+            <div class="kpi-row"><div class="kpi"><div class="kpi-v">0</div><div class="kpi-l">Products</div></div><div class="kpi"><div class="kpi-v">6–10</div><div class="kpi-l">Planned</div></div><div class="kpi"><div class="kpi-v">Q4</div><div class="kpi-l">Target</div></div></div>
+          </div>
+          <div class="vc vc-interactive" onclick="showVentureDetails('events')">
+            <div class="vc-top"><div><div class="vc-name">Events &amp; Hosting</div><div class="vc-stage">Planning · Kea-led</div></div><div class="dot dot-plan"></div></div>
+            <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.7">Kea leads — support only, never override<br>Business Manager support role</div>
+            <div class="kpi-row"><div class="kpi"><div class="kpi-v">0</div><div class="kpi-l">Events</div></div><div class="kpi"><div class="kpi-v">—</div><div class="kpi-l">Revenue</div></div><div class="kpi"><div class="kpi-v">TBC</div><div class="kpi-l">Launch</div></div></div>
+          </div>
         </div>
-        <div class="vc vc-interactive" onclick="showVentureDetails('music')">
-          <div class="vc-top"><div><div class="vc-name">Music — Amapiano</div><div class="vc-stage">Active · 2 projects released</div></div><div class="dot dot-active"></div></div>
-          <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.7">Independent · Building audience &amp; revenue<br>SAMRO/SAMPRA registration urgent</div>
-          <div class="kpi-row"><div class="kpi"><div class="kpi-v">2</div><div class="kpi-l">Releases</div></div><div class="kpi"><div class="kpi-v">—</div><div class="kpi-l">Streams</div></div><div class="kpi"><div class="kpi-v">0</div><div class="kpi-l">Syncs</div></div></div>
-        </div>
-        <div class="vc vc-interactive" onclick="showVentureDetails('brand')">
-          <div class="vc-top"><div><div class="vc-name">Masemula</div><div class="vc-stage">Concept stage · Luxury menswear</div></div><div class="dot dot-plan"></div></div>
-          <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.7">Ralph Lauren / ALD positioning · SA heritage<br>Collection 1: "The Internal" — 6–10 pieces</div>
-          <div class="kpi-row"><div class="kpi"><div class="kpi-v">0</div><div class="kpi-l">Products</div></div><div class="kpi"><div class="kpi-v">6–10</div><div class="kpi-l">Planned</div></div><div class="kpi"><div class="kpi-v">Q4</div><div class="kpi-l">Target</div></div></div>
-        </div>
-        <div class="vc vc-interactive" onclick="showVentureDetails('events')">
-          <div class="vc-top"><div><div class="vc-name">Events &amp; Hosting</div><div class="vc-stage">Planning · Kea-led</div></div><div class="dot dot-plan"></div></div>
-          <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.7">Kea leads — support only, never override<br>Business Manager support role</div>
-          <div class="kpi-row"><div class="kpi"><div class="kpi-v">0</div><div class="kpi-l">Events</div></div><div class="kpi"><div class="kpi-v">—</div><div class="kpi-l">Revenue</div></div><div class="kpi"><div class="kpi-v">TBC</div><div class="kpi-l">Launch</div></div></div>
+        <!-- Venture Detail Panel -->
+        <div id="venture-detail" class="card" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div class="card-title" id="venture-detail-title"></div>
+            <button class="btn" onclick="document.getElementById('venture-detail').style.display='none'">Close</button>
+          </div>
+          <div id="venture-detail-content"></div>
         </div>
       </div>
-      <!-- Venture Detail Panel -->
-      <div id="venture-detail" class="card" style="display:none">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <div class="card-title" id="venture-detail-title"></div>
-          <button class="btn" onclick="document.getElementById('venture-detail').style.display='none'">Close</button>
+      <div class="itab-panel" id="ventures-personal">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Personal projects, learning endeavors, and creative experiments outside of formal business ventures.</div>
+        <div id="personal-projects-list"></div>
+        <div class="card">
+          <div class="card-title">Add Personal Project</div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px">Project Name</div>
+            <input type="text" id="project-name" placeholder="e.g. Estate Dashboard, Photography Portfolio, Side App" style="width:100%;border:0.5px solid var(--border);background:var(--card);padding:8px 10px;font-family:'Jost',sans-serif;font-size:12px;font-weight:300;color:var(--ink);outline:none;border-radius:6px">
+          </div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px">Description</div>
+            <textarea id="project-desc" placeholder="Brief description and goals..." style="width:100%;height:60px;border:0.5px solid var(--border);background:var(--card);padding:10px;font-family:'Jost',sans-serif;font-size:12px;font-weight:300;color:var(--ink);resize:none;outline:none;border-radius:6px"></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px">Status</div>
+              <select id="project-status" class="sel" style="width:100%">
+                <option>Planning</option>
+                <option>In Progress</option>
+                <option>Completed</option>
+                <option>On Hold</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px">Category</div>
+              <select id="project-category" class="sel" style="width:100%">
+                <option>Tech / Coding</option>
+                <option>Creative</option>
+                <option>Learning</option>
+                <option>Personal</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-gold" onclick="addPersonalProject()">Add Project</button>
         </div>
-        <div id="venture-detail-content"></div>
       </div>
-      <div class="card">
-        <div class="card-title">Long-term portfolio</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px">
-          <span class="badge b-biz" style="padding:4px 10px">Speaker Company</span>
-          <span class="badge b-biz" style="padding:4px 10px">YouTube / Streaming</span>
-          <span class="badge b-biz" style="padding:4px 10px">Gumball SA</span>
-          <span class="badge b-fin" style="padding:4px 10px">Construction</span>
-          <span class="badge b-fin" style="padding:4px 10px">Architecture</span>
-          <span class="badge b-fin" style="padding:4px 10px">Car Service Centres</span>
-          <span class="badge b-fin" style="padding:4px 10px">Landscaping</span>
-          <span class="badge b-fin" style="padding:4px 10px">Student Accommodation</span>
-          <span class="badge b-health" style="padding:4px 10px">Charity / Non-profit</span>
+      <div class="itab-panel" id="ventures-portfolio">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Long-term business ideas and future ventures for the Masemula Estate portfolio.</div>
+        <div class="card">
+          <div class="card-title">Future Ventures</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <span class="badge b-biz" style="padding:4px 10px">Speaker Company</span>
+            <span class="badge b-biz" style="padding:4px 10px">YouTube / Streaming</span>
+            <span class="badge b-biz" style="padding:4px 10px">Gumball SA</span>
+            <span class="badge b-fin" style="padding:4px 10px">Construction</span>
+            <span class="badge b-fin" style="padding:4px 10px">Architecture</span>
+            <span class="badge b-fin" style="padding:4px 10px">Car Service Centres</span>
+            <span class="badge b-fin" style="padding:4px 10px">Landscaping</span>
+            <span class="badge b-fin" style="padding:4px 10px">Student Accommodation</span>
+            <span class="badge b-health" style="padding:4px 10px">Charity / Non-profit</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1987,6 +2034,108 @@ function tick(){
   if(el)el.textContent=d.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});
 }
 tick();setInterval(tick,10000);
+
+// ─── PERSONAL PROJECTS ───
+let personalProjects = loadData('personalProjects', []);
+
+async function addPersonalProject() {
+  const name = document.getElementById('project-name').value.trim();
+  const desc = document.getElementById('project-desc').value.trim();
+  const status = document.getElementById('project-status').value;
+  const category = document.getElementById('project-category').value;
+  
+  if (!name) {
+    alert('Please enter a project name');
+    return;
+  }
+  
+  const project = {
+    id: Date.now().toString(),
+    name,
+    description: desc,
+    status,
+    category,
+    createdAt: new Date().toISOString()
+  };
+  
+  personalProjects.unshift(project);
+  await saveData('personalProjects', personalProjects);
+  
+  // Clear form
+  document.getElementById('project-name').value = '';
+  document.getElementById('project-desc').value = '';
+  
+  renderPersonalProjects();
+}
+
+async function deletePersonalProject(id) {
+  if (confirm('Delete this project?')) {
+    personalProjects = personalProjects.filter(p => p.id !== id);
+    await saveData('personalProjects', personalProjects);
+    renderPersonalProjects();
+  }
+}
+
+async function updateProjectStatus(id, newStatus) {
+  const project = personalProjects.find(p => p.id === id);
+  if (project) {
+    project.status = newStatus;
+    await saveData('personalProjects', personalProjects);
+    renderPersonalProjects();
+  }
+}
+
+function renderPersonalProjects() {
+  const el = document.getElementById('personal-projects-list');
+  if (!el) return;
+  
+  if (personalProjects.length === 0) {
+    el.innerHTML = '<div class="card" style="text-align:center;padding:30px"><div style="font-family:\'Cormorant Garamond\',serif;font-size:16px;color:var(--muted);font-style:italic">No personal projects yet.</div><div style="font-size:12px;color:var(--muted);margin-top:8px">Add your first project below to start tracking.</div></div>';
+    return;
+  }
+  
+  const statusColors = {
+    'Planning': 'var(--muted)',
+    'In Progress': 'var(--gold)',
+    'Completed': 'var(--green)',
+    'On Hold': 'var(--muted)'
+  };
+  
+  const categoryBadges = {
+    'Tech / Coding': 'b-acad',
+    'Creative': 'b-biz',
+    'Learning': 'b-health',
+    'Personal': 'b-fin',
+    'Other': ''
+  };
+  
+  el.innerHTML = personalProjects.map(p => `
+    <div class="card mb-10">
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;margin-bottom:4px">${p.name}</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span class="badge ${categoryBadges[p.category]}" style="padding:2px 8px;font-size:10px">${p.category}</span>
+            <span style="font-size:11px;color:${statusColors[p.status]};font-weight:400">${p.status}</span>
+          </div>
+        </div>
+        <button class="btn" style="padding:4px 10px;font-size:11px" onclick="deletePersonalProject('${p.id}')">Delete</button>
+      </div>
+      ${p.description ? `<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">${p.description}</div>` : ''}
+      <div style="display:flex;gap:6px">
+        <button class="btn" style="padding:4px 10px;font-size:11px;background:var(--surface)" onclick="updateProjectStatus('${p.id}', 'Planning')">Planning</button>
+        <button class="btn" style="padding:4px 10px;font-size:11px;background:var(--surface)" onclick="updateProjectStatus('${p.id}', 'In Progress')">In Progress</button>
+        <button class="btn" style="padding:4px 10px;font-size:11px;background:var(--surface)" onclick="updateProjectStatus('${p.id}', 'Completed')">Completed</button>
+        <button class="btn" style="padding:4px 10px;font-size:11px;background:var(--surface)" onclick="updateProjectStatus('${p.id}', 'On Hold')">On Hold</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Render on page load
+document.addEventListener('DOMContentLoaded', () => {
+  renderPersonalProjects();
+});
 
 // ─── NAV ───
 const titles={dashboard:'Estate Overview',ventures:'Ventures',music:'Music',brand:'Masemula Brand',goals:'Goals & Milestones',time:'Time & Routine',routine:'Daily Routine',finance:'Finance',headspace:'Headspace',academics:'Academics',journal:'Journal',content:'Content',moodboard:'Vision Board',designs:'Designs & Graphics',agents:'Estate Agents',jarvis:'Jarvis Live'};
