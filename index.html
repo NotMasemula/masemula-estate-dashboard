@@ -409,7 +409,8 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       <div class="tb-sub" id="tb-sub">Ntobeko Masemula · Johannesburg</div>
     </div>
     <div class="tb-right">
-      <span id="sync-status" title="Sync status" style="cursor:help;font-size:14px">📴</span>
+      <button id="sync-btn" onclick="manualSync()" title="Sync now" style="background:var(--gold);color:#000;border:none;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;margin-right:8px">↻ Sync</button>
+      <span id="sync-status" title="Sync status" style="cursor:pointer;font-size:14px" onclick="manualSync()">📴</span>
       <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">
         <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <svg id="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -1561,9 +1562,22 @@ localStorage.setItem = function(key, value) {
   originalSetItem(key, value);
   // Only trigger sync for user data changes AFTER cloud has loaded
   if (!key.startsWith('estate_') && syncEnabled && !isSyncing && cloudLoaded) {
+    console.log('☁️ Auto-sync triggered by:', key);
     triggerSync();
   }
 };
+
+// Sync when page visibility changes (user switches tabs/apps on mobile)
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden' && syncEnabled && cloudLoaded) {
+    console.log('☁️ Page hidden - syncing...');
+    syncAllToCloud();
+  }
+  if (document.visibilityState === 'visible' && syncEnabled) {
+    console.log('☁️ Page visible - loading cloud data...');
+    loadAllFromCloud();
+  }
+});
 
 // Initialize Supabase (with delay to ensure DOM ready)
 setTimeout(async function initSupabase() {
@@ -1769,6 +1783,31 @@ function updateSyncStatus(status) {
     el.style.cursor = 'default';
     el.onclick = null;
   }
+  // Update sync button
+  const btn = document.getElementById('sync-btn');
+  if (btn) {
+    btn.textContent = status === 'syncing' ? '⟳ Syncing...' : '↻ Sync';
+    btn.disabled = status === 'syncing';
+  }
+}
+
+// Manual sync function - for troubleshooting
+async function manualSync() {
+  console.log('🔧 Manual sync triggered');
+  
+  if (!supabaseClient) {
+    alert('Sync not connected. Check your internet connection and refresh the page.');
+    return;
+  }
+  
+  // First push local data to cloud
+  updateSyncStatus('syncing');
+  await syncAllToCloud();
+  
+  // Then pull cloud data
+  await loadAllFromCloud();
+  
+  alert('Sync complete! Data pushed to cloud and pulled latest.');
 }
 
 // Debounced sync - waits 2 seconds after last change before syncing
