@@ -9,7 +9,13 @@
 <meta http-equiv="Expires" content="0">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
 <title>Masemula Estate OS</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// Fallback if first CDN fails
+if (typeof window.supabase === 'undefined') {
+  document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>');
+}
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -1579,9 +1585,10 @@ document.addEventListener('visibilitychange', function() {
   }
 });
 
-// Initialize Supabase (with delay to ensure DOM ready)
-setTimeout(async function initSupabase() {
-  console.log('🔧 InitSupabase starting...');
+// Initialize Supabase
+let initRetries = 0;
+async function initSupabase() {
+  console.log('🔧 InitSupabase starting... (attempt ' + (initRetries + 1) + ')');
   
   if (!SUPABASE_KEY || SUPABASE_KEY.length < 10) {
     console.log('⚠️ Supabase key not set - running in offline mode');
@@ -1594,11 +1601,21 @@ setTimeout(async function initSupabase() {
     
     // Safari fix: Check if supabase loaded from CDN
     if (typeof window.supabase === 'undefined') {
-      console.log('⚠️ Supabase library not loaded yet - retrying...');
-      updateSyncStatus('offline');
-      // Retry after a delay (Safari can be slow loading scripts)
-      setTimeout(initSupabase, 2000);
-      return;
+      initRetries++;
+      if (initRetries < 5) {
+        console.log('⚠️ Supabase not loaded yet - retry ' + initRetries + '/5...');
+        setTimeout(initSupabase, 1500);
+        return;
+      } else {
+        console.log('❌ Supabase failed to load after 5 attempts');
+        updateSyncStatus('offline');
+        const btn = document.getElementById('sync-btn');
+        if (btn) {
+          btn.textContent = '❌ Load Failed';
+          btn.style.background = '#c33';
+        }
+        return;
+      }
     }
     
     const createClient = window.supabase.createClient;
@@ -1640,7 +1657,10 @@ setTimeout(async function initSupabase() {
     console.error('Supabase init failed:', e);
     updateSyncStatus('offline');
   }
-}, 500);
+}
+
+// Start initialization after page loads (longer delay for Safari)
+setTimeout(initSupabase, 1000);
 
 // Fixed user ID for cross-device sync (all devices use same ID)
 function getUserId() {
