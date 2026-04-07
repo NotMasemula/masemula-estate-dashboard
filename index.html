@@ -9,6 +9,7 @@
 <meta http-equiv="Expires" content="0">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
 <title>Masemula Estate OS</title>
+<!-- v7 - REST API sync with merge logic -->
 <!-- Using direct REST API instead of Supabase JS (works on all browsers including Safari) -->
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap');
@@ -1653,7 +1654,7 @@ function mergeObjects(localObj, cloudObj) {
 
 // Sync all estate data to cloud using REST API (with MERGE logic)
 async function syncAllToCloud() {
-  if (!syncEnabled || isSyncing) return;
+  if (!syncEnabled || isSyncing) return false;
   
   isSyncing = true;
   updateSyncStatus('syncing');
@@ -1674,15 +1675,21 @@ async function syncAllToCloud() {
       const results = await getResponse.json();
       if (results && results.length > 0 && results[0].data) {
         cloudData = results[0].data;
+        console.log('☁️ Got cloud data, journal entries:', (cloudData.journalDiary || []).length);
       }
+    } else {
+      console.log('☁️ Could not fetch cloud data:', getResponse.status);
     }
     
     // Get local data
+    const localJournal = JSON.parse(localStorage.getItem('journalDiary') || '[]');
+    console.log('📱 Local journal entries:', localJournal.length);
+    
     const localData = {
       ledger: JSON.parse(localStorage.getItem('ledger') || '[]'),
       savingsGoals: JSON.parse(localStorage.getItem('savingsGoals') || '[]'),
       emotionLog: JSON.parse(localStorage.getItem('emotionLog') || '[]'),
-      journalDiary: JSON.parse(localStorage.getItem('journalDiary') || '[]'),
+      journalDiary: localJournal,
       agentTasks: JSON.parse(localStorage.getItem('agentTasks') || '[]'),
       agentHistory: JSON.parse(localStorage.getItem('agentHistory') || '[]'),
       investments: JSON.parse(localStorage.getItem('investments') || '[]'),
@@ -1697,11 +1704,14 @@ async function syncAllToCloud() {
     };
     
     // MERGE: Combine local + cloud data (keeps entries from BOTH devices)
+    const mergedJournal = mergeByDate(localData.journalDiary, cloudData.journalDiary || []);
+    console.log('🔀 Merged journal entries:', mergedJournal.length);
+    
     const mergedData = {
       ledger: mergeByDate(localData.ledger, cloudData.ledger || []),
       savingsGoals: mergeByDate(localData.savingsGoals, cloudData.savingsGoals || []),
       emotionLog: mergeByDate(localData.emotionLog, cloudData.emotionLog || []),
-      journalDiary: mergeByDate(localData.journalDiary, cloudData.journalDiary || []),
+      journalDiary: mergedJournal,
       agentTasks: mergeByDate(localData.agentTasks, cloudData.agentTasks || []),
       agentHistory: mergeByDate(localData.agentHistory, cloudData.agentHistory || []),
       investments: mergeByDate(localData.investments, cloudData.investments || []),
@@ -1715,8 +1725,6 @@ async function syncAllToCloud() {
       theme: localData.theme || cloudData.theme || 'light',
       syncedAt: new Date().toISOString()
     };
-    
-    console.log('☁️ Merging data - local entries + cloud entries combined');
     
     // Push merged data to cloud
     const url = `${SUPABASE_URL}/rest/v1/estate_data`;
@@ -1738,17 +1746,32 @@ async function syncAllToCloud() {
     if (!response.ok) {
       const errText = await response.text();
       console.error('☁️ Sync error:', response.status, errText);
+      alert('⚠️ Push failed: ' + response.status + '\n' + errText);
       updateSyncStatus('offline');
-    } else {
-      console.log('☁️ Synced to cloud at', new Date().toLocaleTimeString());
-      localStorage.setItem('estate_last_sync', new Date().toISOString());
-      updateSyncStatus('synced');
+      isSyncing = false;
+      return false;
     }
+    
+    console.log('☁️ Synced to cloud at', new Date().toLocaleTimeString());
+    
+    // IMPORTANT: Also update local storage with merged data so nothing is lost
+    localStorage.setItem('journalDiary', JSON.stringify(mergedJournal));
+    localStorage.setItem('ledger', JSON.stringify(mergedData.ledger));
+    localStorage.setItem('savingsGoals', JSON.stringify(mergedData.savingsGoals));
+    localStorage.setItem('emotionLog', JSON.stringify(mergedData.emotionLog));
+    localStorage.setItem('financeLedger', JSON.stringify(mergedData.financeLedger));
+    
+    localStorage.setItem('estate_last_sync', new Date().toISOString());
+    updateSyncStatus('synced');
+    isSyncing = false;
+    return true;
+    
   } catch (e) {
     console.error('☁️ Sync failed:', e);
+    alert('⚠️ Sync error: ' + e.message);
     updateSyncStatus('offline');
-  } finally {
     isSyncing = false;
+    return false;
   }
 }
 
@@ -1867,7 +1890,7 @@ function updateSyncStatus(status) {
   }
 }
 
-// Manual sync function
+// Manual sync function with detailed debugging
 async function manualSync() {
   const btn = document.getElementById('sync-btn');
   
@@ -1878,7 +1901,6 @@ async function manualSync() {
   
   try {
     if (!syncEnabled) {
-      // Try to reconnect
       await initSupabase();
       if (!syncEnabled) {
         alert('❌ Cannot connect to sync service.\n\nPlease check your internet connection.');
@@ -1887,11 +1909,20 @@ async function manualSync() {
       }
     }
     
-    console.log('🔧 Manual sync: pushing to cloud...');
-    await syncAllToCloud();
+    // Show what we have before sync
+    const beforeJournal = JSON.parse(localStorage.getItem('journalDiary') || '[]');
     
-    console.log('🔧 Manual sync: pulling from cloud...');
-    await loadAllFromCloud();
+    // Do the sync (this now also saves merged data locally)
+    const success = await syncAllToCloud();
+    
+    if (!success) {
+      // Sync failed - don't overwrite local data!
+      if (btn) { btn.textContent = '⚠️ Failed'; btn.style.background = '#c33'; }
+      return;
+    }
+    
+    // Show results
+    const afterJournal = JSON.parse(localStorage.getItem('journalDiary') || '[]');
     
     if (btn) { 
       btn.textContent = '✓ Done!'; 
@@ -1902,7 +1933,10 @@ async function manualSync() {
       }, 2000);
     }
     
-    alert('✅ Sync complete!\n\nYour data has been saved to the cloud.');
+    // Re-render UI with merged data
+    if (typeof renderJournalDiary === 'function') renderJournalDiary();
+    
+    alert('✅ Sync complete!\n\nJournal entries: ' + afterJournal.length + '\n(Before: ' + beforeJournal.length + ')');
     
   } catch (err) {
     console.error('Manual sync error:', err);
