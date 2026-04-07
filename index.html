@@ -1671,14 +1671,14 @@ async function syncAllToCloud() {
     });
     
     let cloudData = {};
+    let recordExists = false;
     if (getResponse.ok) {
       const results = await getResponse.json();
       if (results && results.length > 0 && results[0].data) {
         cloudData = results[0].data;
+        recordExists = true;
         console.log('☁️ Got cloud data, journal entries:', (cloudData.journalDiary || []).length);
       }
-    } else {
-      console.log('☁️ Could not fetch cloud data:', getResponse.status);
     }
     
     // Get local data
@@ -1726,22 +1726,42 @@ async function syncAllToCloud() {
       syncedAt: new Date().toISOString()
     };
     
-    // Push merged data to cloud
-    const url = `${SUPABASE_URL}/rest/v1/estate_data`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify({
-        user_id: SYNC_USER_ID,
-        data: mergedData,
-        updated_at: new Date().toISOString()
-      })
-    });
+    // Use PATCH for existing records, POST for new records
+    let response;
+    if (recordExists) {
+      // Update existing record with PATCH
+      const url = `${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${SYNC_USER_ID}`;
+      response = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          data: mergedData,
+          updated_at: new Date().toISOString()
+        })
+      });
+    } else {
+      // Create new record with POST
+      const url = `${SUPABASE_URL}/rest/v1/estate_data`;
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          user_id: SYNC_USER_ID,
+          data: mergedData,
+          updated_at: new Date().toISOString()
+        })
+      });
+    }
     
     if (!response.ok) {
       const errText = await response.text();
