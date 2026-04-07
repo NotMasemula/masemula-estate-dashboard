@@ -874,6 +874,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       <div class="inner-tabs">
         <button class="itab active" onclick="itab('finance','overview',this)">Overview</button>
         <button class="itab" onclick="itab('finance','ledger',this)">Ledger</button>
+        <button class="itab" onclick="itab('finance','recurring',this)">Recurring</button>
         <button class="itab" onclick="itab('finance','savings',this)">Savings</button>
         <button class="itab" onclick="itab('finance','invest',this)">Investments</button>
         <button class="itab" onclick="itab('finance','accounts',this)">Accounts</button>
@@ -935,6 +936,39 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
         <div class="card">
           <div class="card-title">Transaction History</div>
           <div id="ledger-list"></div>
+        </div>
+      </div>
+      <div class="itab-panel" id="finance-recurring">
+        <div class="card mb-10">
+          <div class="card-title">Add Recurring Transaction</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Set up transactions that happen regularly (subscriptions, rent, salary, etc.)</div>
+          <input class="ledger-input" id="recurring-desc" placeholder="Description (e.g. Shopify subscription)">
+          <input class="ledger-input" id="recurring-amt" type="number" placeholder="Amount (R)">
+          <select class="ledger-input" id="recurring-type">
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
+          <select class="ledger-input" id="recurring-cat">
+            <option>Dropshipping</option><option>Music</option><option>Masemula Brand</option><option>Ads</option><option>Tools</option><option>Other</option>
+          </select>
+          <select class="ledger-input" id="recurring-freq">
+            <option value="monthly">Monthly</option>
+            <option value="weekly">Weekly</option>
+            <option value="daily">Daily</option>
+          </select>
+          <input class="ledger-input" id="recurring-day" type="number" placeholder="Day of month (1-31) or day of week (1-7)" min="1" max="31">
+          <button class="btn btn-gold" style="width:100%;margin-top:8px" onclick="addRecurringTransaction()">Add Recurring Transaction</button>
+        </div>
+
+        <div class="card mb-10">
+          <div class="card-title">Pending Recurring Transactions</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Click to add these to your ledger</div>
+          <div id="pending-recurring-list"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">All Recurring Transactions</div>
+          <div id="recurring-list"></div>
         </div>
       </div>
       <div class="itab-panel" id="finance-savings">
@@ -1709,6 +1743,7 @@ async function syncToCloud(updateStatus = true) {
       moodboardTiles: loadData('moodboardTiles', []),
       academicModules: loadData('academicModules', []),
       personalProjects: loadData('personalProjects', []),
+      recurringTransactions: loadData('recurringTransactions', []),
       rs3Income: loadData('rs3Income', ''),
       theme: loadData('theme', 'light'),
       syncedAt: new Date().toISOString()
@@ -1774,7 +1809,7 @@ async function loadFromCloud(showStatus = true) {
     // Hydrate localStorage and cloudStore
     const keys = ['journalDiary', 'financeLedger', 'savingsGoals', 'emotionLog', 'investments',
                   'agentTasks', 'agentHistory', 'accountBalances', 'moduleMarks', 'contentStats',
-                  'moodboardTiles', 'academicModules', 'personalProjects', 'rs3Income', 'theme'];
+                  'moodboardTiles', 'academicModules', 'personalProjects', 'recurringTransactions', 'rs3Income', 'theme'];
     
     for (const key of keys) {
       if (cloudData[key] !== undefined) {
@@ -1951,6 +1986,10 @@ function reloadSection(key, value) {
     case 'personalProjects':
       if (typeof renderPersonalProjects === 'function') renderPersonalProjects();
       break;
+    case 'recurringTransactions':
+      if (typeof renderRecurringTransactions === 'function') renderRecurringTransactions();
+      if (typeof checkPendingRecurring === 'function') checkPendingRecurring();
+      break;
     case 'theme':
       if (value === 'dark') document.getElementById('os').classList.add('dark');
       else document.getElementById('os').classList.remove('dark');
@@ -1971,6 +2010,8 @@ function renderAllSections() {
     if (typeof renderEmotionLog === 'function') renderEmotionLog();
     if (typeof renderInvestments === 'function') renderInvestments();
     if (typeof renderPersonalProjects === 'function') renderPersonalProjects();
+    if (typeof renderRecurringTransactions === 'function') renderRecurringTransactions();
+    if (typeof checkPendingRecurring === 'function') checkPendingRecurring();
     console.log('🎨 UI rendered');
   }, 100);
 }
@@ -2954,6 +2995,7 @@ renderAllChecklists();
 // ─── FINANCE LEDGER ───
 let ledger=loadData('financeLedger', []);
 let savingsGoals=loadData('savingsGoals', []);
+let recurringTransactions=loadData('recurringTransactions', []);
 
 async function addLedgerEntry(type){
   const descEl=document.getElementById(type+'-desc');
@@ -3178,6 +3220,169 @@ function categorizeTransaction(description) {
   // Default
   return 'Other';
 }
+
+// ─── RECURRING TRANSACTIONS ───
+async function addRecurringTransaction() {
+  const desc = document.getElementById('recurring-desc').value.trim();
+  const amt = parseFloat(document.getElementById('recurring-amt').value);
+  const type = document.getElementById('recurring-type').value;
+  const cat = document.getElementById('recurring-cat').value;
+  const freq = document.getElementById('recurring-freq').value;
+  const day = parseInt(document.getElementById('recurring-day').value);
+  
+  if (!desc || isNaN(amt) || amt <= 0) {
+    alert('Enter description and amount');
+    return;
+  }
+  
+  if (isNaN(day) || day < 1 || (freq === 'monthly' && day > 31) || (freq === 'weekly' && day > 7)) {
+    alert('Enter valid day (1-31 for monthly, 1-7 for weekly)');
+    return;
+  }
+  
+  const recurring = {
+    id: Date.now().toString(),
+    desc,
+    amt,
+    type,
+    cat,
+    freq,
+    day,
+    lastProcessed: null,
+    createdAt: new Date().toISOString()
+  };
+  
+  recurringTransactions.push(recurring);
+  await saveData('recurringTransactions', recurringTransactions);
+  
+  document.getElementById('recurring-desc').value = '';
+  document.getElementById('recurring-amt').value = '';
+  document.getElementById('recurring-day').value = '';
+  
+  renderRecurringTransactions();
+  checkPendingRecurring();
+}
+
+async function deleteRecurringTransaction(id) {
+  if (confirm('Delete this recurring transaction?')) {
+    recurringTransactions = recurringTransactions.filter(r => r.id !== id);
+    await saveData('recurringTransactions', recurringTransactions);
+    renderRecurringTransactions();
+    checkPendingRecurring();
+  }
+}
+
+async function processRecurringTransaction(id) {
+  const recurring = recurringTransactions.find(r => r.id === id);
+  if (!recurring) return;
+  
+  // Add to ledger
+  ledger.unshift({
+    type: recurring.type,
+    desc: recurring.desc,
+    amt: recurring.amt,
+    cat: recurring.cat,
+    date: new Date().toISOString()
+  });
+  
+  // Update last processed date
+  recurring.lastProcessed = new Date().toISOString();
+  
+  await saveData('financeLedger', ledger);
+  await saveData('recurringTransactions', recurringTransactions);
+  
+  renderLedger();
+  updateFinanceTotals();
+  renderRecurringTransactions();
+  checkPendingRecurring();
+}
+
+function renderRecurringTransactions() {
+  recurringTransactions = loadData('recurringTransactions', []);
+  const el = document.getElementById('recurring-list');
+  if (!el) return;
+  
+  if (recurringTransactions.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;padding:10px 0">No recurring transactions set up yet.</div>';
+    return;
+  }
+  
+  el.innerHTML = recurringTransactions.map(r => {
+    const freqText = r.freq === 'monthly' ? `Every ${r.day}th of month` : 
+                     r.freq === 'weekly' ? `Every ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][r.day-1]}` :
+                     'Daily';
+    const lastProcessed = r.lastProcessed ? new Date(r.lastProcessed).toLocaleDateString('en-ZA') : 'Never';
+    
+    return `<div class="ledger-row">
+      <div class="ledger-type ${r.type==='income'?'ledger-in':'ledger-out'}"></div>
+      <div class="ledger-desc">${r.desc}<div style="font-size:10px;color:var(--muted);margin-top:2px">${freqText} · Last: ${lastProcessed}</div></div>
+      <div class="ledger-cat">${r.cat}</div>
+      <div class="ledger-amt" style="color:${r.type==='income'?'var(--green)':'var(--red)'}">R ${r.amt.toLocaleString()}</div>
+      <button class="btn-del" onclick="deleteRecurringTransaction('${r.id}')">×</button>
+    </div>`;
+  }).join('');
+}
+
+function checkPendingRecurring() {
+  recurringTransactions = loadData('recurringTransactions', []);
+  const pending = [];
+  const now = new Date();
+  
+  for (const r of recurringTransactions) {
+    const lastProcessed = r.lastProcessed ? new Date(r.lastProcessed) : null;
+    
+    let isDue = false;
+    
+    if (r.freq === 'monthly') {
+      const currentDay = now.getDate();
+      if (currentDay === r.day) {
+        if (!lastProcessed || lastProcessed.getMonth() !== now.getMonth() || lastProcessed.getFullYear() !== now.getFullYear()) {
+          isDue = true;
+        }
+      }
+    } else if (r.freq === 'weekly') {
+      const currentDay = now.getDay() === 0 ? 7 : now.getDay();
+      if (currentDay === r.day) {
+        if (!lastProcessed || now - lastProcessed > 6 * 24 * 60 * 60 * 1000) {
+          isDue = true;
+        }
+      }
+    } else if (r.freq === 'daily') {
+      if (!lastProcessed || now.toDateString() !== lastProcessed.toDateString()) {
+        isDue = true;
+      }
+    }
+    
+    if (isDue) {
+      pending.push(r);
+    }
+  }
+  
+  const el = document.getElementById('pending-recurring-list');
+  if (!el) return;
+  
+  if (pending.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;padding:10px 0">No pending transactions. All up to date!</div>';
+    return;
+  }
+  
+  el.innerHTML = pending.map(r => `
+    <div class="ledger-row" style="background:var(--gold);background:linear-gradient(90deg, transparent, var(--gold) 50%, transparent);padding:10px;margin-bottom:5px;border-radius:6px">
+      <div class="ledger-type ${r.type==='income'?'ledger-in':'ledger-out'}"></div>
+      <div class="ledger-desc">${r.desc}</div>
+      <div class="ledger-cat">${r.cat}</div>
+      <div class="ledger-amt" style="color:${r.type==='income'?'var(--green)':'var(--red)'}">R ${r.amt.toLocaleString()}</div>
+      <button class="btn" style="padding:4px 10px;font-size:11px" onclick="processRecurringTransaction('${r.id}')">Add to Ledger</button>
+    </div>
+  `).join('');
+}
+
+// Check for pending recurring on page load
+document.addEventListener('DOMContentLoaded', () => {
+  checkPendingRecurring();
+  // Check every hour
+  setInterval(checkPendingRecurring, 3600000);
+});
 
 async function updateRS3Progress(){
   const el=document.getElementById('rs3-income');
