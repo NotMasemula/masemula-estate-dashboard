@@ -1621,20 +1621,20 @@ async function syncToCloud() {
   try {
     // Gather all data
     const allData = {
-      journalDiary: JSON.parse(localStorage.getItem('journalDiary') || '[]'),
-      financeLedger: JSON.parse(localStorage.getItem('financeLedger') || '[]'),
-      savingsGoals: JSON.parse(localStorage.getItem('savingsGoals') || '[]'),
-      emotionLog: JSON.parse(localStorage.getItem('emotionLog') || '[]'),
-      investments: JSON.parse(localStorage.getItem('investments') || '[]'),
-      agentTasks: JSON.parse(localStorage.getItem('agentTasks') || '[]'),
-      agentHistory: JSON.parse(localStorage.getItem('agentHistory') || '[]'),
-      accountBalances: JSON.parse(localStorage.getItem('accountBalances') || '{}'),
-      moduleMarks: JSON.parse(localStorage.getItem('moduleMarks') || '{}'),
-      contentStats: JSON.parse(localStorage.getItem('contentStats') || '{}'),
-      moodboardTiles: JSON.parse(localStorage.getItem('moodboardTiles') || '[]'),
-      academicModules: JSON.parse(localStorage.getItem('academicModules') || '[]'),
-      rs3Income: localStorage.getItem('rs3Income') || '',
-      theme: localStorage.getItem('theme') || 'light',
+      journalDiary: loadData('journalDiary', []),
+      financeLedger: loadData('financeLedger', []),
+      savingsGoals: loadData('savingsGoals', []),
+      emotionLog: loadData('emotionLog', []),
+      investments: loadData('investments', []),
+      agentTasks: loadData('agentTasks', []),
+      agentHistory: loadData('agentHistory', []),
+      accountBalances: loadData('accountBalances', {}),
+      moduleMarks: loadData('moduleMarks', {}),
+      contentStats: loadData('contentStats', {}),
+      moodboardTiles: loadData('moodboardTiles', []),
+      academicModules: loadData('academicModules', []),
+      rs3Income: loadData('rs3Income', ''),
+      theme: loadData('theme', 'light'),
       syncedAt: new Date().toISOString()
     };
     
@@ -1702,16 +1702,17 @@ async function loadFromCloud() {
                   'agentTasks', 'agentHistory', 'accountBalances', 'moduleMarks', 'contentStats',
                   'moodboardTiles', 'academicModules', 'rs3Income', 'theme'];
     
-    keys.forEach(key => {
+    for (const key of keys) {
       if (cloudData[key] !== undefined) {
         cloudStore[key] = cloudData[key];
+        // Also update localStorage directly to keep it in sync
         if (typeof cloudData[key] === 'object') {
           localStorage.setItem(key, JSON.stringify(cloudData[key]));
         } else {
           localStorage.setItem(key, cloudData[key]);
         }
       }
-    });
+    }
     
     // Re-render all sections
     renderAllSections();
@@ -2133,22 +2134,22 @@ if(ecanvas){
 const emoColors={'Happy':'#97C459','Surprised':'#AFA9EC','Bad':'#5DCAA5','Fearful':'#85B7EB','Angry':'#E24B4A','Disgusted':'#888780','Sad':'#378ADD'};
 let ecolorMap={};
 emoData.forEach(e=>{ecolorMap[e.label]=e.color;e.sub.forEach(s=>ecolorMap[s]=e.color)});
-let emoLog=JSON.parse(localStorage.getItem('emotionLog')||'[]');
-function logEmotion(){
+let emoLog=loadData('emotionLog', []);
+async function logEmotion(){
   const sel=document.getElementById('emo-selected').textContent;
   if(sel==='—')return;
   const inten=document.getElementById('emo-intensity').value;
   const note=document.getElementById('emo-note').value;
   const entry={emotion:sel,intensity:inten,note:note||'—',date:Date.now()};
   emoLog.unshift(entry);
-  localStorage.setItem('emotionLog',JSON.stringify(emoLog));
+  await saveData('emotionLog', emoLog);
   renderEmotionLog();
   document.getElementById('emo-note').value='';
 }
-function deleteEmotionEntry(i){
+async function deleteEmotionEntry(i){
   if(confirm('Delete this emotion entry?')){
     emoLog.splice(i,1);
-    localStorage.setItem('emotionLog',JSON.stringify(emoLog));
+    await saveData('emotionLog', emoLog);
     renderEmotionLog();
   }
 }
@@ -2427,20 +2428,20 @@ function resetTimer(){
   document.getElementById('timer-start').textContent='Start';
   document.getElementById('timer-label').textContent='Ready';
 }
-function completeSession(){
+async function completeSession(){
   const today=new Date().toDateString();
-  let stats=JSON.parse(localStorage.getItem('focusStats')||'{}');
+  let stats=loadData('focusStats', {});
   if(!stats[today])stats[today]={sessions:0,minutes:0};
   stats[today].sessions++;
   stats[today].minutes+=timerDuration;
-  localStorage.setItem('focusStats',JSON.stringify(stats));
+  await saveData('focusStats', stats);
   updateFocusStats();
   timerSeconds=timerDuration*60;
   updateTimerDisplay();
 }
 function updateFocusStats(){
   const today=new Date().toDateString();
-  const stats=JSON.parse(localStorage.getItem('focusStats')||'{}');
+  const stats=loadData('focusStats', {});
   const todayStats=stats[today]||{sessions:0,minutes:0};
   document.getElementById('sessions-today').textContent=todayStats.sessions;
   document.getElementById('minutes-today').textContent=todayStats.minutes;
@@ -2471,7 +2472,7 @@ const MODULES=[
   {code:'MTHS114',name:'Mathematics',lecturer:'Dr GT Marewo',assessments:['Test 1','Test 2','Test 3','Exam']},
   {code:'STTN111',name:'Statistics',lecturer:'Dr CJL Van Heerden',assessments:['Test 1','Test 2','Assignment 1','Exam']},
 ];
-let moduleMarks=JSON.parse(localStorage.getItem('moduleMarks')||'{}');
+let moduleMarks=loadData('moduleMarks', {});
 function renderModules(){
   const el=document.getElementById('module-list');if(!el)return;
   el.innerHTML=MODULES.map(m=>{
@@ -2488,10 +2489,10 @@ function renderModules(){
     </div>`;
   }).join('');
 }
-function saveMark(code,assessment,val){
+async function saveMark(code,assessment,val){
   if(!moduleMarks[code])moduleMarks[code]={};
   moduleMarks[code][assessment]=val;
-  localStorage.setItem('moduleMarks',JSON.stringify(moduleMarks));
+  await saveData('moduleMarks', moduleMarks);
   setTimeout(renderModules,50);
 }
 // Init modules
@@ -2529,7 +2530,7 @@ function toggleJournalCard(i){
   const el=document.getElementById('journal-expand-'+i);
   if(el)el.classList.toggle('open');
 }
-function saveJournalEntry(){
+async function saveJournalEntry(){
   // Collect all answers
   JOURNAL_PROMPTS.forEach((_,i)=>{
     const ta=document.getElementById('journal-ans-'+i);
@@ -2541,9 +2542,9 @@ function saveJournalEntry(){
     date:new Date().toISOString(),
     answers:JOURNAL_PROMPTS.map((p,i)=>journalAnswers[i]?{prompt:p.title,text:journalAnswers[i]}:null).filter(Boolean)
   };
-  let diary=JSON.parse(localStorage.getItem('journalDiary')||'[]');
+  let diary=loadData('journalDiary', []);
   diary.unshift(entry);
-  localStorage.setItem('journalDiary',JSON.stringify(diary));
+  await saveData('journalDiary', diary);
   journalAnswers={};
   renderJournalPrompts();
   renderJournalDiary();
@@ -2551,7 +2552,7 @@ function saveJournalEntry(){
 }
 function renderJournalDiary(){
   const el=document.getElementById('journal-diary-list');if(!el)return;
-  const diary=JSON.parse(localStorage.getItem('journalDiary')||'[]');
+  const diary=loadData('journalDiary', []);
   if(diary.length===0){
     el.innerHTML='<div class="card" style="text-align:center;padding:30px"><div style="font-family:\'Cormorant Garamond\',serif;font-size:16px;color:var(--muted);font-style:italic">No journal entries yet.</div><div style="font-size:12px;color:var(--muted);margin-top:8px">Write in the Write tab and click Save Entry to create your first reflection.</div></div>';
     return;
@@ -2577,11 +2578,11 @@ function renderJournalDiary(){
     </div>`;
   }).join('');
 }
-function deleteJournalEntry(idx){
+async function deleteJournalEntry(idx){
   if(!confirm('Delete this journal entry?'))return;
-  let diary=JSON.parse(localStorage.getItem('journalDiary')||'[]');
+  let diary=loadData('journalDiary', []);
   diary.splice(idx,1);
-  localStorage.setItem('journalDiary',JSON.stringify(diary));
+  await saveData('journalDiary', diary);
   renderJournalDiary();
 }
 // Init journal
@@ -2590,26 +2591,26 @@ renderJournalDiary();
 
 // ─── CONTENT STATS ───
 function loadStats(){
-  const stats=JSON.parse(localStorage.getItem('contentStats')||'{}');
+  const stats=loadData('contentStats', {});
   Object.keys(stats).forEach(k=>{
     const el=document.getElementById(k);
     if(el)el.value=stats[k];
   });
-  const updated=localStorage.getItem('statsUpdated');
+  const updated=loadData('statsUpdated', null);
   if(updated){
     const el=document.getElementById('stats-updated');
     if(el)el.textContent='Last updated: '+new Date(updated).toLocaleDateString('en-ZA');
   }
 }
-function saveStats(){
+async function saveStats(){
   const fields=['spotify-listeners','spotify-streams','tiktok-music-followers','tiktok-music-views','ig-music-followers','ig-music-reach','yt-music-subs','yt-music-views','ig-mas-followers','ig-mas-engagement','tt-mas-followers','tt-mas-views','tt-ds-followers','tt-ds-views','ig-events-followers','ig-events-reach'];
   const stats={};
   fields.forEach(f=>{
     const el=document.getElementById(f);
     if(el&&el.value)stats[f]=el.value;
   });
-  localStorage.setItem('contentStats',JSON.stringify(stats));
-  localStorage.setItem('statsUpdated',new Date().toISOString());
+  await saveData('contentStats', stats);
+  await saveData('statsUpdated', new Date().toISOString());
   const el=document.getElementById('stats-updated');
   if(el)el.textContent='Last updated: '+new Date().toLocaleDateString('en-ZA');
 }
@@ -2656,8 +2657,8 @@ const CONTENT_CHECKLISTS={
   ]
 };
 function getChecklistKey(){const d=new Date(),w=Math.ceil((d-new Date(d.getFullYear(),0,1))/604800000);return'mev4_cl_'+d.getFullYear()+'_'+w;}
-let contentChecks=JSON.parse(localStorage.getItem(getChecklistKey())||'{}');
-function saveContentChecks(){localStorage.setItem(getChecklistKey(),JSON.stringify(contentChecks));}
+let contentChecks=loadData(getChecklistKey(), {});
+async function saveContentChecks(){await saveData(getChecklistKey(), contentChecks);}
 function toggleContentCheck(id){contentChecks[id]=!contentChecks[id];saveContentChecks();renderAllChecklists();}
 function renderChecklist(category,containerId){
   const el=document.getElementById(containerId);if(!el)return;
@@ -2674,10 +2675,10 @@ function renderAllChecklists(){
 renderAllChecklists();
 
 // ─── FINANCE LEDGER ───
-let ledger=JSON.parse(localStorage.getItem('financeLedger')||'[]');
-let savingsGoals=JSON.parse(localStorage.getItem('savingsGoals')||'[]');
+let ledger=loadData('financeLedger', []);
+let savingsGoals=loadData('savingsGoals', []);
 
-function addLedgerEntry(type){
+async function addLedgerEntry(type){
   const descEl=document.getElementById(type+'-desc');
   const amtEl=document.getElementById(type+'-amt');
   const catEl=document.getElementById(type+'-cat');
@@ -2686,7 +2687,7 @@ function addLedgerEntry(type){
   const cat=catEl.value;
   if(!desc||isNaN(amt)||amt<=0){alert('Enter description and amount');return;}
   ledger.unshift({type,desc,amt,cat,date:new Date().toISOString()});
-  localStorage.setItem('financeLedger',JSON.stringify(ledger));
+  await saveData('financeLedger', ledger);
   descEl.value='';amtEl.value='';
   renderLedger();
   updateFinanceTotals();
@@ -2709,10 +2710,10 @@ function renderLedger(){
     </div>`;
   }).join('');
 }
-function deleteLedgerEntry(i){
+async function deleteLedgerEntry(i){
   if(confirm('Delete this transaction?')){
     ledger.splice(i,1);
-    localStorage.setItem('ledger',JSON.stringify(ledger));
+    await saveData('financeLedger', ledger);
     renderLedger();
     updateFinanceTotals();
   }
@@ -2731,7 +2732,7 @@ function updateFinanceTotals(){
     netEl.className='stat-n '+(net>=0?'stat-pos':'stat-neg');
   }
 }
-function updateRS3Progress(){
+async function updateRS3Progress(){
   const el=document.getElementById('rs3-income');
   const val=parseFloat(el.value)||0;
   const target=30800;
@@ -2740,22 +2741,22 @@ function updateRS3Progress(){
   const text=document.getElementById('rs3-income-text');
   if(bar)bar.style.width=pct+'%';
   if(text)text.textContent='R'+val.toLocaleString()+' / R'+target.toLocaleString();
-  localStorage.setItem('rs3Income',val);
+  await saveData('rs3Income', val.toString());
 }
-function addSavingsGoal(){
+async function addSavingsGoal(){
   const nameEl=document.getElementById('savings-name');
   const targetEl=document.getElementById('savings-target');
   const name=nameEl.value.trim();
   const target=parseFloat(targetEl.value);
   if(!name||isNaN(target)||target<=0){alert('Enter goal name and target');return;}
   savingsGoals.push({name,target,current:0});
-  localStorage.setItem('savingsGoals',JSON.stringify(savingsGoals));
+  await saveData('savingsGoals', savingsGoals);
   nameEl.value='';targetEl.value='';
   renderSavingsGoals();
 }
-function updateSavingsGoal(i,val){
+async function updateSavingsGoal(i,val){
   savingsGoals[i].current=parseFloat(val)||0;
-  localStorage.setItem('savingsGoals',JSON.stringify(savingsGoals));
+  await saveData('savingsGoals', savingsGoals);
   renderSavingsGoals();
 }
 function renderSavingsGoals(){
@@ -2773,10 +2774,10 @@ function renderSavingsGoals(){
     </div>`;
   }).join('');
 }
-function deleteSavingsGoal(i){
+async function deleteSavingsGoal(i){
   if(confirm('Delete this savings goal?')){
     savingsGoals.splice(i,1);
-    localStorage.setItem('savingsGoals',JSON.stringify(savingsGoals));
+    await saveData('savingsGoals', savingsGoals);
     renderSavingsGoals();
   }
 }
@@ -2784,21 +2785,21 @@ function deleteSavingsGoal(i){
 renderLedger();
 updateFinanceTotals();
 renderSavingsGoals();
-const savedRS3=localStorage.getItem('rs3Income');
+const savedRS3=loadData('rs3Income', null);
 if(savedRS3){
   const el=document.getElementById('rs3-income');
   if(el){el.value=savedRS3;updateRS3Progress();}
 }
 
 // ─── INVESTMENTS ───
-let investments=JSON.parse(localStorage.getItem('investments')||'[]');
-function addInvestment(){
+let investments=loadData('investments', []);
+async function addInvestment(){
   const name=document.getElementById('invest-name').value.trim();
   const type=document.getElementById('invest-type').value;
   const amt=parseFloat(document.getElementById('invest-amt').value);
   if(!name||isNaN(amt)){alert('Enter name and amount');return;}
   investments.push({id:Date.now(),name,type,amount:amt,returns:0});
-  localStorage.setItem('investments',JSON.stringify(investments));
+  await saveData('investments', investments);
   document.getElementById('invest-name').value='';
   document.getElementById('invest-amt').value='';
   renderInvestments();
@@ -2823,20 +2824,20 @@ function renderInvestments(){
   document.getElementById('invest-total').textContent='R '+total.toLocaleString();
   document.getElementById('invest-return').textContent='R '+returns.toLocaleString();
 }
-function removeInvestment(id){
+async function removeInvestment(id){
   investments=investments.filter(i=>i.id!==id);
-  localStorage.setItem('investments',JSON.stringify(investments));
+  await saveData('investments', investments);
   renderInvestments();
 }
 renderInvestments();
 
 // ─── BANK ACCOUNTS ───
-let accountBalances=JSON.parse(localStorage.getItem('accountBalances')||'{"primary":0,"business":0,"savings":0}');
-function updateAccountBalances(){
+let accountBalances=loadData('accountBalances', {"primary":0,"business":0,"savings":0});
+async function updateAccountBalances(){
   accountBalances.primary=parseFloat(document.getElementById('bal-primary').value)||0;
   accountBalances.business=parseFloat(document.getElementById('bal-business').value)||0;
   accountBalances.savings=parseFloat(document.getElementById('bal-savings').value)||0;
-  localStorage.setItem('accountBalances',JSON.stringify(accountBalances));
+  await saveData('accountBalances', accountBalances);
   renderAccountBalances();
 }
 function renderAccountBalances(){
@@ -2856,8 +2857,8 @@ function renderAccountBalances(){
 renderAccountBalances();
 
 /* ═══ AGENTS ═══ */
-let agentTasks=JSON.parse(localStorage.getItem('agentTasks')||'[]');
-let agentHistory=JSON.parse(localStorage.getItem('agentHistory')||'[]');
+let agentTasks=loadData('agentTasks', []);
+let agentHistory=loadData('agentHistory', []);
 const agentNames={
   pa:'Personal Assistant',
   estate:'Estate Manager',
@@ -2876,31 +2877,31 @@ const agentNames={
   'ds-cx':'DS — Customer Exp',
   'ds-finance':'DS — Finance'
 };
-function createAgentTask(){
+async function createAgentTask(){
   const agent=document.getElementById('task-agent').value;
   const priority=document.getElementById('task-priority').value;
   const desc=document.getElementById('task-desc').value.trim();
   if(!desc)return alert('Please enter a task description');
   const task={id:Date.now(),agent,priority,desc,status:'pending',created:new Date().toISOString()};
   agentTasks.push(task);
-  localStorage.setItem('agentTasks',JSON.stringify(agentTasks));
+  await saveData('agentTasks', agentTasks);
   document.getElementById('task-desc').value='';
   renderAgentTasks();updateDashboardAgents();
 }
-function completeAgentTask(id){
+async function completeAgentTask(id){
   const idx=agentTasks.findIndex(t=>t.id===id);
   if(idx>-1){
     const task=agentTasks.splice(idx,1)[0];
     task.status='done';task.completed=new Date().toISOString();
     agentHistory.unshift(task);
-    localStorage.setItem('agentTasks',JSON.stringify(agentTasks));
-    localStorage.setItem('agentHistory',JSON.stringify(agentHistory));
+    await saveData('agentTasks', agentTasks);
+    await saveData('agentHistory', agentHistory);
     renderAgentTasks();renderAgentHistory();updateDashboardAgents();
   }
 }
-function deleteAgentTask(id){
+async function deleteAgentTask(id){
   agentTasks=agentTasks.filter(t=>t.id!==id);
-  localStorage.setItem('agentTasks',JSON.stringify(agentTasks));
+  await saveData('agentTasks', agentTasks);
   renderAgentTasks();updateDashboardAgents();
 }
 function renderAgentTasks(){
@@ -2954,9 +2955,9 @@ const toMin=t=>{if(!t||t==='00:00')return 0;const[h,m]=t.split(':').map(Number);
 const getTodayIndex=()=>{const d=new Date().getDay();return d===0?6:d-1;};
 const getWeekKey=()=>{const d=new Date(),j=new Date(d.getFullYear(),0,1),w=Math.ceil(((d-j)/864e5+j.getDay()+1)/7);return'mev4_w'+d.getFullYear()+'_'+w;};
 const emptyWeek=()=>({gym:[0,0,0,0,0,0,0],read:[0,0,0,0,0,0,0],sleep:[0,0,0,0,0,0,0],drop:[0,0,0,0,0,0,0],music:[0,0,0,0,0,0,0],deep:[0,0,0,0,0,0,0],study:[0,0,0,0,0,0,0]});
-let weekData=JSON.parse(localStorage.getItem(getWeekKey())||'null')||emptyWeek();
+let weekData=loadData(getWeekKey(), null) || emptyWeek();
 let selectedDay=getTodayIndex();
-function saveWeekData(){localStorage.setItem(getWeekKey(),JSON.stringify(weekData));}
+async function saveWeekData(){await saveData(getWeekKey(), weekData);}
 function renderRoutineDayNav(){
   const ti=getTodayIndex();
   document.getElementById('routine-day-nav').innerHTML=DAYS_SHORT.map((d,i)=>`<div class="day-btn${i===ti?' is-today':''}${i===selectedDay?' selected':''}" onclick="selectDay(${i})">${d}</div>`).join('');
