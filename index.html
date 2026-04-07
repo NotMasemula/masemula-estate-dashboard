@@ -1585,9 +1585,9 @@ async function saveData(key, value) {
     return;
   }
   
-  // Debounce cloud saves
+  // Silently sync to cloud in background (debounced)
   clearTimeout(window['saveTimeout_' + key]);
-  window['saveTimeout_' + key] = setTimeout(() => syncToCloud(), 1000);
+  window['saveTimeout_' + key] = setTimeout(() => syncToCloud(false), 1000);
 }
 
 // ═══ UNIVERSAL LOAD FUNCTION ═══
@@ -1612,11 +1612,11 @@ function loadData(key, fallback = null) {
 }
 
 // ═══ SYNC ALL DATA TO CLOUD ═══
-async function syncToCloud() {
+async function syncToCloud(updateStatus = true) {
   if (!syncEnabled || isSyncing) return false;
   
   isSyncing = true;
-  setSyncStatus('saving');
+  if (updateStatus) setSyncStatus('saving');
   
   try {
     // Gather all data
@@ -1654,8 +1654,8 @@ async function syncToCloud() {
     });
     
     if (response.ok) {
-      console.log('☁️ Synced to cloud');
-      setSyncStatus('synced');
+      console.log(updateStatus ? '☁️ Synced to cloud' : '☁️ Background save complete');
+      if (updateStatus) setSyncStatus('synced');
       isSyncing = false;
       return true;
     } else {
@@ -1663,7 +1663,7 @@ async function syncToCloud() {
     }
   } catch (err) {
     console.error('☁️ Sync error:', err);
-    setSyncStatus('offline');
+    if (updateStatus) setSyncStatus('offline');
     isSyncing = false;
     return false;
   }
@@ -1731,10 +1731,8 @@ async function loadFromCloud() {
 
 // ═══ INITIALIZE DASHBOARD ═══
 async function initDashboard() {
-  setSyncStatus('loading');
-  
+  // Test connection only - don't auto-load data
   try {
-    // Test connection
     const testResp = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?select=user_id&limit=1`, {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
@@ -1742,101 +1740,22 @@ async function initDashboard() {
     if (!testResp.ok) throw new Error('Connection failed');
     
     syncEnabled = true;
-    console.log('☁️ Connected to Supabase');
-    
-    // Load from cloud
-    await loadFromCloud();
-    
-    // Setup Realtime
-    setupRealtime();
+    console.log('☁️ Connected to Supabase (manual sync mode)');
+    setSyncStatus('synced');
     
   } catch (err) {
     console.warn('⚠️ Offline mode:', err.message);
     syncEnabled = false;
     setSyncStatus('offline');
-    renderAllSections();
   }
-}
-
-// ═══ REALTIME SYNC ═══
-let realtimeWs = null;
-let heartbeatInterval = null;
-let reconnectAttempts = 0;
-const MAX_RECONNECT_DELAY = 30000; // 30 seconds max
-
-function setupRealtime() {
-  if (realtimeWs) return;
   
-  try {
-    const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + 
-      '/realtime/v1/websocket?apikey=' + SUPABASE_KEY + '&vsn=1.0.0';
-    
-    realtimeWs = new WebSocket(wsUrl);
-    
-    realtimeWs.onopen = async () => {
-      console.log('🔌 Realtime connected');
-      reconnectAttempts = 0; // Reset on successful connection
-      
-      // Refetch latest data to catch any missed updates
-      if (syncEnabled) {
-        console.log('🔄 Refetching data after reconnection...');
-        await loadFromCloud();
-      }
-      
-      // Subscribe to changes
-      realtimeWs.send(JSON.stringify({
-        topic: 'realtime:public:estate_data',
-        event: 'phx_join',
-        payload: { config: { postgres_changes: [{ event: '*', schema: 'public', table: 'estate_data' }] } },
-        ref: '1'
-      }));
-      
-      // Heartbeat
-      heartbeatInterval = setInterval(() => {
-        if (realtimeWs.readyState === WebSocket.OPEN) {
-          realtimeWs.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: Date.now().toString() }));
-        }
-      }, 30000);
-    };
-    
-    realtimeWs.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        if (msg.event === 'postgres_changes' && msg.payload?.data?.record?.user_id === USER_ID) {
-          console.log('🔄 Remote update detected');
-          // Reload from cloud
-          loadFromCloud();
-        }
-      } catch (e) {}
-    };
-    
-    realtimeWs.onclose = () => {
-      console.log('🔌 Realtime disconnected, attempting reconnection...');
-      clearInterval(heartbeatInterval);
-      heartbeatInterval = null;
-      realtimeWs = null;
-      
-      // Exponential backoff: 3s, 6s, 12s, 24s, 30s (max)
-      reconnectAttempts++;
-      const delay = Math.min(3000 * Math.pow(2, reconnectAttempts - 1), MAX_RECONNECT_DELAY);
-      console.log(`⏱️ Reconnecting in ${delay / 1000}s (attempt ${reconnectAttempts})...`);
-      
-      setTimeout(() => {
-        if (syncEnabled) {
-          setupRealtime();
-        }
-      }, delay);
-    };
-    
-    realtimeWs.onerror = (err) => {
-      console.warn('⚠️ Realtime error:', err);
-      realtimeWs.close();
-    };
-    
-  } catch (err) {
-    console.warn('⚠️ Realtime setup failed:', err);
-  }
+  // Always render from local data on page load
+  renderAllSections();
 }
+
+// ═══ REALTIME SYNC - DISABLED (Manual sync only) ═══
+// Realtime auto-updates removed per user request
+// All UI updates now happen only when user presses sync button
 
 // ═══ RENDER ALL SECTIONS ═══
 function renderAllSections() {
@@ -1853,21 +1772,51 @@ function renderAllSections() {
 
 // ═══ MANUAL SYNC BUTTON ═══
 async function manualSync() {
+  if (!syncEnabled) {
+    alert('Cannot sync - not connected to Supabase');
+    return;
+  }
+  
   const btn = document.getElementById('sync-btn');
-  if (btn) { btn.textContent = '⟳ Syncing...'; btn.style.background = '#888'; }
+  setSyncStatus('saving');
   
   try {
-    // First push local to cloud
+    console.log('🔄 Manual sync started');
+    
+    // First push local changes to cloud
     await syncToCloud();
     
-    // Then pull cloud (to get any changes from other devices)
+    // Then pull latest data from cloud
     await loadFromCloud();
     
+    setSyncStatus('synced');
+    console.log('✅ Manual sync complete');
+    
+    // Show success feedback
     if (btn) { 
       btn.textContent = '✓ Done!'; 
       btn.style.background = '#4CAF50';
-      setTimeout(() => { btn.textContent = '↻ Sync'; btn.style.background = 'var(--gold)'; btn.style.color = '#000'; }, 2000);
+      setTimeout(() => {
+        btn.textContent = '↻ Sync';
+        btn.style.background = 'var(--gold)';
+        btn.style.color = '#000';
+      }, 2000);
     }
+    
+  } catch (err) {
+    console.error('❌ Sync failed:', err);
+    setSyncStatus('offline');
+    if (btn) {
+      btn.textContent = '⚠️ Failed';
+      btn.style.background = '#c33';
+      setTimeout(() => {
+        btn.textContent = '↻ Sync';
+        btn.style.background = 'var(--gold)';
+        btn.style.color = '#000';
+      }, 3000);
+    }
+  }
+}
     
   } catch (err) {
     console.error('Sync error:', err);
