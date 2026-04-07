@@ -409,7 +409,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       <div class="tb-sub" id="tb-sub">Ntobeko Masemula · Johannesburg</div>
     </div>
     <div class="tb-right">
-      <button id="sync-btn" onclick="manualSync()" title="Sync now" style="background:var(--gold);color:#000;border:none;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;margin-right:8px">↻ Sync</button>
+      <button id="sync-btn" onclick="manualSync()" title="Sync now" style="background:#888;color:#fff;border:none;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;margin-right:8px">⏳ Connecting...</button>
       <span id="sync-status" title="Sync status" style="cursor:pointer;font-size:14px" onclick="manualSync()">📴</span>
       <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">
         <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -1592,9 +1592,18 @@ setTimeout(async function initSupabase() {
   try {
     console.log('🔧 Checking for Supabase library...');
     
-    const { createClient } = window.supabase || {};
+    // Safari fix: Check if supabase loaded from CDN
+    if (typeof window.supabase === 'undefined') {
+      console.log('⚠️ Supabase library not loaded yet - retrying...');
+      updateSyncStatus('offline');
+      // Retry after a delay (Safari can be slow loading scripts)
+      setTimeout(initSupabase, 2000);
+      return;
+    }
+    
+    const createClient = window.supabase.createClient;
     if (!createClient) {
-      console.log('⚠️ Supabase library not loaded - running offline');
+      console.log('⚠️ Supabase createClient not found');
       updateSyncStatus('offline');
       return;
     }
@@ -1615,6 +1624,10 @@ setTimeout(async function initSupabase() {
     syncEnabled = true;
     console.log('☁️ Supabase sync enabled!');
     updateSyncStatus('synced');
+    
+    // Update sync button to show connected
+    const btn = document.getElementById('sync-btn');
+    if (btn) btn.style.background = 'var(--gold)';
     
     // Load cloud data - this is the source of truth
     await loadAllFromCloud();
@@ -1756,58 +1769,91 @@ async function loadAllFromCloud() {
 // Sync status indicator
 function updateSyncStatus(status) {
   const el = document.getElementById('sync-status');
-  if (!el) return;
-  if (status === 'synced') {
-    el.innerHTML = '☁️';
-    el.title = 'Synced! Click to pull latest from cloud';
-    el.style.cursor = 'pointer';
-    el.onclick = async () => {
-      el.innerHTML = '⟳';
-      el.title = 'Refreshing...';
-      const loaded = await loadAllFromCloud();
-      if (loaded) {
-        location.reload();
-      } else {
-        el.innerHTML = '☁️';
-        alert('Already up to date!');
-      }
-    };
-  } else if (status === 'syncing') {
-    el.innerHTML = '⟳';
-    el.title = 'Syncing to cloud...';
-    el.style.cursor = 'wait';
-    el.onclick = null;
-  } else {
-    el.innerHTML = '📴';
-    el.title = 'Offline - check console for errors';
-    el.style.cursor = 'default';
-    el.onclick = null;
-  }
-  // Update sync button
   const btn = document.getElementById('sync-btn');
-  if (btn) {
-    btn.textContent = status === 'syncing' ? '⟳ Syncing...' : '↻ Sync';
-    btn.disabled = status === 'syncing';
+  
+  if (status === 'synced') {
+    if (el) {
+      el.innerHTML = '☁️';
+      el.title = 'Connected! Click to refresh from cloud';
+      el.style.cursor = 'pointer';
+    }
+    if (btn) {
+      btn.textContent = '↻ Sync';
+      btn.style.background = 'var(--gold)';
+      btn.style.color = '#000';
+      btn.disabled = false;
+    }
+  } else if (status === 'syncing') {
+    if (el) {
+      el.innerHTML = '⟳';
+      el.title = 'Syncing...';
+    }
+    if (btn) {
+      btn.textContent = '⟳ Syncing...';
+      btn.style.background = '#888';
+      btn.disabled = true;
+    }
+  } else {
+    // offline
+    if (el) {
+      el.innerHTML = '📴';
+      el.title = 'Offline - tap Sync to retry';
+    }
+    if (btn) {
+      btn.textContent = '⚠️ Offline';
+      btn.style.background = '#c33';
+      btn.style.color = '#fff';
+      btn.disabled = false;
+    }
   }
 }
 
 // Manual sync function - for troubleshooting
 async function manualSync() {
-  console.log('🔧 Manual sync triggered');
+  const btn = document.getElementById('sync-btn');
   
-  if (!supabaseClient) {
-    alert('Sync not connected. Check your internet connection and refresh the page.');
-    return;
+  // Immediate feedback
+  if (btn) {
+    btn.textContent = '⟳ Working...';
+    btn.style.background = '#888';
   }
   
-  // First push local data to cloud
-  updateSyncStatus('syncing');
-  await syncAllToCloud();
-  
-  // Then pull cloud data
-  await loadAllFromCloud();
-  
-  alert('Sync complete! Data pushed to cloud and pulled latest.');
+  try {
+    // Check if Supabase is ready
+    if (!supabaseClient) {
+      alert('❌ Sync not connected!\n\nThe sync service did not initialize. Please:\n1. Check your internet connection\n2. Refresh the page\n3. Try again');
+      if (btn) { btn.textContent = '↻ Sync'; btn.style.background = 'var(--gold)'; }
+      return;
+    }
+    
+    console.log('🔧 Manual sync: pushing to cloud...');
+    
+    // Push local data to cloud
+    await syncAllToCloud();
+    
+    console.log('🔧 Manual sync: pulling from cloud...');
+    
+    // Pull cloud data
+    await loadAllFromCloud();
+    
+    // Success feedback
+    if (btn) { 
+      btn.textContent = '✓ Done!'; 
+      btn.style.background = '#4CAF50';
+      setTimeout(() => {
+        btn.textContent = '↻ Sync';
+        btn.style.background = 'var(--gold)';
+      }, 2000);
+    }
+    
+    alert('✅ Sync complete!\n\nYour data has been saved to the cloud.');
+    
+  } catch (err) {
+    console.error('Manual sync error:', err);
+    alert('❌ Sync failed!\n\nError: ' + err.message + '\n\nPlease check your internet connection.');
+    if (btn) { btn.textContent = '↻ Sync'; btn.style.background = 'var(--gold)'; }
+  }
+}
 }
 
 // Debounced sync - waits 2 seconds after last change before syncing
