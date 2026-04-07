@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -1545,193 +1544,42 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 </div><!-- end os -->
 
 <script>
-// ═══ SUPABASE SYNC (REST API - works on all browsers) ═══
+// ═══ SUPABASE SYNC v8 - Key-based sync with Realtime ═══
 const SUPABASE_URL = 'https://romytadgdnpphqzlseaa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ggs07ym7m21ZKiTwQdB94g_lFACej5D';
-const SYNC_USER_ID = 'ntobeko-masemula-estate';
 let syncEnabled = false;
-let syncTimeout = null;
 let isSyncing = false;
-let cloudLoaded = false;
+let cloudStore = {}; // In-memory cache of cloud data
 
-console.log('🔧 Estate OS: REST API sync loaded');
+console.log('🔧 Estate OS v8: Key-based sync with Realtime');
 
-// Intercept localStorage to auto-trigger sync on any save
-const originalSetItem = localStorage.setItem.bind(localStorage);
-localStorage.setItem = function(key, value) {
-  originalSetItem(key, value);
-  if (!key.startsWith('estate_') && syncEnabled && !isSyncing && cloudLoaded) {
-    console.log('☁️ Auto-sync triggered by:', key);
-    triggerSync();
-  }
-};
-
-// Sync when page visibility changes (mobile)
-document.addEventListener('visibilitychange', function() {
-  if (document.visibilityState === 'hidden' && syncEnabled && cloudLoaded) {
-    console.log('☁️ Page hidden - syncing...');
-    syncAllToCloud();
-  }
-  if (document.visibilityState === 'visible' && syncEnabled) {
-    console.log('☁️ Page visible - loading cloud data...');
-    loadAllFromCloud();
-  }
-});
-
-// Initialize sync (no library needed - uses fetch)
-async function initSupabase() {
-  console.log('🔧 Initializing REST API sync...');
+// ═══ UNIVERSAL SAVE/LOAD FUNCTIONS ═══
+// Save data to Supabase (with localStorage fallback)
+async function saveData(key, value) {
+  // Always save to localStorage first (offline cache)
+  localStorage.setItem(key, JSON.stringify(value));
+  cloudStore[key] = value;
   
-  if (!SUPABASE_KEY || SUPABASE_KEY.length < 10) {
-    console.log('⚠️ Supabase key not set - offline mode');
-    updateSyncStatus('offline');
+  if (!syncEnabled) {
+    console.log(`💾 Saved "${key}" locally (offline)`);
     return;
   }
   
-  try {
-    // Test connection with a simple fetch
-    console.log('🔧 Testing database connection...');
-    const testUrl = `${SUPABASE_URL}/rest/v1/estate_data?select=user_id&limit=1`;
-    const response = await fetch(testUrl, {
-      method: 'GET',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`
-      }
-    });
-    
-    if (!response.ok) {
-      console.log('⚠️ Database connection failed:', response.status);
-      updateSyncStatus('offline');
-      return;
-    }
-    
-    syncEnabled = true;
-    console.log('☁️ REST API sync enabled!');
-    updateSyncStatus('synced');
-    
-    const btn = document.getElementById('sync-btn');
-    if (btn) btn.style.background = 'var(--gold)';
-    
-    // Load cloud data first
-    await loadAllFromCloud();
-    
-    // Now enable sync
-    cloudLoaded = true;
-    console.log('☁️ Ready - changes will now sync to cloud');
-    
-  } catch (e) {
-    console.error('Sync init failed:', e);
-    updateSyncStatus('offline');
-  }
-}
-
-// Start initialization after page loads
-setTimeout(initSupabase, 500);
-
-// Helper: Merge arrays by date (keeps all unique entries)
-function mergeByDate(localArr, cloudArr) {
-  if (!Array.isArray(localArr)) localArr = [];
-  if (!Array.isArray(cloudArr)) cloudArr = [];
-  const combined = [...cloudArr];
-  localArr.forEach(localItem => {
-    const dateKey = localItem.date || localItem.id || JSON.stringify(localItem);
-    const exists = combined.some(cloudItem => {
-      const cloudKey = cloudItem.date || cloudItem.id || JSON.stringify(cloudItem);
-      return cloudKey === dateKey;
-    });
-    if (!exists) combined.push(localItem);
-  });
-  return combined;
-}
-
-// Helper: Merge objects (local values override cloud)
-function mergeObjects(localObj, cloudObj) {
-  if (typeof localObj !== 'object') localObj = {};
-  if (typeof cloudObj !== 'object') cloudObj = {};
-  return { ...cloudObj, ...localObj };
-}
-
-// Sync all estate data to cloud using REST API (with MERGE logic)
-async function syncAllToCloud() {
-  if (!syncEnabled || isSyncing) return false;
-  
-  isSyncing = true;
-  updateSyncStatus('syncing');
+  setSyncStatus('saving');
   
   try {
-    // First, fetch current cloud data
-    const getUrl = `${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${SYNC_USER_ID}&select=data`;
-    const getResponse = await fetch(getUrl, {
-      method: 'GET',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`
-      }
+    // Check if key exists
+    const checkUrl = `${SUPABASE_URL}/rest/v1/estate_data?key=eq.${encodeURIComponent(key)}&select=key`;
+    const checkResp = await fetch(checkUrl, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
+    const existing = await checkResp.json();
     
-    let cloudData = {};
-    let recordExists = false;
-    if (getResponse.ok) {
-      const results = await getResponse.json();
-      if (results && results.length > 0 && results[0].data) {
-        cloudData = results[0].data;
-        recordExists = true;
-        console.log('☁️ Got cloud data, journal entries:', (cloudData.journalDiary || []).length);
-      }
-    }
+    const payload = { key, value, updated_at: new Date().toISOString() };
     
-    // Get local data
-    const localJournal = JSON.parse(localStorage.getItem('journalDiary') || '[]');
-    console.log('📱 Local journal entries:', localJournal.length);
-    
-    const localData = {
-      ledger: JSON.parse(localStorage.getItem('ledger') || '[]'),
-      savingsGoals: JSON.parse(localStorage.getItem('savingsGoals') || '[]'),
-      emotionLog: JSON.parse(localStorage.getItem('emotionLog') || '[]'),
-      journalDiary: localJournal,
-      agentTasks: JSON.parse(localStorage.getItem('agentTasks') || '[]'),
-      agentHistory: JSON.parse(localStorage.getItem('agentHistory') || '[]'),
-      investments: JSON.parse(localStorage.getItem('investments') || '[]'),
-      accountBalances: JSON.parse(localStorage.getItem('accountBalances') || '{}'),
-      modules: JSON.parse(localStorage.getItem('academicModules') || '[]'),
-      contentStats: JSON.parse(localStorage.getItem('contentStats') || '{}'),
-      moodboardTiles: JSON.parse(localStorage.getItem('moodboardTiles') || '[]'),
-      financeLedger: JSON.parse(localStorage.getItem('financeLedger') || '[]'),
-      moduleMarks: JSON.parse(localStorage.getItem('moduleMarks') || '{}'),
-      rs3Income: localStorage.getItem('rs3Income') || '',
-      theme: localStorage.getItem('theme') || 'light'
-    };
-    
-    // MERGE: Combine local + cloud data (keeps entries from BOTH devices)
-    const mergedJournal = mergeByDate(localData.journalDiary, cloudData.journalDiary || []);
-    console.log('🔀 Merged journal entries:', mergedJournal.length);
-    
-    const mergedData = {
-      ledger: mergeByDate(localData.ledger, cloudData.ledger || []),
-      savingsGoals: mergeByDate(localData.savingsGoals, cloudData.savingsGoals || []),
-      emotionLog: mergeByDate(localData.emotionLog, cloudData.emotionLog || []),
-      journalDiary: mergedJournal,
-      agentTasks: mergeByDate(localData.agentTasks, cloudData.agentTasks || []),
-      agentHistory: mergeByDate(localData.agentHistory, cloudData.agentHistory || []),
-      investments: mergeByDate(localData.investments, cloudData.investments || []),
-      accountBalances: mergeObjects(localData.accountBalances, cloudData.accountBalances || {}),
-      modules: mergeByDate(localData.modules, cloudData.modules || []),
-      contentStats: mergeObjects(localData.contentStats, cloudData.contentStats || {}),
-      moodboardTiles: mergeByDate(localData.moodboardTiles, cloudData.moodboardTiles || []),
-      financeLedger: mergeByDate(localData.financeLedger, cloudData.financeLedger || []),
-      moduleMarks: mergeObjects(localData.moduleMarks, cloudData.moduleMarks || {}),
-      rs3Income: localData.rs3Income || cloudData.rs3Income || '',
-      theme: localData.theme || cloudData.theme || 'light',
-      syncedAt: new Date().toISOString()
-    };
-    
-    // Use PATCH for existing records, POST for new records
-    let response;
-    if (recordExists) {
-      // Update existing record with PATCH
-      const url = `${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${SYNC_USER_ID}`;
-      response = await fetch(url, {
+    if (existing && existing.length > 0) {
+      // Update existing
+      await fetch(`${SUPABASE_URL}/rest/v1/estate_data?key=eq.${encodeURIComponent(key)}`, {
         method: 'PATCH',
         headers: {
           'apikey': SUPABASE_KEY,
@@ -1739,15 +1587,11 @@ async function syncAllToCloud() {
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
-        body: JSON.stringify({
-          data: mergedData,
-          updated_at: new Date().toISOString()
-        })
+        body: JSON.stringify({ value, updated_at: new Date().toISOString() })
       });
     } else {
-      // Create new record with POST
-      const url = `${SUPABASE_URL}/rest/v1/estate_data`;
-      response = await fetch(url, {
+      // Insert new
+      await fetch(`${SUPABASE_URL}/rest/v1/estate_data`, {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
@@ -1755,223 +1599,289 @@ async function syncAllToCloud() {
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
-        body: JSON.stringify({
-          user_id: SYNC_USER_ID,
-          data: mergedData,
-          updated_at: new Date().toISOString()
-        })
+        body: JSON.stringify(payload)
       });
     }
     
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('☁️ Sync error:', response.status, errText);
-      alert('⚠️ Push failed: ' + response.status + '\n' + errText);
-      updateSyncStatus('offline');
-      isSyncing = false;
-      return false;
-    }
-    
-    console.log('☁️ Synced to cloud at', new Date().toLocaleTimeString());
-    
-    // IMPORTANT: Also update local storage with merged data so nothing is lost
-    localStorage.setItem('journalDiary', JSON.stringify(mergedJournal));
-    localStorage.setItem('ledger', JSON.stringify(mergedData.ledger));
-    localStorage.setItem('savingsGoals', JSON.stringify(mergedData.savingsGoals));
-    localStorage.setItem('emotionLog', JSON.stringify(mergedData.emotionLog));
-    localStorage.setItem('financeLedger', JSON.stringify(mergedData.financeLedger));
-    
-    localStorage.setItem('estate_last_sync', new Date().toISOString());
-    updateSyncStatus('synced');
-    isSyncing = false;
-    return true;
-    
-  } catch (e) {
-    console.error('☁️ Sync failed:', e);
-    alert('⚠️ Sync error: ' + e.message);
-    updateSyncStatus('offline');
-    isSyncing = false;
-    return false;
+    console.log(`☁️ Saved "${key}" to cloud`);
+    setSyncStatus('synced');
+  } catch (err) {
+    console.warn(`⚠️ Cloud save failed for "${key}":`, err);
+    setSyncStatus('offline');
   }
 }
 
-// Load all data from cloud using REST API
-async function loadAllFromCloud() {
-  if (!syncEnabled) return false;
+// Load data from Supabase (with localStorage fallback)
+async function loadData(key, fallback = null) {
+  // Return from memory cache if available
+  if (cloudStore[key] !== undefined) {
+    return cloudStore[key];
+  }
   
-  isSyncing = true;
+  // Try localStorage first (fast)
+  const local = localStorage.getItem(key);
+  if (local) {
+    try {
+      cloudStore[key] = JSON.parse(local);
+      return cloudStore[key];
+    } catch (e) {
+      return local; // Return as string if not JSON
+    }
+  }
   
-  try {
-    const url = `${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${SYNC_USER_ID}&select=data,updated_at`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`
+  // If online, try cloud
+  if (syncEnabled) {
+    try {
+      const url = `${SUPABASE_URL}/rest/v1/estate_data?key=eq.${encodeURIComponent(key)}&select=value`;
+      const resp = await fetch(url, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+      });
+      const data = await resp.json();
+      if (data && data.length > 0 && data[0].value !== undefined) {
+        cloudStore[key] = data[0].value;
+        localStorage.setItem(key, JSON.stringify(data[0].value));
+        return data[0].value;
       }
-    });
-    
-    if (!response.ok) {
-      console.log('☁️ Load error:', response.status);
-      isSyncing = false;
-      return false;
+    } catch (err) {
+      console.warn(`⚠️ Cloud load failed for "${key}":`, err);
     }
-    
-    const results = await response.json();
-    
-    if (!results || results.length === 0 || !results[0].data) {
-      console.log('☁️ No cloud data found - this device will create initial sync');
-      isSyncing = false;
-      return false;
-    }
-    
-    const data = results[0];
-    const cloudData = data.data;
-    console.log('☁️ Loading cloud data from:', data.updated_at);
-    
-    // Load all cloud data to localStorage
-    if (cloudData.ledger) localStorage.setItem('ledger', JSON.stringify(cloudData.ledger));
-    if (cloudData.savingsGoals) localStorage.setItem('savingsGoals', JSON.stringify(cloudData.savingsGoals));
-    if (cloudData.emotionLog) localStorage.setItem('emotionLog', JSON.stringify(cloudData.emotionLog));
-    if (cloudData.journalDiary) localStorage.setItem('journalDiary', JSON.stringify(cloudData.journalDiary));
-    if (cloudData.agentTasks) localStorage.setItem('agentTasks', JSON.stringify(cloudData.agentTasks));
-    if (cloudData.agentHistory) localStorage.setItem('agentHistory', JSON.stringify(cloudData.agentHistory));
-    if (cloudData.investments) localStorage.setItem('investments', JSON.stringify(cloudData.investments));
-    if (cloudData.accountBalances) localStorage.setItem('accountBalances', JSON.stringify(cloudData.accountBalances));
-    if (cloudData.modules) localStorage.setItem('academicModules', JSON.stringify(cloudData.modules));
-    if (cloudData.contentStats) localStorage.setItem('contentStats', JSON.stringify(cloudData.contentStats));
-    if (cloudData.moodboardTiles) localStorage.setItem('moodboardTiles', JSON.stringify(cloudData.moodboardTiles));
-    if (cloudData.financeLedger) localStorage.setItem('financeLedger', JSON.stringify(cloudData.financeLedger));
-    if (cloudData.moduleMarks) localStorage.setItem('moduleMarks', JSON.stringify(cloudData.moduleMarks));
-    if (cloudData.rs3Income) localStorage.setItem('rs3Income', cloudData.rs3Income);
-    if (cloudData.theme) localStorage.setItem('theme', cloudData.theme);
-    
-    localStorage.setItem('estate_last_sync', data.updated_at);
-    console.log('☁️ Cloud data loaded successfully!');
-    
-    // Re-render UI
-    setTimeout(() => {
-      if (typeof renderJournalDiary === 'function') renderJournalDiary();
-      if (typeof renderLedger === 'function') renderLedger();
-      if (typeof renderSavingsGoals === 'function') renderSavingsGoals();
-      if (typeof renderAgentTasks === 'function') renderAgentTasks();
-      if (typeof renderEmotionLog === 'function') renderEmotionLog();
-      if (typeof renderInvestments === 'function') renderInvestments();
-      console.log('☁️ UI refreshed with cloud data');
-    }, 100);
-    
-    isSyncing = false;
-    return true;
-  } catch (e) {
-    console.error('☁️ Load from cloud failed:', e);
-    isSyncing = false;
-    return false;
   }
+  
+  return fallback;
 }
 
-// Sync status indicator
-function updateSyncStatus(status) {
+// ═══ SYNC STATUS INDICATOR ═══
+function setSyncStatus(state) {
   const el = document.getElementById('sync-status');
   const btn = document.getElementById('sync-btn');
-  
-  if (status === 'synced') {
-    if (el) {
-      el.innerHTML = '☁️';
-      el.title = 'Connected! Click to refresh from cloud';
-      el.style.cursor = 'pointer';
-    }
-    if (btn) {
-      btn.textContent = '↻ Sync';
-      btn.style.background = 'var(--gold)';
-      btn.style.color = '#000';
-      btn.disabled = false;
-    }
-  } else if (status === 'syncing') {
-    if (el) {
-      el.innerHTML = '⟳';
-      el.title = 'Syncing...';
-    }
-    if (btn) {
-      btn.textContent = '⟳ Syncing...';
-      btn.style.background = '#888';
-      btn.disabled = true;
-    }
-  } else {
-    if (el) {
-      el.innerHTML = '📴';
-      el.title = 'Offline - tap Sync to retry';
-    }
-    if (btn) {
-      btn.textContent = '⚠️ Offline';
-      btn.style.background = '#c33';
-      btn.style.color = '#fff';
-      btn.disabled = false;
-    }
+  const states = {
+    synced: { icon: '🟢', text: '↻ Sync', bg: 'var(--gold)', title: 'Synced' },
+    saving: { icon: '🟡', text: '⟳ Saving...', bg: '#888', title: 'Saving...' },
+    loading: { icon: '⏳', text: '⟳ Loading...', bg: '#888', title: 'Loading...' },
+    offline: { icon: '🔴', text: '⚠️ Offline', bg: '#c33', title: 'Offline' }
+  };
+  const s = states[state] || states.offline;
+  if (el) { el.textContent = s.icon; el.title = s.title; }
+  if (btn) { 
+    btn.textContent = s.text; 
+    btn.style.background = s.bg;
+    btn.style.color = state === 'synced' ? '#000' : '#fff';
+    btn.disabled = (state === 'saving' || state === 'loading');
   }
 }
 
-// Manual sync function with detailed debugging
-async function manualSync() {
-  const btn = document.getElementById('sync-btn');
-  
-  if (btn) {
-    btn.textContent = '⟳ Working...';
-    btn.style.background = '#888';
-  }
+// ═══ LOAD ALL DATA ON STARTUP ═══
+async function initDashboard() {
+  setSyncStatus('loading');
   
   try {
-    if (!syncEnabled) {
-      await initSupabase();
-      if (!syncEnabled) {
-        alert('❌ Cannot connect to sync service.\n\nPlease check your internet connection.');
-        if (btn) { btn.textContent = '↻ Retry'; btn.style.background = 'var(--gold)'; }
-        return;
+    // Test connection
+    const testResp = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?select=key&limit=1`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    
+    if (!testResp.ok) {
+      throw new Error('Connection failed');
+    }
+    
+    syncEnabled = true;
+    console.log('☁️ Connected to Supabase');
+    
+    // Fetch ALL keys in one query
+    const url = `${SUPABASE_URL}/rest/v1/estate_data?select=key,value`;
+    const resp = await fetch(url, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    
+    if (resp.ok) {
+      const rows = await resp.json();
+      console.log(`☁️ Loaded ${rows.length} keys from cloud`);
+      
+      // Hydrate cloudStore and localStorage
+      rows.forEach(row => {
+        if (row.key && row.value !== undefined) {
+          cloudStore[row.key] = row.value;
+          localStorage.setItem(row.key, JSON.stringify(row.value));
+        }
+      });
+      
+      // Re-render all sections
+      renderAllSections();
+    }
+    
+    // Setup Realtime subscription
+    setupRealtime();
+    
+    setSyncStatus('synced');
+    
+  } catch (err) {
+    console.warn('⚠️ Could not connect to cloud, using local data:', err);
+    syncEnabled = false;
+    setSyncStatus('offline');
+    // Still render from localStorage
+    renderAllSections();
+  }
+}
+
+// ═══ REALTIME SYNC ═══
+let realtimeSocket = null;
+
+function setupRealtime() {
+  if (realtimeSocket) return;
+  
+  try {
+    // Supabase Realtime via WebSocket
+    const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + '/realtime/v1/websocket?apikey=' + SUPABASE_KEY + '&vsn=1.0.0';
+    realtimeSocket = new WebSocket(wsUrl);
+    
+    realtimeSocket.onopen = () => {
+      console.log('🔌 Realtime connected');
+      // Subscribe to estate_data changes
+      const joinMsg = {
+        topic: 'realtime:public:estate_data',
+        event: 'phx_join',
+        payload: { config: { postgres_changes: [{ event: '*', schema: 'public', table: 'estate_data' }] } },
+        ref: '1'
+      };
+      realtimeSocket.send(JSON.stringify(joinMsg));
+    };
+    
+    realtimeSocket.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.event === 'postgres_changes' && msg.payload?.data?.record) {
+          const { key, value } = msg.payload.data.record;
+          console.log('🔄 Realtime update:', key);
+          cloudStore[key] = value;
+          localStorage.setItem(key, JSON.stringify(value));
+          reloadSection(key, value);
+        }
+      } catch (e) {}
+    };
+    
+    realtimeSocket.onclose = () => {
+      console.log('🔌 Realtime disconnected, reconnecting...');
+      realtimeSocket = null;
+      setTimeout(setupRealtime, 3000);
+    };
+    
+    // Keep alive
+    setInterval(() => {
+      if (realtimeSocket && realtimeSocket.readyState === WebSocket.OPEN) {
+        realtimeSocket.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: Date.now().toString() }));
+      }
+    }, 30000);
+    
+  } catch (err) {
+    console.warn('⚠️ Realtime setup failed:', err);
+  }
+}
+
+// Re-render only the affected section
+function reloadSection(key, value) {
+  switch (key) {
+    case 'journalDiary': if (typeof renderJournalDiary === 'function') renderJournalDiary(); break;
+    case 'financeLedger': if (typeof renderLedger === 'function') renderLedger(); break;
+    case 'savingsGoals': if (typeof renderSavingsGoals === 'function') renderSavingsGoals(); break;
+    case 'emotionLog': if (typeof renderEmotionLog === 'function') renderEmotionLog(); break;
+    case 'investments': if (typeof renderInvestments === 'function') renderInvestments(); break;
+    case 'agentTasks': if (typeof renderAgentTasks === 'function') renderAgentTasks(); break;
+    case 'moduleMarks': if (typeof renderModuleMarks === 'function') renderModuleMarks(); break;
+    case 'accountBalances': if (typeof renderAccountBalances === 'function') renderAccountBalances(); break;
+    case 'theme': 
+      if (value === 'dark') document.getElementById('os').classList.add('dark');
+      else document.getElementById('os').classList.remove('dark');
+      break;
+    default:
+      console.log('No renderer for:', key);
+  }
+}
+
+// Render all sections from cloudStore/localStorage
+function renderAllSections() {
+  setTimeout(() => {
+    if (typeof renderJournalDiary === 'function') renderJournalDiary();
+    if (typeof renderLedger === 'function') renderLedger();
+    if (typeof renderSavingsGoals === 'function') renderSavingsGoals();
+    if (typeof renderAgentTasks === 'function') renderAgentTasks();
+    if (typeof renderEmotionLog === 'function') renderEmotionLog();
+    if (typeof renderInvestments === 'function') renderInvestments();
+    console.log('🎨 UI rendered');
+  }, 100);
+}
+
+// ═══ MANUAL SYNC BUTTON ═══
+async function manualSync() {
+  const btn = document.getElementById('sync-btn');
+  if (btn) { btn.textContent = '⟳ Syncing...'; btn.style.background = '#888'; }
+  
+  setSyncStatus('loading');
+  
+  try {
+    // Push all local data to cloud
+    const keys = ['journalDiary', 'financeLedger', 'savingsGoals', 'emotionLog', 'investments', 
+                  'agentTasks', 'agentHistory', 'accountBalances', 'moduleMarks', 'contentStats',
+                  'moodboardTiles', 'academicModules', 'rs3Income', 'theme'];
+    
+    for (const key of keys) {
+      const local = localStorage.getItem(key);
+      if (local) {
+        try {
+          const value = JSON.parse(local);
+          await saveData(key, value);
+        } catch (e) {
+          await saveData(key, local);
+        }
       }
     }
     
-    // Show what we have before sync
-    const beforeJournal = JSON.parse(localStorage.getItem('journalDiary') || '[]');
-    
-    // Do the sync (this now also saves merged data locally)
-    const success = await syncAllToCloud();
-    
-    if (!success) {
-      // Sync failed - don't overwrite local data!
-      if (btn) { btn.textContent = '⚠️ Failed'; btn.style.background = '#c33'; }
-      return;
-    }
-    
-    // Show results
-    const afterJournal = JSON.parse(localStorage.getItem('journalDiary') || '[]');
+    // Pull latest from cloud
+    await initDashboard();
     
     if (btn) { 
       btn.textContent = '✓ Done!'; 
       btn.style.background = '#4CAF50';
-      setTimeout(() => {
-        btn.textContent = '↻ Sync';
-        btn.style.background = 'var(--gold)';
-      }, 2000);
+      setTimeout(() => { btn.textContent = '↻ Sync'; btn.style.background = 'var(--gold)'; }, 2000);
     }
     
-    // Re-render UI with merged data
-    if (typeof renderJournalDiary === 'function') renderJournalDiary();
-    
-    alert('✅ Sync complete!\n\nJournal entries: ' + afterJournal.length + '\n(Before: ' + beforeJournal.length + ')');
-    
   } catch (err) {
-    console.error('Manual sync error:', err);
-    alert('❌ Sync failed!\n\nError: ' + err.message);
-    if (btn) { btn.textContent = '↻ Sync'; btn.style.background = 'var(--gold)'; }
+    console.error('Sync error:', err);
+    setSyncStatus('offline');
+    if (btn) { btn.textContent = '⚠️ Failed'; btn.style.background = '#c33'; }
   }
 }
 
-// Debounced sync
-function triggerSync() {
-  if (!syncEnabled || isSyncing) return;
-  clearTimeout(syncTimeout);
-  updateSyncStatus('syncing');
-  syncTimeout = setTimeout(syncAllToCloud, 2000);
+// ═══ MIGRATE LOCAL DATA TO CLOUD ═══
+async function migrateToCloud() {
+  if (!syncEnabled) {
+    alert('Cannot migrate - not connected to cloud');
+    return;
+  }
+  
+  const keys = Object.keys(localStorage).filter(k => !k.startsWith('estate_'));
+  console.log(`Migrating ${keys.length} keys to cloud...`);
+  
+  for (const key of keys) {
+    try {
+      const raw = localStorage.getItem(key);
+      let value;
+      try { value = JSON.parse(raw); } catch (e) { value = raw; }
+      await saveData(key, value);
+      console.log(`✓ Migrated: ${key}`);
+    } catch (err) {
+      console.warn(`✗ Failed: ${key}`, err);
+    }
+  }
+  
+  console.log('Migration complete!');
+  alert('Migration complete! All local data has been synced to cloud.');
 }
+
+// Start on page load
+document.addEventListener('DOMContentLoaded', initDashboard);
+
+// Also try after a delay (for dynamic content)
+setTimeout(initDashboard, 500);
 
 // ─── THEME TOGGLE ───
 function toggleTheme(){
