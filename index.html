@@ -1628,33 +1628,97 @@ async function initSupabase() {
 // Start initialization after page loads
 setTimeout(initSupabase, 500);
 
-// Sync all estate data to cloud using REST API
+// Helper: Merge arrays by date (keeps all unique entries)
+function mergeByDate(localArr, cloudArr) {
+  if (!Array.isArray(localArr)) localArr = [];
+  if (!Array.isArray(cloudArr)) cloudArr = [];
+  const combined = [...cloudArr];
+  localArr.forEach(localItem => {
+    const dateKey = localItem.date || localItem.id || JSON.stringify(localItem);
+    const exists = combined.some(cloudItem => {
+      const cloudKey = cloudItem.date || cloudItem.id || JSON.stringify(cloudItem);
+      return cloudKey === dateKey;
+    });
+    if (!exists) combined.push(localItem);
+  });
+  return combined;
+}
+
+// Helper: Merge objects (local values override cloud)
+function mergeObjects(localObj, cloudObj) {
+  if (typeof localObj !== 'object') localObj = {};
+  if (typeof cloudObj !== 'object') cloudObj = {};
+  return { ...cloudObj, ...localObj };
+}
+
+// Sync all estate data to cloud using REST API (with MERGE logic)
 async function syncAllToCloud() {
   if (!syncEnabled || isSyncing) return;
   
   isSyncing = true;
   updateSyncStatus('syncing');
   
-  const allData = {
-    ledger: JSON.parse(localStorage.getItem('ledger') || '[]'),
-    savingsGoals: JSON.parse(localStorage.getItem('savingsGoals') || '[]'),
-    emotionLog: JSON.parse(localStorage.getItem('emotionLog') || '[]'),
-    journalDiary: JSON.parse(localStorage.getItem('journalDiary') || '[]'),
-    agentTasks: JSON.parse(localStorage.getItem('agentTasks') || '[]'),
-    agentHistory: JSON.parse(localStorage.getItem('agentHistory') || '[]'),
-    investments: JSON.parse(localStorage.getItem('investments') || '[]'),
-    accountBalances: JSON.parse(localStorage.getItem('accountBalances') || '{}'),
-    modules: JSON.parse(localStorage.getItem('academicModules') || '[]'),
-    contentStats: JSON.parse(localStorage.getItem('contentStats') || '{}'),
-    moodboardTiles: JSON.parse(localStorage.getItem('moodboardTiles') || '[]'),
-    financeLedger: JSON.parse(localStorage.getItem('financeLedger') || '[]'),
-    moduleMarks: JSON.parse(localStorage.getItem('moduleMarks') || '{}'),
-    rs3Income: localStorage.getItem('rs3Income') || '',
-    theme: localStorage.getItem('theme') || 'light',
-    syncedAt: new Date().toISOString()
-  };
-  
   try {
+    // First, fetch current cloud data
+    const getUrl = `${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${SYNC_USER_ID}&select=data`;
+    const getResponse = await fetch(getUrl, {
+      method: 'GET',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      }
+    });
+    
+    let cloudData = {};
+    if (getResponse.ok) {
+      const results = await getResponse.json();
+      if (results && results.length > 0 && results[0].data) {
+        cloudData = results[0].data;
+      }
+    }
+    
+    // Get local data
+    const localData = {
+      ledger: JSON.parse(localStorage.getItem('ledger') || '[]'),
+      savingsGoals: JSON.parse(localStorage.getItem('savingsGoals') || '[]'),
+      emotionLog: JSON.parse(localStorage.getItem('emotionLog') || '[]'),
+      journalDiary: JSON.parse(localStorage.getItem('journalDiary') || '[]'),
+      agentTasks: JSON.parse(localStorage.getItem('agentTasks') || '[]'),
+      agentHistory: JSON.parse(localStorage.getItem('agentHistory') || '[]'),
+      investments: JSON.parse(localStorage.getItem('investments') || '[]'),
+      accountBalances: JSON.parse(localStorage.getItem('accountBalances') || '{}'),
+      modules: JSON.parse(localStorage.getItem('academicModules') || '[]'),
+      contentStats: JSON.parse(localStorage.getItem('contentStats') || '{}'),
+      moodboardTiles: JSON.parse(localStorage.getItem('moodboardTiles') || '[]'),
+      financeLedger: JSON.parse(localStorage.getItem('financeLedger') || '[]'),
+      moduleMarks: JSON.parse(localStorage.getItem('moduleMarks') || '{}'),
+      rs3Income: localStorage.getItem('rs3Income') || '',
+      theme: localStorage.getItem('theme') || 'light'
+    };
+    
+    // MERGE: Combine local + cloud data (keeps entries from BOTH devices)
+    const mergedData = {
+      ledger: mergeByDate(localData.ledger, cloudData.ledger || []),
+      savingsGoals: mergeByDate(localData.savingsGoals, cloudData.savingsGoals || []),
+      emotionLog: mergeByDate(localData.emotionLog, cloudData.emotionLog || []),
+      journalDiary: mergeByDate(localData.journalDiary, cloudData.journalDiary || []),
+      agentTasks: mergeByDate(localData.agentTasks, cloudData.agentTasks || []),
+      agentHistory: mergeByDate(localData.agentHistory, cloudData.agentHistory || []),
+      investments: mergeByDate(localData.investments, cloudData.investments || []),
+      accountBalances: mergeObjects(localData.accountBalances, cloudData.accountBalances || {}),
+      modules: mergeByDate(localData.modules, cloudData.modules || []),
+      contentStats: mergeObjects(localData.contentStats, cloudData.contentStats || {}),
+      moodboardTiles: mergeByDate(localData.moodboardTiles, cloudData.moodboardTiles || []),
+      financeLedger: mergeByDate(localData.financeLedger, cloudData.financeLedger || []),
+      moduleMarks: mergeObjects(localData.moduleMarks, cloudData.moduleMarks || {}),
+      rs3Income: localData.rs3Income || cloudData.rs3Income || '',
+      theme: localData.theme || cloudData.theme || 'light',
+      syncedAt: new Date().toISOString()
+    };
+    
+    console.log('☁️ Merging data - local entries + cloud entries combined');
+    
+    // Push merged data to cloud
     const url = `${SUPABASE_URL}/rest/v1/estate_data`;
     const response = await fetch(url, {
       method: 'POST',
@@ -1666,7 +1730,7 @@ async function syncAllToCloud() {
       },
       body: JSON.stringify({
         user_id: SYNC_USER_ID,
-        data: allData,
+        data: mergedData,
         updated_at: new Date().toISOString()
       })
     });
