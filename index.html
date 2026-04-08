@@ -424,6 +424,22 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 
     <!-- ═══ DASHBOARD ═══ -->
     <div class="section active" id="s-dashboard">
+      <div class="card mb-10" style="background:linear-gradient(135deg, #1a1a1a 0%, var(--card) 100%);border:1px solid var(--gold);padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:5px">Nedbank Account Balance</div>
+            <div style="font-size:36px;font-family:'Cormorant Garamond',serif;font-weight:600;color:var(--gold)" id="dashboard-balance">R —</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:5px">
+              <span id="dashboard-balance-time">Not synced yet</span>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <button class="btn btn-gold" style="font-size:11px;padding:6px 12px" onclick="refreshLiveBalance()">🔄 Refresh</button>
+            <div style="font-size:10px;color:var(--muted);margin-top:5px">Live balance</div>
+          </div>
+        </div>
+      </div>
+      
       <div class="grid-4 mb-10">
         <div class="stat"><div class="stat-n">4</div><div class="stat-l">Active ventures</div></div>
         <div class="stat"><div class="stat-n stat-pos">R 2k</div><div class="stat-l">DS revenue</div></div>
@@ -880,6 +896,35 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
         <button class="itab" onclick="itab('finance','accounts',this)">Accounts</button>
       </div>
       <div class="itab-panel active" id="finance-overview">
+        <div class="card mb-10" style="background:linear-gradient(135deg, var(--card) 0%, var(--surface) 100%);border:1px solid var(--border)">
+          <div class="card-title">💰 Live Nedbank Balance</div>
+          <div style="display:flex;gap:20px;align-items:center;margin-bottom:15px">
+            <div style="flex:1">
+              <div style="font-size:32px;font-family:'Cormorant Garamond',serif;font-weight:600;margin-bottom:5px" id="live-balance">R —</div>
+              <div style="font-size:11px;color:var(--muted)">Current Balance</div>
+            </div>
+            <div style="flex:1">
+              <div style="font-size:24px;font-family:'Cormorant Garamond',serif;font-weight:500;margin-bottom:5px" id="live-available">R —</div>
+              <div style="font-size:11px;color:var(--muted)">Available</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">
+            Last updated: <span id="balance-updated-time">Never</span>
+          </div>
+          <button class="btn btn-gold" style="width:100%;font-size:12px" onclick="refreshLiveBalance()">🔄 Refresh Balance</button>
+          <div style="font-size:10px;color:var(--muted);margin-top:8px;text-align:center">
+            Auto-refreshes every 5 minutes
+          </div>
+        </div>
+
+        <div class="card mb-10">
+          <div class="card-title">📊 Recent Transactions (Last 24 Hours)</div>
+          <div id="recent-transactions-list" style="max-height:300px;overflow-y:auto"></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:10px;text-align:center">
+            Updates automatically when balance refreshes
+          </div>
+        </div>
+
         <div class="grid-4 mb-10" style="grid-template-columns:repeat(3,minmax(0,1fr))">
           <div class="stat"><div class="stat-n" id="fin-total-in">R 0</div><div class="stat-l">Total income</div></div>
           <div class="stat"><div class="stat-n stat-neg" id="fin-total-out">R 0</div><div class="stat-l">Total expenses</div></div>
@@ -3531,6 +3576,177 @@ if (stitchAutoSyncEnabled) {
     }
   }, 3600000); // 1 hour
 }
+
+// ─── LIVE BALANCE MONITORING ───
+let liveBalanceData = loadData('liveBalanceData', null);
+let recentTransactions = [];
+
+async function refreshLiveBalance() {
+  const btn = event?.target;
+  if (btn) {
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Refreshing...';
+  }
+  
+  try {
+    // Call Supabase Edge Function to get balance
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/fetch-nedbank-transactions`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error('Balance refresh failed');
+    }
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // Update balance display
+      liveBalanceData = {
+        balance: result.balance,
+        availableBalance: result.availableBalance,
+        accountNumber: result.accountNumber,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      await saveData('liveBalanceData', liveBalanceData);
+      
+      // Get recent transactions (last 24 hours)
+      const ledger = loadData('financeLedger', []);
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      recentTransactions = ledger
+        .filter(t => new Date(t.date) > yesterday)
+        .slice(0, 10);
+      
+      renderLiveBalance();
+      renderRecentTransactions();
+      
+      // Update ledger too
+      await loadFromCloud();
+      renderLedger();
+      updateFinanceTotals();
+    } else {
+      throw new Error(result.error || 'Unknown error');
+    }
+  } catch (err) {
+    console.error('Balance refresh error:', err);
+    
+    // Show error state
+    document.getElementById('live-balance').textContent = 'Error';
+    document.getElementById('live-balance').style.color = 'var(--red)';
+    
+    if (err.message.includes('404')) {
+      alert('⚙️ Stitch not configured yet.\n\nSet up Stitch integration to enable live balance.');
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '🔄 Refresh Balance';
+    }
+  }
+}
+
+function renderLiveBalance() {
+  if (!liveBalanceData) {
+    document.getElementById('live-balance').textContent = 'R —';
+    document.getElementById('live-available').textContent = 'R —';
+    document.getElementById('balance-updated-time').textContent = 'Never';
+    
+    // Dashboard widget
+    const dashboardBalance = document.getElementById('dashboard-balance');
+    const dashboardBalanceTime = document.getElementById('dashboard-balance-time');
+    if (dashboardBalance) dashboardBalance.textContent = 'R —';
+    if (dashboardBalanceTime) dashboardBalanceTime.textContent = 'Not synced yet';
+    return;
+  }
+  
+  const balanceText = 'R ' + liveBalanceData.balance.toLocaleString('en-ZA', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const balanceColor = liveBalanceData.balance >= 0 ? 'var(--green)' : 'var(--red)';
+  
+  // Finance tab
+  document.getElementById('live-balance').textContent = balanceText;
+  document.getElementById('live-balance').style.color = balanceColor;
+  
+  document.getElementById('live-available').textContent = 'R ' + liveBalanceData.availableBalance.toLocaleString('en-ZA', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  
+  const updated = new Date(liveBalanceData.lastUpdated);
+  const now = new Date();
+  const diffMs = now - updated;
+  const diffMins = Math.floor(diffMs / 60000);
+  
+  let timeText;
+  if (diffMins < 1) {
+    timeText = 'Just now';
+  } else if (diffMins < 60) {
+    timeText = `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+  } else {
+    timeText = updated.toLocaleTimeString('en-ZA');
+  }
+  
+  document.getElementById('balance-updated-time').textContent = timeText;
+  
+  // Dashboard widget
+  const dashboardBalance = document.getElementById('dashboard-balance');
+  const dashboardBalanceTime = document.getElementById('dashboard-balance-time');
+  if (dashboardBalance) {
+    dashboardBalance.textContent = balanceText;
+    dashboardBalance.style.color = 'var(--gold)'; // Keep gold on dashboard
+  }
+  if (dashboardBalanceTime) {
+    dashboardBalanceTime.textContent = 'Updated ' + timeText;
+  }
+}
+
+function renderRecentTransactions() {
+  const el = document.getElementById('recent-transactions-list');
+  if (!el) return;
+  
+  if (recentTransactions.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;padding:20px;text-align:center">No transactions in last 24 hours</div>';
+    return;
+  }
+  
+  el.innerHTML = recentTransactions.map(t => {
+    const time = new Date(t.date).toLocaleTimeString('en-ZA', {hour: '2-digit', minute: '2-digit'});
+    const isIncome = t.type === 'income';
+    
+    return `
+      <div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="width:8px;height:8px;border-radius:50%;background:${isIncome ? 'var(--green)' : 'var(--red)'};margin-right:10px"></div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:500">${t.desc}</div>
+          <div style="font-size:10px;color:var(--muted)">${time} · ${t.cat}</div>
+        </div>
+        <div style="font-size:14px;font-weight:500;color:${isIncome ? 'var(--green)' : 'var(--red)'}">
+          ${isIncome ? '+' : '-'}R${t.amt.toLocaleString('en-ZA', {minimumFractionDigits: 2})}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Auto-refresh balance every 5 minutes
+setInterval(async () => {
+  if (liveBalanceData && stitchAutoSyncEnabled) {
+    await refreshLiveBalance();
+  }
+}, 300000); // 5 minutes
+
+// Render on page load
+document.addEventListener('DOMContentLoaded', () => {
+  renderLiveBalance();
+  renderRecentTransactions();
+});
 
 async function updateRS3Progress(){
   const el=document.getElementById('rs3-income');
