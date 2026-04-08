@@ -425,19 +425,12 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
     <!-- ═══ DASHBOARD ═══ -->
     <div class="section active" id="s-dashboard">
       <div class="card mb-10" style="background:linear-gradient(135deg, #1a1a1a 0%, var(--card) 100%);border:1px solid var(--gold);padding:20px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:5px">Nedbank Account Balance</div>
-            <div style="font-size:36px;font-family:'Cormorant Garamond',serif;font-weight:600;color:var(--gold)" id="dashboard-balance">R —</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:5px">
-              <span id="dashboard-balance-time">Not synced yet</span>
-            </div>
-          </div>
-          <div style="text-align:right">
-            <button class="btn btn-gold" style="font-size:11px;padding:6px 12px" onclick="refreshLiveBalance()">🔄 Refresh</button>
-            <div style="font-size:10px;color:var(--muted);margin-top:5px">Live balance</div>
-          </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+          <div style="font-size:16px;font-weight:500;color:var(--gold)">💳 Bank Accounts</div>
+          <button class="btn btn-gold" style="font-size:11px;padding:6px 12px" onclick="refreshLiveBalance()">🔄 Refresh All</button>
         </div>
+        <div id="dashboard-accounts-list" style="display:grid;gap:10px"></div>
+        <div id="dashboard-balance-time" style="font-size:10px;color:var(--muted);margin-top:10px;text-align:right">Not synced yet</div>
       </div>
       
       <div class="grid-4 mb-10">
@@ -897,21 +890,12 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       </div>
       <div class="itab-panel active" id="finance-overview">
         <div class="card mb-10" style="background:linear-gradient(135deg, var(--card) 0%, var(--surface) 100%);border:1px solid var(--border)">
-          <div class="card-title">💰 Live Nedbank Balance</div>
-          <div style="display:flex;gap:20px;align-items:center;margin-bottom:15px">
-            <div style="flex:1">
-              <div style="font-size:32px;font-family:'Cormorant Garamond',serif;font-weight:600;margin-bottom:5px" id="live-balance">R —</div>
-              <div style="font-size:11px;color:var(--muted)">Current Balance</div>
-            </div>
-            <div style="flex:1">
-              <div style="font-size:24px;font-family:'Cormorant Garamond',serif;font-weight:500;margin-bottom:5px" id="live-available">R —</div>
-              <div style="font-size:11px;color:var(--muted)">Available</div>
-            </div>
-          </div>
+          <div class="card-title">💰 Live Bank Balances</div>
+          <div id="finance-accounts-list" style="display:grid;gap:15px;margin-bottom:15px"></div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:10px">
             Last updated: <span id="balance-updated-time">Never</span>
           </div>
-          <button class="btn btn-gold" style="width:100%;font-size:12px" onclick="refreshLiveBalance()">🔄 Refresh Balance</button>
+          <button class="btn btn-gold" style="width:100%;font-size:12px" onclick="refreshLiveBalance()">🔄 Refresh All Accounts</button>
           <div style="font-size:10px;color:var(--muted);margin-top:8px;text-align:center">
             Auto-refreshes every 5 minutes
           </div>
@@ -3609,11 +3593,15 @@ async function refreshLiveBalance() {
     const result = await response.json();
     
     if (result.success) {
-      // Update balance display
+      // Update balance display - support multiple accounts
       liveBalanceData = {
-        balance: result.balance,
-        availableBalance: result.availableBalance,
-        accountNumber: result.accountNumber,
+        accounts: result.accounts || [{
+          accountNumber: result.accountNumber,
+          accountName: 'Main Account',
+          balance: result.balance,
+          availableBalance: result.availableBalance,
+          accountType: 'Cheque'
+        }],
         lastUpdated: new Date().toISOString()
       };
       
@@ -3642,8 +3630,7 @@ async function refreshLiveBalance() {
     console.error('Balance refresh error:', err);
     
     // Show error state
-    document.getElementById('live-balance').textContent = 'Error';
-    document.getElementById('live-balance').style.color = 'var(--red)';
+    renderLiveBalanceError();
     
     if (err.message.includes('404')) {
       alert('⚙️ Stitch not configured yet.\n\nSet up Stitch integration to enable live balance.');
@@ -3651,34 +3638,45 @@ async function refreshLiveBalance() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.textContent = '🔄 Refresh Balance';
+      btn.textContent = '🔄 Refresh All';
     }
   }
 }
 
+function renderLiveBalanceError() {
+  const dashboardList = document.getElementById('dashboard-accounts-list');
+  const financeList = document.getElementById('finance-accounts-list');
+  
+  const errorHtml = '<div style="padding:20px;text-align:center;color:var(--red)">Error loading accounts</div>';
+  
+  if (dashboardList) dashboardList.innerHTML = errorHtml;
+  if (financeList) financeList.innerHTML = errorHtml;
+}
+
 function renderLiveBalance() {
-  if (!liveBalanceData) {
-    document.getElementById('live-balance').textContent = 'R —';
-    document.getElementById('live-available').textContent = 'R —';
-    document.getElementById('balance-updated-time').textContent = 'Never';
+  const dashboardList = document.getElementById('dashboard-accounts-list');
+  const financeList = document.getElementById('finance-accounts-list');
+  const timeEl = document.getElementById('balance-updated-time');
+  const dashboardTimeEl = document.getElementById('dashboard-balance-time');
+  
+  if (!liveBalanceData || !liveBalanceData.accounts || liveBalanceData.accounts.length === 0) {
+    // Show placeholder
+    const placeholderHtml = `
+      <div style="padding:30px;text-align:center;color:var(--muted)">
+        <div style="font-size:48px;margin-bottom:10px">💳</div>
+        <div style="font-size:14px;margin-bottom:5px">No accounts connected</div>
+        <div style="font-size:11px">Set up Stitch integration to see live balances</div>
+      </div>
+    `;
     
-    // Dashboard widget
-    const dashboardBalance = document.getElementById('dashboard-balance');
-    const dashboardBalanceTime = document.getElementById('dashboard-balance-time');
-    if (dashboardBalance) dashboardBalance.textContent = 'R —';
-    if (dashboardBalanceTime) dashboardBalanceTime.textContent = 'Not synced yet';
+    if (dashboardList) dashboardList.innerHTML = placeholderHtml;
+    if (financeList) financeList.innerHTML = placeholderHtml;
+    if (timeEl) timeEl.textContent = 'Never';
+    if (dashboardTimeEl) dashboardTimeEl.textContent = 'Not synced yet';
     return;
   }
   
-  const balanceText = 'R ' + liveBalanceData.balance.toLocaleString('en-ZA', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-  const balanceColor = liveBalanceData.balance >= 0 ? 'var(--green)' : 'var(--red)';
-  
-  // Finance tab
-  document.getElementById('live-balance').textContent = balanceText;
-  document.getElementById('live-balance').style.color = balanceColor;
-  
-  document.getElementById('live-available').textContent = 'R ' + liveBalanceData.availableBalance.toLocaleString('en-ZA', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-  
+  // Calculate time since update
   const updated = new Date(liveBalanceData.lastUpdated);
   const now = new Date();
   const diffMs = now - updated;
@@ -3688,23 +3686,86 @@ function renderLiveBalance() {
   if (diffMins < 1) {
     timeText = 'Just now';
   } else if (diffMins < 60) {
-    timeText = `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+    timeText = `${diffMins} min${diffMins > 1 ? 's' : ''} ago';
   } else {
     timeText = updated.toLocaleTimeString('en-ZA');
   }
   
-  document.getElementById('balance-updated-time').textContent = timeText;
+  if (timeEl) timeEl.textContent = timeText;
+  if (dashboardTimeEl) dashboardTimeEl.textContent = 'Updated ' + timeText;
   
-  // Dashboard widget
-  const dashboardBalance = document.getElementById('dashboard-balance');
-  const dashboardBalanceTime = document.getElementById('dashboard-balance-time');
-  if (dashboardBalance) {
-    dashboardBalance.textContent = balanceText;
-    dashboardBalance.style.color = 'var(--gold)'; // Keep gold on dashboard
-  }
-  if (dashboardBalanceTime) {
-    dashboardBalanceTime.textContent = 'Updated ' + timeText;
-  }
+  // Render accounts
+  const accounts = liveBalanceData.accounts;
+  const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+  
+  // Dashboard: Compact view
+  const dashboardHtml = accounts.map((acc, idx) => {
+    const balanceColor = acc.balance >= 0 ? 'var(--green)' : 'var(--red)';
+    const isFirst = idx === 0;
+    
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:${isFirst ? '0' : '15px 0 0 0'};${isFirst ? '' : 'border-top:1px solid var(--border-dark)'}">
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:3px">${acc.accountName || 'Account'} ${acc.accountType ? '• ' + acc.accountType : ''}</div>
+          <div style="font-size:${isFirst ? '28px' : '20px'};font-family:'Cormorant Garamond',serif;font-weight:600;color:${isFirst ? 'var(--gold)' : balanceColor}">
+            R ${acc.balance.toLocaleString('en-ZA', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+          </div>
+        </div>
+        ${acc.availableBalance !== acc.balance ? `
+          <div style="text-align:right">
+            <div style="font-size:9px;color:var(--muted)">Available</div>
+            <div style="font-size:12px;font-weight:500">R ${acc.availableBalance.toLocaleString('en-ZA', {minimumFractionDigits: 2})}</div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+  
+  // Finance: Detailed view
+  const financeHtml = accounts.map(acc => {
+    const balanceColor = acc.balance >= 0 ? 'var(--green)' : 'var(--red)';
+    
+    return `
+      <div style="border:1px solid var(--border);border-radius:8px;padding:15px;background:var(--card)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div>
+            <div style="font-size:13px;font-weight:500;margin-bottom:3px">${acc.accountName || 'Nedbank Account'}</div>
+            <div style="font-size:10px;color:var(--muted)">${acc.accountType || 'Cheque'} • ****${acc.accountNumber ? acc.accountNumber.slice(-4) : '0000'}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:24px;font-family:'Cormorant Garamond',serif;font-weight:600;color:${balanceColor}">
+              R ${acc.balance.toLocaleString('en-ZA', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+            </div>
+            <div style="font-size:10px;color:var(--muted)">Current Balance</div>
+          </div>
+        </div>
+        ${acc.availableBalance !== acc.balance ? `
+          <div style="padding-top:10px;border-top:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-size:11px;color:var(--muted)">Available Balance</div>
+              <div style="font-size:14px;font-weight:500">R ${acc.availableBalance.toLocaleString('en-ZA', {minimumFractionDigits: 2})}</div>
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+  
+  // Add total if multiple accounts
+  const totalHtml = accounts.length > 1 ? `
+    <div style="border:2px solid var(--gold);border-radius:8px;padding:15px;background:linear-gradient(135deg, var(--card) 0%, var(--surface) 100%)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;font-weight:500;color:var(--gold)">💎 Total Balance</div>
+        <div style="font-size:28px;font-family:'Cormorant Garamond',serif;font-weight:600;color:var(--gold)">
+          R ${totalBalance.toLocaleString('en-ZA', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:5px">Across ${accounts.length} account${accounts.length > 1 ? 's' : ''}</div>
+    </div>
+  ` : '';
+  
+  if (dashboardList) dashboardList.innerHTML = dashboardHtml;
+  if (financeList) financeList.innerHTML = financeHtml + (totalHtml ? totalHtml : '');
 }
 
 function renderRecentTransactions() {
