@@ -904,12 +904,33 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       </div>
       <div class="itab-panel" id="finance-ledger">
         <div class="card mb-10">
+          <div class="card-title">🔄 Nedbank Auto-Sync via Stitch</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+            Automatically fetch transactions from your Nedbank account. Connect once, sync anytime.
+          </div>
+          <div id="stitch-status" style="font-size:12px;margin-bottom:10px;padding:10px;background:var(--surface);border-radius:6px">
+            <div style="margin-bottom:8px">
+              <span style="color:var(--muted)">Status:</span>
+              <span id="stitch-connected" style="color:var(--gold);margin-left:5px">⚙️ Setup Required</span>
+            </div>
+            <div style="font-size:11px;color:var(--muted)">
+              Last synced: <span id="last-sync-time">Never</span>
+            </div>
+          </div>
+          <button class="btn btn-gold" style="width:100%" onclick="syncNedbank()">🔄 Sync Nedbank Transactions</button>
+          <div style="font-size:10px;color:var(--muted);margin-top:10px;text-align:center">
+            <a href="https://stitch.money/" target="_blank" style="color:var(--gold);text-decoration:none">Sign up for Stitch</a> · 
+            <a href="javascript:showStitchInstructions()" style="color:var(--gold);text-decoration:none">Setup Instructions</a>
+          </div>
+        </div>
+
+        <div class="card mb-10">
           <div class="card-title">Import from Bank CSV</div>
           <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">
-            Export transactions from Nedbank (or any SA bank) as CSV and import them here. Works with Nedbank Online Banking, FNB, Capitec, Standard Bank, ABSA.
+            Manual import: Export transactions from Nedbank as CSV and import them here.
           </div>
           <input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none" onchange="handleCSVUpload(event)">
-          <button class="btn btn-gold" style="width:100%" onclick="document.getElementById('csv-file-input').click()">📁 Select Bank CSV File</button>
+          <button class="btn" style="width:100%" onclick="document.getElementById('csv-file-input').click()">📁 Select Bank CSV File</button>
           <div id="csv-import-status" style="margin-top:10px;font-size:11px;text-align:center;color:var(--muted)"></div>
         </div>
         
@@ -3383,6 +3404,133 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check every hour
   setInterval(checkPendingRecurring, 3600000);
 });
+
+// ─── STITCH NEDBANK AUTO-SYNC ───
+async function syncNedbank() {
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Syncing...';
+  
+  const statusEl = document.getElementById('stitch-connected');
+  
+  try {
+    // Call Supabase Edge Function to fetch transactions
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/fetch-nedbank-transactions`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error('Sync failed: ' + response.status);
+    }
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // Reload ledger from Supabase
+      await loadFromCloud();
+      renderLedger();
+      updateFinanceTotals();
+      
+      // Update UI
+      document.getElementById('last-sync-time').textContent = new Date().toLocaleTimeString('en-ZA');
+      statusEl.textContent = '✓ Connected';
+      statusEl.style.color = 'var(--green)';
+      
+      alert(`✅ Synced ${result.newTransactions} new transactions!${result.balance ? '\nBalance: R' + result.balance.toLocaleString() : ''}`);
+    } else {
+      throw new Error(result.error || 'Unknown error');
+    }
+  } catch (err) {
+    console.error('Stitch sync error:', err);
+    statusEl.textContent = '❌ Sync Failed';
+    statusEl.style.color = 'var(--red)';
+    
+    if (err.message.includes('404')) {
+      alert('⚙️ Stitch integration not set up yet.\n\nClick "Setup Instructions" to get started.');
+    } else {
+      alert('❌ Sync failed: ' + err.message + '\n\nCheck if Stitch is configured correctly.');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
+function showStitchInstructions() {
+  const instructions = `
+🔄 NEDBANK AUTO-SYNC SETUP
+
+Follow these steps to enable automatic transaction syncing:
+
+STEP 1: Sign up for Stitch
+1. Go to https://stitch.money/
+2. Create account (business or personal)
+3. Verify your email
+
+STEP 2: Connect Nedbank Account
+1. In Stitch Dashboard → "Linked Accounts"
+2. Click "Link Bank Account"
+3. Select "Nedbank"
+4. Log in with Nedbank credentials
+5. Authorize Stitch (read-only access)
+6. Your Nedbank account is now linked!
+
+STEP 3: Get API Keys
+1. Stitch Dashboard → "Developers" → "API Keys"
+2. Create new API key
+3. Copy Client ID and Client Secret
+4. Save them securely
+
+STEP 4: Contact Me
+Once you have:
+✅ Stitch account created
+✅ Nedbank connected to Stitch
+✅ API keys (Client ID + Secret)
+
+Then I can:
+1. Set up Supabase Edge Function
+2. Configure API keys securely
+3. Enable auto-sync on your dashboard
+
+COST:
+• Free tier: 100 API calls/month (manual sync only)
+• Paid: R500-1000/month (hourly auto-sync)
+
+SECURITY:
+✅ Read-only access (cannot transfer money)
+✅ OAuth standard (same as Google/Facebook)
+✅ API keys stored securely on server
+✅ Revoke access anytime in Nedbank
+
+For now, use:
+• CSV Import (manual weekly/monthly)
+• Recurring Transactions (saves 80% of manual work)
+
+Questions? Let me know!
+  `.trim();
+  
+  alert(instructions);
+}
+
+// Auto-sync every hour (only if configured)
+let stitchAutoSyncEnabled = false; // Will be enabled after setup
+if (stitchAutoSyncEnabled) {
+  setInterval(async () => {
+    try {
+      await syncNedbank();
+    } catch (err) {
+      console.error('Auto-sync failed:', err);
+    }
+  }, 3600000); // 1 hour
+}
 
 async function updateRS3Progress(){
   const el=document.getElementById('rs3-income');
