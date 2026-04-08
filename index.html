@@ -409,7 +409,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       <div class="tb-sub" id="tb-sub">Ntobeko Masemula · Johannesburg</div>
     </div>
     <div class="tb-right">
-      <button id="sync-btn" onclick="manualSync()" title="Sync now" style="background:#888;color:#fff;border:none;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;margin-right:8px">⏳ Connecting...</button>
+      <button id="sync-btn" onclick="manualSync()" title="Sync now" style="background:var(--gold);color:#000;border:none;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;margin-right:8px">↻ Sync</button>
       <span id="sync-status" title="Sync status" style="cursor:pointer;font-size:14px" onclick="manualSync()">📴</span>
       <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">
         <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -1890,10 +1890,26 @@ async function loadFromCloud(showStatus = true) {
 // ═══ INITIALIZE DASHBOARD ═══
 async function initDashboard() {
   try {
-    // Test connection
+    console.log('🚀 Initializing dashboard...');
+    
+    // Ensure DOM is ready
+    if (document.readyState !== 'complete' && document.readyState !== 'interactive') {
+      console.log('⏳ Waiting for DOM...');
+      return;
+    }
+    
+    setSyncStatus('saving'); // Show connecting state
+    
+    // Test connection with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
     const testResp = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?select=user_id&limit=1`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
     
     if (!testResp.ok) throw new Error('Connection failed');
     
@@ -1907,6 +1923,7 @@ async function initDashboard() {
     setupRealtime();
     
     setSyncStatus('synced');
+    console.log('✅ Dashboard initialized');
     
   } catch (err) {
     console.warn('⚠️ Offline mode:', err.message);
