@@ -3703,7 +3703,7 @@ function renderLiveBalance() {
   if (diffMins < 1) {
     timeText = 'Just now';
   } else if (diffMins < 60) {
-    timeText = `${diffMins} min${diffMins > 1 ? 's' : ''} ago';
+    timeText = `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
   } else {
     timeText = updated.toLocaleTimeString('en-ZA');
   }
