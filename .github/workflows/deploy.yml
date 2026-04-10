@@ -1,0 +1,76 @@
+name: Deploy to GitHub Pages
+
+# TEMPLATE - Enable this workflow when ready to auto-deploy
+# Currently set to manual trigger only (workflow_dispatch)
+# To enable auto-deploy: add 'push' trigger for your main branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    name: Deploy Dashboard
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify no secrets in code
+        run: |
+          echo "🔍 Checking for accidentally committed secrets..."
+          
+          # Check for Supabase service role key (should NEVER be in HTML)
+          if grep -r "service_role" index.html 2>/dev/null; then
+            echo "❌ DEPLOY BLOCKED: Service role key found in index.html"
+            exit 1
+          fi
+          
+          # Check for Stripe live secret keys
+          if grep -rE "sk_live_[a-zA-Z0-9]+" . --include="*.html" --include="*.js" 2>/dev/null; then
+            echo "❌ DEPLOY BLOCKED: Stripe live secret key found"
+            exit 1
+          fi
+          
+          echo "✅ Security check passed"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Notify deployment
+        run: |
+          echo "✅ Dashboard deployed successfully!"
+          echo "URL: ${{ steps.deployment.outputs.page_url }}"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Deployed at: $(TZ='Africa/Johannesburg' date '+%Y-%m-%d %H:%M SAST')"

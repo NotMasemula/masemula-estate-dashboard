@@ -1,0 +1,35 @@
+# CODEOWNERS
+# This file defines who is responsible for code in this repository.
+# These owners will be automatically requested for review on pull requests.
+# Documentation: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# === DEFAULT OWNER ===
+# @NotMasemula owns everything by default
+* @NotMasemula
+
+# === SECURITY FILES ===
+# Security-sensitive files require explicit review
+.gitignore @NotMasemula
+CODEOWNERS @NotMasemula
+.github/SECURITY.md @NotMasemula
+.env.local.example @NotMasemula
+
+# === SUPABASE & DATABASE ===
+# Database migrations require careful review
+supabase/ @NotMasemula
+supabase/migrations/ @NotMasemula
+supabase/functions/ @NotMasemula
+
+# === CONFIGURATION ===
+config/ @NotMasemula
+
+# === GITHUB WORKFLOWS ===
+.github/workflows/ @NotMasemula
+
+# === DOCUMENTATION ===
+docs/ @NotMasemula
+*.md @NotMasemula
+
+# === MAIN APPLICATION ===
+index.html @NotMasemula
+js/ @NotMasemula
