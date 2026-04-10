@@ -1189,7 +1189,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       <div class="itab-panel" id="finance-shared">
         <!-- Setup notice -->
         <div class="card mb-10" style="border-color:var(--gold);background:linear-gradient(135deg,var(--card) 0%,var(--surface) 100%)">
-          <div class="card-title">🤝 Shared Ventures — Ntobeko &amp; Tshegofatso</div>
+          <div class="card-title">🤝 Shared Ventures &mdash; Ntobeko &amp; Tshegofatso</div>
           <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:10px">50/50 partnership management. Track revenue, expenses, settlements and transfers between partners. All data syncs in real-time via your Supabase account.</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-gold" onclick="openCreateVentureModal()">+ New Venture</button>
@@ -4712,8 +4712,8 @@ function svShowVentureDetail(id) {
   </div>
   <div class="card mb-10">
     <div class="card-title">Startup Capital</div>
-    <div class="prog-row"><div class="prog-label">Ntobeko</div><div class="prog-bar" style="width:120px"><div class="prog-fill" style="width:${v.startup_capital_required>0?Math.min(100,v.capital_ntobeko/v.startup_capital_required*200):0}%"></div></div><div class="prog-pct">R ${(v.capital_ntobeko||0).toLocaleString()}</div></div>
-    <div class="prog-row"><div class="prog-label">Tshegofatso</div><div class="prog-bar" style="width:120px"><div class="prog-fill" style="width:${v.startup_capital_required>0?Math.min(100,v.capital_partner/v.startup_capital_required*200):0}%"></div></div><div class="prog-pct">R ${(v.capital_partner||0).toLocaleString()}</div></div>
+    <div class="prog-row"><div class="prog-label">Ntobeko</div><div class="prog-bar" style="width:120px"><div class="prog-fill" style="width:${v.startup_capital_required>0?Math.min(100,v.capital_ntobeko/v.startup_capital_required*100):0}%"></div></div><div class="prog-pct">R ${(v.capital_ntobeko||0).toLocaleString()}</div></div>
+    <div class="prog-row"><div class="prog-label">Tshegofatso</div><div class="prog-bar" style="width:120px"><div class="prog-fill" style="width:${v.startup_capital_required>0?Math.min(100,v.capital_partner/v.startup_capital_required*100):0}%"></div></div><div class="prog-pct">R ${(v.capital_partner||0).toLocaleString()}</div></div>
     <div style="font-size:10px;color:var(--muted);margin-top:8px">Target: R ${(v.startup_capital_required||0).toLocaleString()} total</div>
   </div>
   <div class="card mb-10">
@@ -5235,7 +5235,11 @@ document.addEventListener('DOMContentLoaded', () => {
 const _origLoadCloud = loadFromCloud;
 window.loadFromCloud = async function(showStatus=true) {
   const result = await _origLoadCloud.call(this, showStatus);
-  if (syncEnabled) { svLoadFromCloud().then(()=>svRenderAll()); }
+  if (syncEnabled) {
+    // Load shared venture data independently — not awaited so it does not
+    // delay the main dashboard sync from returning to callers.
+    svLoadFromCloud().then(() => svRenderAll()).catch(e => console.warn('SV sync error:', e));
+  }
   return result;
 };
 </script>
