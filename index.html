@@ -327,6 +327,55 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 /* PULSE */
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 .pulse{animation:pulse 2s ease-in-out infinite}
+
+/* SHARED VENTURES */
+.sv-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center}
+.sv-modal-overlay.open{display:flex}
+.sv-modal{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:20px;width:90%;max-width:480px;max-height:90vh;overflow-y:auto}
+.sv-modal-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.sv-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
+.sv-input{width:100%;padding:8px 10px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface);font-family:'Jost',sans-serif;font-size:12px;color:var(--ink);outline:none;margin-bottom:10px}
+.sv-input:focus{border-color:var(--gold)}
+.sv-card{background:var(--card);border:0.5px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;cursor:pointer;transition:all 0.2s}
+.sv-card:hover{border-color:var(--gold);box-shadow:0 2px 12px rgba(0,0,0,0.08)}
+.sv-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.sv-card-name{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:400}
+.sv-status{font-size:9px;text-transform:uppercase;letter-spacing:0.07em;padding:2px 8px;border-radius:3px;font-weight:400}
+.sv-status-planning{background:#FAEEDA;color:#854F0B}
+.sv-status-capital{background:#E1F5EE;color:#0F6E56}
+.sv-status-active{background:#EAF3DE;color:#3B6D11}
+.sv-status-paused{background:#F5F0E8;color:#5C3317}
+.sv-status-closed{background:#F0EDE7;color:#7A7570}
+.sv-split-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin:8px 0}
+.sv-split-n{background:var(--gold)}
+.sv-split-p{background:var(--accent)}
+.sv-tx-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:12px}
+.sv-tx-row:last-child{border-bottom:none}
+.sv-tx-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sv-tx-in{background:var(--green)}
+.sv-tx-out{background:var(--red)}
+.sv-approval-badge{font-size:9px;text-transform:uppercase;letter-spacing:0.06em;padding:2px 7px;border-radius:3px}
+.sv-pending{background:#FAEEDA;color:#854F0B}
+.sv-approved{background:#EAF3DE;color:#3B6D11}
+.sv-disputed{background:#FCEBEB;color:#A32D2D}
+.sv-transfer-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);font-size:12px}
+.sv-transfer-row:last-child{border-bottom:none}
+.sv-panel{display:none}
+.sv-panel.active{display:block}
+.sv-tab{font-size:10px;letter-spacing:0.07em;text-transform:uppercase;padding:5px 10px;cursor:pointer;color:var(--muted);border-bottom:1px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:'Jost',sans-serif;transition:all 0.2s}
+.sv-tab.active{color:var(--ink);border-bottom-color:var(--accent)}
+.sv-tab:hover:not(.active){color:var(--ink)}
+.sv-tabs{display:flex;gap:0;border-bottom:0.5px solid var(--border);margin-bottom:14px;flex-wrap:wrap}
+.sv-settlement-box{background:var(--surface);border-radius:8px;padding:14px;margin-bottom:10px}
+.sv-settlement-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:12px}
+.sv-settlement-row:last-child{border-bottom:none}
+.sv-settlement-total{display:flex;justify-content:space-between;font-size:14px;font-family:'Cormorant Garamond',serif;font-weight:400;padding:10px 0 0}
+.dark .sv-modal{background:var(--card);border-color:var(--border)}
+.dark .sv-card{background:var(--card);border-color:var(--border)}
+.dark .sv-input{background:var(--surface);color:#F0EDE7;border-color:var(--border)}
+.dark .sv-status-planning,.dark .sv-status-capital,.dark .sv-status-active,.dark .sv-status-paused,.dark .sv-status-closed{background:rgba(240,237,231,0.1);color:#F0EDE7}
+.dark .sv-pending,.dark .sv-approved,.dark .sv-disputed{background:rgba(240,237,231,0.1);color:#F0EDE7}
+.dark .sv-settlement-box{background:var(--surface)}
 </style>
 
 <div id="os">
@@ -887,6 +936,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
         <button class="itab" onclick="itab('finance','savings',this)">Savings</button>
         <button class="itab" onclick="itab('finance','invest',this)">Investments</button>
         <button class="itab" onclick="itab('finance','accounts',this)">Accounts</button>
+        <button class="itab" onclick="itab('finance','shared',this)">Shared Ventures</button>
       </div>
       <div class="itab-panel active" id="finance-overview">
         <div class="card mb-10" style="background:linear-gradient(135deg, var(--card) 0%, var(--surface) 100%);border:1px solid var(--border)">
@@ -1134,9 +1184,274 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
           </div>
         </div>
       </div>
+
+      <!-- ═══ SHARED VENTURES PANEL ═══ -->
+      <div class="itab-panel" id="finance-shared">
+        <!-- Setup notice -->
+        <div class="card mb-10" style="border-color:var(--gold);background:linear-gradient(135deg,var(--card) 0%,var(--surface) 100%)">
+          <div class="card-title">🤝 Shared Ventures — Ntobeko &amp; Tshegofatso</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:10px">50/50 partnership management. Track revenue, expenses, settlements and transfers between partners. All data syncs in real-time via your Supabase account.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-gold" onclick="openCreateVentureModal()">+ New Venture</button>
+            <button class="btn" onclick="svSyncSharedData()">↻ Sync Partner Data</button>
+            <button class="btn" style="font-size:10px" onclick="svShowSetup()">⚙ Setup</button>
+          </div>
+          <div id="sv-sync-status" style="font-size:10px;color:var(--muted);margin-top:8px">Last synced: <span id="sv-sync-time">Never</span></div>
+        </div>
+
+        <!-- Sub-tabs -->
+        <div class="sv-tabs">
+          <button class="sv-tab active" onclick="svTab('sv-ventures-panel',this)">Ventures</button>
+          <button class="sv-tab" onclick="svTab('sv-transactions-panel',this)">Transactions</button>
+          <button class="sv-tab" onclick="svTab('sv-settlement-panel',this)">Settlement</button>
+          <button class="sv-tab" onclick="svTab('sv-transfers-panel',this)">Transfers</button>
+          <button class="sv-tab" onclick="svTab('sv-loans-panel',this)">Loans</button>
+          <button class="sv-tab" onclick="svTab('sv-history-panel',this)">History</button>
+        </div>
+
+        <!-- ─ VENTURES ─ -->
+        <div class="sv-panel active" id="sv-ventures-panel">
+          <div id="sv-ventures-list"></div>
+          <div id="sv-venture-detail" style="display:none"></div>
+        </div>
+
+        <!-- ─ TRANSACTIONS ─ -->
+        <div class="sv-panel" id="sv-transactions-panel">
+          <div class="card mb-10">
+            <div class="card-title">Add Transaction</div>
+            <div class="grid-2" style="gap:10px">
+              <div>
+                <div class="sv-label">Venture</div>
+                <select class="sv-input" id="sv-tx-venture"></select>
+              </div>
+              <div>
+                <div class="sv-label">Type</div>
+                <select class="sv-input" id="sv-tx-type">
+                  <option value="income">Income / Revenue</option>
+                  <option value="expense">Expense / Cost</option>
+                </select>
+              </div>
+            </div>
+            <div class="sv-label">Description</div>
+            <input class="sv-input" id="sv-tx-desc" placeholder="e.g. DS Sales — Week 1">
+            <div class="grid-2" style="gap:10px">
+              <div>
+                <div class="sv-label">Amount (R)</div>
+                <input class="sv-input" id="sv-tx-amt" type="number" placeholder="0.00" min="0">
+              </div>
+              <div>
+                <div class="sv-label">Source</div>
+                <select class="sv-input" id="sv-tx-source">
+                  <option value="manual">Manual Entry</option>
+                  <option value="nedbank">Nedbank (import)</option>
+                  <option value="shopify">Shopify (future)</option>
+                  <option value="stripe">Stripe (future)</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-gold" style="width:100%" onclick="svAddTransaction()">Add Transaction</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Transaction History</div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+              <select class="sv-input" id="sv-tx-filter-venture" style="flex:1;margin-bottom:0" onchange="svRenderTransactions()">
+                <option value="">All Ventures</option>
+              </select>
+              <select class="sv-input" id="sv-tx-filter-status" style="flex:1;margin-bottom:0" onchange="svRenderTransactions()">
+                <option value="">All Statuses</option>
+                <option value="pending">Pending Approval</option>
+                <option value="approved">Approved</option>
+                <option value="disputed">Disputed</option>
+              </select>
+            </div>
+            <div id="sv-tx-list"></div>
+          </div>
+        </div>
+
+        <!-- ─ SETTLEMENT ─ -->
+        <div class="sv-panel" id="sv-settlement-panel">
+          <div class="card mb-10">
+            <div class="card-title">Calculate Monthly Settlement</div>
+            <div class="grid-2" style="gap:10px">
+              <div>
+                <div class="sv-label">Venture</div>
+                <select class="sv-input" id="sv-settle-venture" onchange="svCalcSettlement()"></select>
+              </div>
+              <div>
+                <div class="sv-label">Month</div>
+                <input class="sv-input" id="sv-settle-month" type="month" onchange="svCalcSettlement()">
+              </div>
+            </div>
+            <div>
+              <div class="sv-label">Reinvestment Amount (R)</div>
+              <input class="sv-input" id="sv-settle-reinvest" type="number" placeholder="0" min="0" value="0" oninput="svCalcSettlement()">
+            </div>
+            <div id="sv-settlement-preview"></div>
+            <div id="sv-settlement-actions" style="display:none;margin-top:10px">
+              <button class="btn btn-gold" style="width:100%" onclick="svSaveSettlement()">Save Settlement Record</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Settlement History</div>
+            <div id="sv-settlements-list"></div>
+          </div>
+        </div>
+
+        <!-- ─ TRANSFERS ─ -->
+        <div class="sv-panel" id="sv-transfers-panel">
+          <div class="card mb-10">
+            <div class="card-title">Log a Transfer</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">Manual transfers: log here, then send via Nedbank app. Partner confirms receipt.</div>
+            <div class="sv-label">Settlement</div>
+            <select class="sv-input" id="sv-transfer-settlement">
+              <option value="">— Select settlement —</option>
+            </select>
+            <div class="grid-2" style="gap:10px">
+              <div>
+                <div class="sv-label">From</div>
+                <select class="sv-input" id="sv-transfer-from">
+                  <option value="ntobeko">Ntobeko</option>
+                  <option value="tshegofatso">Tshegofatso</option>
+                </select>
+              </div>
+              <div>
+                <div class="sv-label">To</div>
+                <select class="sv-input" id="sv-transfer-to">
+                  <option value="tshegofatso">Tshegofatso</option>
+                  <option value="ntobeko">Ntobeko</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-2" style="gap:10px">
+              <div>
+                <div class="sv-label">Amount (R)</div>
+                <input class="sv-input" id="sv-transfer-amt" type="number" placeholder="0.00" min="0">
+              </div>
+              <div>
+                <div class="sv-label">Type</div>
+                <select class="sv-input" id="sv-transfer-type">
+                  <option value="profit_share">Profit Share</option>
+                  <option value="loan_repayment">Loan Repayment</option>
+                  <option value="capital">Startup Capital</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="sv-label">Notes</div>
+            <input class="sv-input" id="sv-transfer-notes" placeholder="Reference / notes">
+            <button class="btn btn-gold" style="width:100%" onclick="svLogTransfer()">Log Transfer</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Transfer Tracker</div>
+            <div id="sv-transfers-list"></div>
+          </div>
+        </div>
+
+        <!-- ─ LOANS ─ -->
+        <div class="sv-panel" id="sv-loans-panel">
+          <div class="card mb-10">
+            <div class="card-title">Create Startup Loan</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">If one partner covers the other's startup capital, record it here. Repayments are deducted from monthly profit share.</div>
+            <div class="sv-label">Venture</div>
+            <select class="sv-input" id="sv-loan-venture"></select>
+            <div class="grid-2" style="gap:10px">
+              <div>
+                <div class="sv-label">Lender (paid for both)</div>
+                <select class="sv-input" id="sv-loan-lender">
+                  <option value="ntobeko">Ntobeko</option>
+                  <option value="tshegofatso">Tshegofatso</option>
+                </select>
+              </div>
+              <div>
+                <div class="sv-label">Borrower</div>
+                <select class="sv-input" id="sv-loan-borrower">
+                  <option value="tshegofatso">Tshegofatso</option>
+                  <option value="ntobeko">Ntobeko</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-2" style="gap:10px">
+              <div>
+                <div class="sv-label">Principal Amount (R)</div>
+                <input class="sv-input" id="sv-loan-principal" type="number" placeholder="0.00" min="0">
+              </div>
+              <div>
+                <div class="sv-label">Monthly Repayment (R)</div>
+                <input class="sv-input" id="sv-loan-repayment" type="number" placeholder="0.00" min="0">
+              </div>
+            </div>
+            <div class="sv-label">Notes</div>
+            <input class="sv-input" id="sv-loan-notes" placeholder="Agreed terms">
+            <button class="btn btn-gold" style="width:100%" onclick="svCreateLoan()">Create Loan Record</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Active Loans</div>
+            <div id="sv-loans-list"></div>
+          </div>
+        </div>
+
+        <!-- ─ HISTORY ─ -->
+        <div class="sv-panel" id="sv-history-panel">
+          <div class="card">
+            <div class="card-title">Audit Trail</div>
+            <div id="sv-audit-list"></div>
+          </div>
+        </div>
+      </div><!-- end finance-shared panel -->
+    </div><!-- end s-finance -->
+
+    <!-- ═══ CREATE VENTURE MODAL ═══ -->
+    <div class="sv-modal-overlay" id="sv-create-modal">
+      <div class="sv-modal">
+        <div class="sv-modal-title">New Shared Venture <button class="btn" onclick="closeCreateVentureModal()" style="font-size:10px;padding:4px 10px">Close</button></div>
+        <div class="sv-label">Venture Name</div>
+        <input class="sv-input" id="sv-new-name" placeholder="e.g. Dropshipping — Clean Desk Co.">
+        <div class="sv-label">Description</div>
+        <textarea class="sv-input" id="sv-new-desc" placeholder="Brief description..." style="height:60px;resize:none"></textarea>
+        <div class="sv-label">Status</div>
+        <select class="sv-input" id="sv-new-status">
+          <option value="planning">Planning</option>
+          <option value="capital_collection">Capital Collection</option>
+          <option value="in_operation">In Operation</option>
+          <option value="paused">Paused</option>
+        </select>
+        <div class="grid-2" style="gap:10px">
+          <div>
+            <div class="sv-label">Ntobeko's Split (%)</div>
+            <input class="sv-input" id="sv-new-split-n" type="number" value="50" min="0" max="100" oninput="svUpdateSplitPreview()">
+          </div>
+          <div>
+            <div class="sv-label">Tshegofatso's Split (%)</div>
+            <input class="sv-input" id="sv-new-split-p" type="number" value="50" min="0" max="100" oninput="svUpdateSplitPreview()">
+          </div>
+        </div>
+        <div id="sv-split-preview" style="height:6px;border-radius:3px;overflow:hidden;margin-bottom:10px;display:flex"><div style="flex:50;background:var(--gold)"></div><div style="flex:50;background:var(--accent)"></div></div>
+        <div class="sv-label">Startup Capital Required (R)</div>
+        <input class="sv-input" id="sv-new-capital" type="number" placeholder="0" min="0" value="0">
+        <div class="grid-2" style="gap:10px">
+          <div>
+            <div class="sv-label">Ntobeko's Contribution (R)</div>
+            <input class="sv-input" id="sv-new-contrib-n" type="number" placeholder="0" min="0" value="0">
+          </div>
+          <div>
+            <div class="sv-label">Tshegofatso's Contribution (R)</div>
+            <input class="sv-input" id="sv-new-contrib-p" type="number" placeholder="0" min="0" value="0">
+          </div>
+        </div>
+        <button class="btn btn-gold" style="width:100%;margin-top:4px" onclick="svCreateVenture()">Create Venture</button>
+      </div>
     </div>
 
-    <!-- ═══ HEADSPACE ═══ -->
+    <!-- ═══ DISPUTE MODAL ═══ -->
+    <div class="sv-modal-overlay" id="sv-dispute-modal">
+      <div class="sv-modal">
+        <div class="sv-modal-title">Dispute Transaction <button class="btn" onclick="document.getElementById('sv-dispute-modal').classList.remove('open')" style="font-size:10px;padding:4px 10px">Close</button></div>
+        <div class="sv-label">Reason for Dispute</div>
+        <textarea class="sv-input" id="sv-dispute-reason" placeholder="Explain why you are disputing this transaction..." style="height:80px;resize:none"></textarea>
+        <input type="hidden" id="sv-dispute-tx-id">
+        <button class="btn" style="width:100%;border-color:var(--red);color:var(--red)" onclick="svConfirmDispute()">Submit Dispute</button>
+      </div>
+    </div>
     <div class="section" id="s-headspace">
       <div class="sec-head">
         <div><div class="sec-title">Headspace</div><div class="sec-sub">Emotional awareness · Daily journal · Inner work</div></div>
@@ -4150,6 +4465,779 @@ function renderRoutineFlags(){
 // Init routine
 renderRoutineDayNav();renderRoutineNote();renderRoutineSchedule();renderRoutineHabits();renderRoutineWeeklyProg();renderRoutineFlags();
 document.getElementById('routine-day-label').textContent=DAYS_FULL[selectedDay];
+
+// ═══════════════════════════════════════════════════════════════
+// SHARED VENTURES — Partnership Management System
+// Ntobeko & Tshegofatso · 50/50 default split · Free tier only
+// ═══════════════════════════════════════════════════════════════
+
+// Shared venture data lives in its own Supabase record so both
+// partners can read and write to the same dataset.
+const SV_KEY = 'masemula-ventures-shared';
+
+// In-memory store for the current session
+let svData = {
+  ventures: [],
+  transactions: [],
+  settlements: [],
+  transfers: [],
+  loans: [],
+  audit: []
+};
+
+// ─── LOAD / SAVE SHARED DATA ───
+
+async function svLoadFromCloud() {
+  if (!syncEnabled) { svLoadLocal(); return; }
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${SV_KEY}&select=data,updated_at`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!res.ok) throw new Error('Load failed');
+    const rows = await res.json();
+    if (rows && rows.length > 0 && rows[0].data) {
+      svData = Object.assign({ ventures:[], transactions:[], settlements:[], transfers:[], loans:[], audit:[] }, rows[0].data);
+      localStorage.setItem('sv_data', JSON.stringify(svData));
+      const el = document.getElementById('sv-sync-time');
+      if (el) el.textContent = new Date(rows[0].updated_at).toLocaleTimeString('en-ZA');
+    } else {
+      svLoadLocal();
+    }
+  } catch(e) {
+    console.warn('SV load failed, using local:', e.message);
+    svLoadLocal();
+  }
+}
+
+function svLoadLocal() {
+  const raw = localStorage.getItem('sv_data');
+  if (raw) {
+    try { svData = Object.assign({ ventures:[], transactions:[], settlements:[], transfers:[], loans:[], audit:[] }, JSON.parse(raw)); }
+    catch(e) {}
+  }
+}
+
+async function svSaveToCloud() {
+  localStorage.setItem('sv_data', JSON.stringify(svData));
+  if (!syncEnabled) return;
+  try {
+    // Upsert shared record
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${SV_KEY}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ data: svData, updated_at: new Date().toISOString() })
+    });
+    if (!res.ok) {
+      // Record may not exist yet — try INSERT
+      await fetch(`${SUPABASE_URL}/rest/v1/estate_data`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ user_id: SV_KEY, data: svData })
+      });
+    }
+    const el = document.getElementById('sv-sync-time');
+    if (el) el.textContent = new Date().toLocaleTimeString('en-ZA');
+  } catch(e) {
+    console.warn('SV save failed:', e.message);
+  }
+}
+
+async function svSyncSharedData() {
+  const btn = event && event.target;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Syncing...'; }
+  await svLoadFromCloud();
+  svRenderAll();
+  if (btn) { btn.disabled = false; btn.textContent = '↻ Sync Partner Data'; }
+}
+
+// ─── TAB NAVIGATION ───
+
+function svTab(panelId, el) {
+  const container = document.getElementById('finance-shared');
+  if (!container) return;
+  container.querySelectorAll('.sv-panel').forEach(p => p.classList.remove('active'));
+  container.querySelectorAll('.sv-tab').forEach(t => t.classList.remove('active'));
+  const panel = document.getElementById(panelId);
+  if (panel) panel.classList.add('active');
+  if (el) el.classList.add('active');
+  // Refresh panel contents when switching
+  if (panelId === 'sv-ventures-panel') svRenderVentures();
+  if (panelId === 'sv-transactions-panel') { svPopulateVentureSelects(); svRenderTransactions(); }
+  if (panelId === 'sv-settlement-panel') { svPopulateVentureSelects(); svRenderSettlements(); }
+  if (panelId === 'sv-transfers-panel') { svPopulateSettlementSelect(); svRenderTransfers(); }
+  if (panelId === 'sv-loans-panel') { svPopulateVentureSelects(); svRenderLoans(); }
+  if (panelId === 'sv-history-panel') svRenderAudit();
+}
+
+// ─── MODALS ───
+
+function openCreateVentureModal() {
+  document.getElementById('sv-create-modal').classList.add('open');
+}
+function closeCreateVentureModal() {
+  document.getElementById('sv-create-modal').classList.remove('open');
+}
+function svUpdateSplitPreview() {
+  const n = parseFloat(document.getElementById('sv-new-split-n').value) || 0;
+  const p = Math.max(0, 100 - n);
+  document.getElementById('sv-new-split-p').value = p;
+  const prev = document.getElementById('sv-split-preview');
+  if (prev) prev.innerHTML = `<div style="flex:${n};background:var(--gold)"></div><div style="flex:${p};background:var(--accent)"></div>`;
+}
+function svShowSetup() {
+  alert(`SHARED VENTURES SETUP\n\nTo enable real-time sync between you and Tshegofatso:\n\n1. Both dashboards connect to the SAME Supabase project\n2. A shared record is created with key: "${SV_KEY}"\n3. Both partners can read & write to this shared record\n4. Click "↻ Sync Partner Data" to refresh\n\nNO additional cost — uses your existing free Supabase plan.\n\nTshegofatso needs to:\n• Open the same dashboard URL\n• Go to Finance → Shared Ventures\n• Click "↻ Sync Partner Data"`);
+}
+
+// ─── VENTURES ───
+
+async function svCreateVenture() {
+  const name = document.getElementById('sv-new-name').value.trim();
+  if (!name) { alert('Enter a venture name'); return; }
+  const splitN = parseFloat(document.getElementById('sv-new-split-n').value) || 50;
+  const splitP = parseFloat(document.getElementById('sv-new-split-p').value) || 50;
+  if (Math.abs(splitN + splitP - 100) > 0.1) { alert('Split percentages must add up to 100%'); return; }
+  const venture = {
+    id: 'vc_' + Date.now(),
+    name,
+    description: document.getElementById('sv-new-desc').value.trim(),
+    status: document.getElementById('sv-new-status').value,
+    split_ntobeko: splitN,
+    split_partner: splitP,
+    startup_capital_required: parseFloat(document.getElementById('sv-new-capital').value) || 0,
+    capital_ntobeko: parseFloat(document.getElementById('sv-new-contrib-n').value) || 0,
+    capital_partner: parseFloat(document.getElementById('sv-new-contrib-p').value) || 0,
+    created_at: new Date().toISOString(),
+    created_by: 'ntobeko'
+  };
+  svData.ventures.unshift(venture);
+  svAuditLog('venture_created', `Created venture: ${name}`, 'ntobeko');
+  await svSaveToCloud();
+  closeCreateVentureModal();
+  // Reset form
+  ['sv-new-name','sv-new-desc','sv-new-capital','sv-new-contrib-n','sv-new-contrib-p'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('sv-new-split-n').value = 50;
+  document.getElementById('sv-new-split-p').value = 50;
+  document.getElementById('sv-new-status').value = 'planning';
+  svRenderVentures();
+  svPopulateVentureSelects();
+}
+
+function svRenderVentures() {
+  const el = document.getElementById('sv-ventures-list');
+  if (!el) return;
+  if (svData.ventures.length === 0) {
+    el.innerHTML = `<div class="card" style="text-align:center;padding:30px">
+      <div style="font-size:14px;font-family:'Cormorant Garamond',serif;margin-bottom:8px">No shared ventures yet</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Create your first 50/50 partnership venture</div>
+      <button class="btn btn-gold" onclick="openCreateVentureModal()">+ Create First Venture</button>
+    </div>`;
+    return;
+  }
+  const statusLabel = { planning:'Planning', capital_collection:'Capital Collection', in_operation:'In Operation', paused:'Paused', closed:'Closed' };
+  const statusClass = { planning:'sv-status-planning', capital_collection:'sv-status-capital', in_operation:'sv-status-active', paused:'sv-status-paused', closed:'sv-status-closed' };
+  el.innerHTML = svData.ventures.map(v => {
+    const txs = svData.transactions.filter(t => t.venture_id === v.id);
+    const revenue = txs.filter(t => t.type==='income' && t.approval_status==='approved').reduce((s,t)=>s+t.amount, 0);
+    const expenses = txs.filter(t => t.type==='expense' && t.approval_status==='approved').reduce((s,t)=>s+t.amount, 0);
+    const net = revenue - expenses;
+    return `<div class="sv-card" onclick="svShowVentureDetail('${v.id}')">
+      <div class="sv-card-head">
+        <div class="sv-card-name">${svEsc(v.name)}</div>
+        <span class="sv-status ${statusClass[v.status]||'sv-status-planning'}">${statusLabel[v.status]||v.status}</span>
+      </div>
+      ${v.description ? `<div style="font-size:11px;color:var(--muted);font-weight:300;margin-bottom:8px;line-height:1.6">${svEsc(v.description)}</div>` : ''}
+      <div class="sv-split-bar"><div class="sv-split-n" style="flex:${v.split_ntobeko}"></div><div class="sv-split-p" style="flex:${v.split_partner}"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:8px">
+        <span>Ntobeko ${v.split_ntobeko}%</span><span>Tshegofatso ${v.split_partner}%</span>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-v" style="color:var(--green)">R ${revenue.toLocaleString()}</div><div class="kpi-l">Revenue</div></div>
+        <div class="kpi"><div class="kpi-v" style="color:var(--red)">R ${expenses.toLocaleString()}</div><div class="kpi-l">Expenses</div></div>
+        <div class="kpi"><div class="kpi-v" style="color:${net>=0?'var(--green)':'var(--red)'}">R ${net.toLocaleString()}</div><div class="kpi-l">Net</div></div>
+        <div class="kpi"><div class="kpi-v">${txs.length}</div><div class="kpi-l">Txns</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function svShowVentureDetail(id) {
+  const v = svData.ventures.find(x => x.id === id);
+  if (!v) return;
+  const detailEl = document.getElementById('sv-venture-detail');
+  const listEl = document.getElementById('sv-ventures-list');
+  if (!detailEl || !listEl) return;
+  const txs = svData.transactions.filter(t => t.venture_id === id);
+  const revenue = txs.filter(t=>t.type==='income'&&t.approval_status==='approved').reduce((s,t)=>s+t.amount,0);
+  const expenses = txs.filter(t=>t.type==='expense'&&t.approval_status==='approved').reduce((s,t)=>s+t.amount,0);
+  const net = revenue - expenses;
+  const loans = svData.loans.filter(l => l.venture_id === id && l.status === 'active');
+  const loanHtml = loans.length ? loans.map(l => `
+    <div class="item-row">
+      <span class="badge b-watch">Loan</span>
+      <span style="flex:1;font-size:12px">${l.borrower==='ntobeko'?'Ntobeko':'Tshegofatso'} owes ${l.lender==='ntobeko'?'Ntobeko':'Tshegofatso'}: R ${(l.principal-l.repaid).toLocaleString()} remaining</span>
+      <span style="font-size:10px;color:var(--muted)">R${l.monthly_repayment}/mo</span>
+    </div>`).join('') : '<div style="font-size:11px;color:var(--muted);padding:8px 0">No active loans</div>';
+  const statusClass={planning:'sv-status-planning',capital_collection:'sv-status-capital',in_operation:'sv-status-active',paused:'sv-status-paused',closed:'sv-status-closed'};
+  const statusLabel={planning:'Planning',capital_collection:'Capital Collection',in_operation:'In Operation',paused:'Paused',closed:'Closed'};
+  detailEl.style.display = 'block';
+  listEl.style.display = 'none';
+  detailEl.innerHTML = `<div class="card mb-10">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:18px">${svEsc(v.name)}</div>
+      <button class="btn" onclick="document.getElementById('sv-venture-detail').style.display='none';document.getElementById('sv-ventures-list').style.display=''" style="font-size:10px">← Back</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <span class="sv-status ${statusClass[v.status]||'sv-status-planning'}">${statusLabel[v.status]||v.status}</span>
+      <button class="btn" style="font-size:10px;padding:2px 8px" onclick="svUpdateVentureStatus('${id}')">Change Status</button>
+      <button class="btn" style="font-size:10px;padding:2px 8px;border-color:var(--red);color:var(--red)" onclick="svDeleteVenture('${id}')">Delete</button>
+    </div>
+    ${v.description ? `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">${svEsc(v.description)}</div>` : ''}
+    <div class="sv-split-bar"><div class="sv-split-n" style="flex:${v.split_ntobeko}"></div><div class="sv-split-p" style="flex:${v.split_partner}"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:12px"><span>Ntobeko — ${v.split_ntobeko}%</span><span>Tshegofatso — ${v.split_partner}%</span></div>
+    <div class="grid-3" style="gap:10px">
+      <div class="stat"><div class="stat-n stat-pos">R ${revenue.toLocaleString()}</div><div class="stat-l">Total Revenue</div></div>
+      <div class="stat"><div class="stat-n stat-neg">R ${expenses.toLocaleString()}</div><div class="stat-l">Total Expenses</div></div>
+      <div class="stat"><div class="stat-n ${net>=0?'stat-pos':'stat-neg'}">R ${net.toLocaleString()}</div><div class="stat-l">Net Profit</div></div>
+    </div>
+  </div>
+  <div class="card mb-10">
+    <div class="card-title">Startup Capital</div>
+    <div class="prog-row"><div class="prog-label">Ntobeko</div><div class="prog-bar" style="width:120px"><div class="prog-fill" style="width:${v.startup_capital_required>0?Math.min(100,v.capital_ntobeko/v.startup_capital_required*200):0}%"></div></div><div class="prog-pct">R ${(v.capital_ntobeko||0).toLocaleString()}</div></div>
+    <div class="prog-row"><div class="prog-label">Tshegofatso</div><div class="prog-bar" style="width:120px"><div class="prog-fill" style="width:${v.startup_capital_required>0?Math.min(100,v.capital_partner/v.startup_capital_required*200):0}%"></div></div><div class="prog-pct">R ${(v.capital_partner||0).toLocaleString()}</div></div>
+    <div style="font-size:10px;color:var(--muted);margin-top:8px">Target: R ${(v.startup_capital_required||0).toLocaleString()} total</div>
+  </div>
+  <div class="card mb-10">
+    <div class="card-title">Active Loans</div>
+    ${loanHtml}
+  </div>`;
+}
+
+async function svUpdateVentureStatus(id) {
+  const v = svData.ventures.find(x=>x.id===id);
+  if (!v) return;
+  const options = ['planning','capital_collection','in_operation','paused','closed'];
+  const labels = ['Planning','Capital Collection','In Operation','Paused','Closed'];
+  const newStatus = prompt(`Current: ${v.status}\nNew status (${options.join(', ')}):`);
+  if (!newStatus || !options.includes(newStatus.trim())) { alert('Invalid status'); return; }
+  v.status = newStatus.trim();
+  svAuditLog('venture_status_changed', `${v.name} → ${v.status}`, 'ntobeko');
+  await svSaveToCloud();
+  svShowVentureDetail(id);
+}
+
+async function svDeleteVenture(id) {
+  if (!confirm('Delete this venture? All associated transactions will be removed.')) return;
+  const v = svData.ventures.find(x=>x.id===id);
+  svData.ventures = svData.ventures.filter(x=>x.id!==id);
+  svData.transactions = svData.transactions.filter(x=>x.venture_id!==id);
+  svAuditLog('venture_deleted', `Deleted venture: ${v?v.name:id}`, 'ntobeko');
+  await svSaveToCloud();
+  document.getElementById('sv-venture-detail').style.display = 'none';
+  document.getElementById('sv-ventures-list').style.display = '';
+  svRenderVentures();
+  svPopulateVentureSelects();
+}
+
+// ─── TRANSACTIONS ───
+
+function svPopulateVentureSelects() {
+  const ids = ['sv-tx-venture','sv-settle-venture','sv-tx-filter-venture','sv-loan-venture'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const isFilter = id.includes('filter');
+    const prev = el.value;
+    el.innerHTML = (isFilter ? '<option value="">All Ventures</option>' : '') +
+      svData.ventures.map(v=>`<option value="${v.id}">${svEsc(v.name)}</option>`).join('');
+    if (prev) el.value = prev;
+  });
+}
+
+async function svAddTransaction() {
+  const venture_id = document.getElementById('sv-tx-venture').value;
+  const type = document.getElementById('sv-tx-type').value;
+  const desc = document.getElementById('sv-tx-desc').value.trim();
+  const amount = parseFloat(document.getElementById('sv-tx-amt').value);
+  const source = document.getElementById('sv-tx-source').value;
+  if (!venture_id) { alert('Select a venture'); return; }
+  if (!desc) { alert('Enter a description'); return; }
+  if (!amount || amount <= 0) { alert('Enter a valid amount'); return; }
+  const tx = {
+    id: 'tx_' + Date.now(),
+    venture_id,
+    type,
+    description: desc,
+    amount,
+    source,
+    approval_status: 'pending',
+    created_by: 'ntobeko',
+    created_at: new Date().toISOString(),
+    dispute_reason: ''
+  };
+  svData.transactions.unshift(tx);
+  svAuditLog('transaction_added', `${type==='income'?'Income':'Expense'} R${amount} — ${desc}`, 'ntobeko');
+  await svSaveToCloud();
+  ['sv-tx-desc','sv-tx-amt'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  svRenderTransactions();
+}
+
+async function svApproveTransaction(id) {
+  const tx = svData.transactions.find(t=>t.id===id);
+  if (!tx) return;
+  tx.approval_status = 'approved';
+  tx.approved_at = new Date().toISOString();
+  svAuditLog('transaction_approved', `Approved: ${tx.description} (R${tx.amount})`, 'ntobeko');
+  await svSaveToCloud();
+  svRenderTransactions();
+}
+
+function svOpenDisputeModal(id) {
+  document.getElementById('sv-dispute-tx-id').value = id;
+  document.getElementById('sv-dispute-reason').value = '';
+  document.getElementById('sv-dispute-modal').classList.add('open');
+}
+
+async function svConfirmDispute() {
+  const id = document.getElementById('sv-dispute-tx-id').value;
+  const reason = document.getElementById('sv-dispute-reason').value.trim();
+  if (!reason) { alert('Please provide a reason for the dispute'); return; }
+  const tx = svData.transactions.find(t=>t.id===id);
+  if (!tx) return;
+  tx.approval_status = 'disputed';
+  tx.dispute_reason = reason;
+  tx.disputed_at = new Date().toISOString();
+  svAuditLog('transaction_disputed', `Disputed: ${tx.description} — ${reason}`, 'ntobeko');
+  await svSaveToCloud();
+  document.getElementById('sv-dispute-modal').classList.remove('open');
+  svRenderTransactions();
+}
+
+async function svDeleteTransaction(id) {
+  if (!confirm('Delete this transaction?')) return;
+  const tx = svData.transactions.find(t=>t.id===id);
+  svData.transactions = svData.transactions.filter(t=>t.id!==id);
+  svAuditLog('transaction_deleted', `Deleted: ${tx?tx.description:id}`, 'ntobeko');
+  await svSaveToCloud();
+  svRenderTransactions();
+}
+
+function svRenderTransactions() {
+  const el = document.getElementById('sv-tx-list');
+  if (!el) return;
+  const filterVenture = (document.getElementById('sv-tx-filter-venture')||{}).value || '';
+  const filterStatus = (document.getElementById('sv-tx-filter-status')||{}).value || '';
+  let txs = svData.transactions.filter(t => {
+    if (filterVenture && t.venture_id !== filterVenture) return false;
+    if (filterStatus && t.approval_status !== filterStatus) return false;
+    return true;
+  });
+  if (txs.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;padding:10px 0">No transactions yet.</div>';
+    return;
+  }
+  const statusBadge = s => {
+    if (s==='approved') return `<span class="sv-approval-badge sv-approved">Approved</span>`;
+    if (s==='disputed') return `<span class="sv-approval-badge sv-disputed">Disputed</span>`;
+    return `<span class="sv-approval-badge sv-pending">Pending</span>`;
+  };
+  el.innerHTML = txs.map(t => {
+    const v = svData.ventures.find(x=>x.id===t.venture_id);
+    const d = new Date(t.created_at).toLocaleDateString('en-ZA',{day:'numeric',month:'short'});
+    const actions = t.approval_status==='pending' ? `
+      <button class="btn btn-gold" style="font-size:9px;padding:2px 7px" onclick="svApproveTransaction('${t.id}')">Approve</button>
+      <button class="btn" style="font-size:9px;padding:2px 7px;border-color:var(--red);color:var(--red)" onclick="svOpenDisputeModal('${t.id}')">Dispute</button>` : '';
+    return `<div class="sv-tx-row">
+      <div class="sv-tx-dot ${t.type==='income'?'sv-tx-in':'sv-tx-out'}"></div>
+      <div style="flex:1">
+        <div style="font-weight:300">${svEsc(t.description)}</div>
+        <div style="font-size:10px;color:var(--muted)">${v?svEsc(v.name):'—'} · ${d} · ${t.source} ${t.dispute_reason?'· <em>'+svEsc(t.dispute_reason)+'</em>':''}</div>
+        ${t.approval_status==='pending'?'<div style="margin-top:4px;display:flex;gap:4px">'+actions+'</div>':''}
+      </div>
+      ${statusBadge(t.approval_status)}
+      <div style="font-family:'Cormorant Garamond',serif;font-size:14px;min-width:70px;text-align:right;color:${t.type==='income'?'var(--green)':'var(--red)'}">R ${t.amount.toLocaleString()}</div>
+      <button class="btn-del" onclick="svDeleteTransaction('${t.id}')">×</button>
+    </div>`;
+  }).join('');
+}
+
+// ─── SETTLEMENT CALCULATOR ───
+
+function svCalcSettlement() {
+  const ventureId = (document.getElementById('sv-settle-venture')||{}).value;
+  const month = (document.getElementById('sv-settle-month')||{}).value;
+  const reinvest = parseFloat((document.getElementById('sv-settle-reinvest')||{}).value) || 0;
+  const previewEl = document.getElementById('sv-settlement-preview');
+  const actionsEl = document.getElementById('sv-settlement-actions');
+  if (!previewEl) return;
+  if (!ventureId || !month) {
+    previewEl.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:10px 0">Select a venture and month to calculate settlement.</div>';
+    if (actionsEl) actionsEl.style.display = 'none';
+    return;
+  }
+  const v = svData.ventures.find(x=>x.id===ventureId);
+  if (!v) return;
+  const [year, mo] = month.split('-').map(Number);
+  const txs = svData.transactions.filter(t => {
+    if (t.venture_id !== ventureId || t.approval_status !== 'approved') return false;
+    const d = new Date(t.created_at);
+    return d.getFullYear()===year && (d.getMonth()+1)===mo;
+  });
+  const revenue = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expenses = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const netProfit = Math.max(0, revenue - expenses - reinvest);
+  // Check for active loans
+  const activeLoan = svData.loans.find(l=>l.venture_id===ventureId && l.status==='active');
+  let shareN = netProfit * (v.split_ntobeko/100);
+  let shareP = netProfit * (v.split_partner/100);
+  let loanDeductHtml = '';
+  if (activeLoan) {
+    const repay = Math.min(activeLoan.monthly_repayment, activeLoan.principal - activeLoan.repaid);
+    if (activeLoan.borrower === 'ntobeko') {
+      shareN = Math.max(0, shareN - repay);
+      shareP = shareP + repay;
+      loanDeductHtml = `<div class="sv-settlement-row"><span style="color:var(--muted)">Loan repayment (Ntobeko → Tshegofatso)</span><span style="color:var(--red)">−R ${repay.toLocaleString()}</span></div>`;
+    } else {
+      shareP = Math.max(0, shareP - repay);
+      shareN = shareN + repay;
+      loanDeductHtml = `<div class="sv-settlement-row"><span style="color:var(--muted)">Loan repayment (Tshegofatso → Ntobeko)</span><span style="color:var(--red)">−R ${repay.toLocaleString()}</span></div>`;
+    }
+  }
+  const transferTo = shareN > shareP ? `Tshegofatso owes Ntobeko R ${(shareN-shareP).toLocaleString()}` : shareP > shareN ? `Ntobeko owes Tshegofatso R ${(shareP-shareN).toLocaleString()}` : 'Balanced — no transfer needed';
+  previewEl.innerHTML = `<div class="sv-settlement-box">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">${v.name} · ${month}</div>
+    <div class="sv-settlement-row"><span>Revenue</span><span style="color:var(--green)">+R ${revenue.toLocaleString()}</span></div>
+    <div class="sv-settlement-row"><span>Expenses</span><span style="color:var(--red)">−R ${expenses.toLocaleString()}</span></div>
+    <div class="sv-settlement-row"><span>Reinvestment</span><span style="color:var(--muted)">−R ${reinvest.toLocaleString()}</span></div>
+    <div class="sv-settlement-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:10px"><strong>Net Profit to Split</strong><strong>R ${netProfit.toLocaleString()}</strong></div>
+    ${loanDeductHtml}
+    <div class="sv-settlement-row" style="margin-top:8px"><span>Ntobeko (${v.split_ntobeko}%)</span><span style="color:var(--green)">R ${shareN.toLocaleString()}</span></div>
+    <div class="sv-settlement-row"><span>Tshegofatso (${v.split_partner}%)</span><span style="color:var(--green)">R ${shareP.toLocaleString()}</span></div>
+    <div style="margin-top:12px;padding:10px;background:rgba(201,168,76,0.1);border-radius:6px;font-size:12px;border-left:3px solid var(--gold)">
+      <strong>Transfer:</strong> ${transferTo}
+    </div>
+  </div>`;
+  if (actionsEl) actionsEl.style.display = 'block';
+  // Store calc for saving
+  window._svCurrentSettlement = { ventureId, month, revenue, expenses, reinvest, net_profit:netProfit, share_ntobeko:shareN, share_partner:shareP };
+}
+
+async function svSaveSettlement() {
+  const calc = window._svCurrentSettlement;
+  if (!calc) return;
+  const existing = svData.settlements.find(s=>s.venture_id===calc.ventureId&&s.month_year===calc.month);
+  if (existing) {
+    if (!confirm('A settlement for this month already exists. Overwrite?')) return;
+    Object.assign(existing, calc, { venture_id:calc.ventureId, month_year:calc.month, status:'draft', updated_at:new Date().toISOString() });
+  } else {
+    svData.settlements.unshift({ id:'st_'+Date.now(), venture_id:calc.ventureId, month_year:calc.month, total_revenue:calc.revenue, total_expenses:calc.expenses, reinvestment:calc.reinvest, net_profit:calc.net_profit, share_ntobeko:calc.share_ntobeko, share_partner:calc.share_partner, status:'draft', created_at:new Date().toISOString() });
+  }
+  const v = svData.ventures.find(x=>x.id===calc.ventureId);
+  svAuditLog('settlement_saved', `Settlement saved: ${v?v.name:''} ${calc.month}`, 'ntobeko');
+  await svSaveToCloud();
+  svRenderSettlements();
+  svPopulateSettlementSelect();
+  alert('Settlement saved! Go to Transfers to log the actual money movement.');
+}
+
+function svRenderSettlements() {
+  const el = document.getElementById('sv-settlements-list');
+  if (!el) return;
+  if (svData.settlements.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;padding:10px 0">No settlements calculated yet.</div>';
+    return;
+  }
+  const statusBadge = s => s==='paid'?`<span class="badge b-fin">Paid</span>`:s==='approved'?`<span class="badge b-track">Approved</span>`:`<span class="badge b-watch">Draft</span>`;
+  el.innerHTML = svData.settlements.map(s => {
+    const v = svData.ventures.find(x=>x.id===s.venture_id);
+    return `<div class="sv-settlement-box" style="cursor:default">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:400">${v?svEsc(v.name):'—'} · ${s.month_year}</span>
+        ${statusBadge(s.status)}
+      </div>
+      <div style="font-size:11px;color:var(--muted)">Revenue: R ${(s.total_revenue||0).toLocaleString()} · Expenses: R ${(s.total_expenses||0).toLocaleString()} · Net: R ${(s.net_profit||0).toLocaleString()}</div>
+      <div style="font-size:11px;margin-top:6px">Ntobeko: <span style="color:var(--green)">R ${(s.share_ntobeko||0).toLocaleString()}</span> · Tshegofatso: <span style="color:var(--green)">R ${(s.share_partner||0).toLocaleString()}</span></div>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        ${s.status==='draft'?`<button class="btn" style="font-size:9px;padding:2px 8px;border-color:var(--green);color:var(--green)" onclick="svApproveSettlement('${s.id}')">Mark Approved</button>`:''}
+        ${s.status==='approved'?`<button class="btn btn-gold" style="font-size:9px;padding:2px 8px" onclick="svMarkSettlementPaid('${s.id}')">Mark Paid</button>`:''}
+        <button class="btn-del" onclick="svDeleteSettlement('${s.id}')">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function svApproveSettlement(id) {
+  const s = svData.settlements.find(x=>x.id===id);
+  if (s) { s.status='approved'; s.approved_at=new Date().toISOString(); }
+  svAuditLog('settlement_approved', `Settlement approved: ${id}`, 'ntobeko');
+  await svSaveToCloud();
+  svRenderSettlements();
+}
+async function svMarkSettlementPaid(id) {
+  const s = svData.settlements.find(x=>x.id===id);
+  if (s) { s.status='paid'; s.paid_at=new Date().toISOString(); }
+  svAuditLog('settlement_paid', `Settlement marked paid: ${id}`, 'ntobeko');
+  await svSaveToCloud();
+  svRenderSettlements();
+}
+async function svDeleteSettlement(id) {
+  if (!confirm('Delete this settlement record?')) return;
+  svData.settlements = svData.settlements.filter(x=>x.id!==id);
+  await svSaveToCloud();
+  svRenderSettlements();
+  svPopulateSettlementSelect();
+}
+
+// ─── TRANSFERS ───
+
+function svPopulateSettlementSelect() {
+  const el = document.getElementById('sv-transfer-settlement');
+  if (!el) return;
+  el.innerHTML = '<option value="">— No linked settlement —</option>' +
+    svData.settlements.map(s => {
+      const v = svData.ventures.find(x=>x.id===s.venture_id);
+      return `<option value="${s.id}">${v?svEsc(v.name):'—'} · ${s.month_year}</option>`;
+    }).join('');
+}
+
+async function svLogTransfer() {
+  const from = document.getElementById('sv-transfer-from').value;
+  const to = document.getElementById('sv-transfer-to').value;
+  const amount = parseFloat(document.getElementById('sv-transfer-amt').value);
+  const type = document.getElementById('sv-transfer-type').value;
+  const notes = document.getElementById('sv-transfer-notes').value.trim();
+  const settlement_id = document.getElementById('sv-transfer-settlement').value;
+  if (from === to) { alert('From and To cannot be the same person'); return; }
+  if (!amount || amount <= 0) { alert('Enter a valid amount'); return; }
+  const transfer = {
+    id: 'tr_' + Date.now(),
+    from_user: from,
+    to_user: to,
+    amount,
+    type,
+    notes,
+    settlement_id,
+    status: 'sent',
+    created_at: new Date().toISOString(),
+    received_at: null
+  };
+  svData.transfers.unshift(transfer);
+  svAuditLog('transfer_logged', `Transfer logged: R${amount} from ${from} to ${to}`, from);
+  await svSaveToCloud();
+  ['sv-transfer-amt','sv-transfer-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  svRenderTransfers();
+}
+
+async function svConfirmReceived(id) {
+  const t = svData.transfers.find(x=>x.id===id);
+  if (!t) return;
+  t.status = 'received';
+  t.received_at = new Date().toISOString();
+  svAuditLog('transfer_received', `R${t.amount} from ${t.from_user} — confirmed received`, t.to_user);
+  // If this transfer is linked to a loan, reduce the outstanding balance
+  const loan = svData.loans.find(l => l.status==='active' && l.venture_id === (t.venture_id||''));
+  if (loan && t.type === 'loan_repayment') {
+    loan.repaid = (loan.repaid||0) + t.amount;
+    if (loan.repaid >= loan.principal) { loan.status = 'paid_off'; loan.paid_at = new Date().toISOString(); }
+  }
+  await svSaveToCloud();
+  svRenderTransfers();
+}
+
+async function svDeleteTransfer(id) {
+  if (!confirm('Delete this transfer record?')) return;
+  svData.transfers = svData.transfers.filter(x=>x.id!==id);
+  await svSaveToCloud();
+  svRenderTransfers();
+}
+
+function svRenderTransfers() {
+  const el = document.getElementById('sv-transfers-list');
+  if (!el) return;
+  if (svData.transfers.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;padding:10px 0">No transfers logged yet.</div>';
+    return;
+  }
+  const typeLabel = { profit_share:'Profit Share', loan_repayment:'Loan Repayment', capital:'Startup Capital', other:'Other' };
+  const statusBadge = s => s==='received'?`<span class="sv-approval-badge sv-approved">Received</span>`:s==='disputed'?`<span class="sv-approval-badge sv-disputed">Disputed</span>`:`<span class="sv-approval-badge sv-pending">Sent</span>`;
+  el.innerHTML = svData.transfers.map(t => {
+    const d = new Date(t.created_at).toLocaleDateString('en-ZA',{day:'numeric',month:'short'});
+    const fromName = t.from_user==='ntobeko'?'Ntobeko':'Tshegofatso';
+    const toName = t.to_user==='ntobeko'?'Ntobeko':'Tshegofatso';
+    return `<div class="sv-transfer-row">
+      <div style="flex:1">
+        <div style="font-weight:400">${fromName} → ${toName} · <span style="font-family:'Cormorant Garamond',serif;font-size:15px">R ${t.amount.toLocaleString()}</span></div>
+        <div style="font-size:10px;color:var(--muted)">${typeLabel[t.type]||t.type} · ${d} ${t.notes?'· '+svEsc(t.notes):''}</div>
+        ${t.status==='sent'?`<button class="btn btn-gold" style="font-size:9px;padding:2px 8px;margin-top:4px" onclick="svConfirmReceived('${t.id}')">Confirm Received</button>`:''}
+      </div>
+      ${statusBadge(t.status)}
+      <button class="btn-del" onclick="svDeleteTransfer('${t.id}')">×</button>
+    </div>`;
+  }).join('');
+}
+
+// ─── LOANS ───
+
+async function svCreateLoan() {
+  const venture_id = document.getElementById('sv-loan-venture').value;
+  const lender = document.getElementById('sv-loan-lender').value;
+  const borrower = document.getElementById('sv-loan-borrower').value;
+  const principal = parseFloat(document.getElementById('sv-loan-principal').value);
+  const monthly_repayment = parseFloat(document.getElementById('sv-loan-repayment').value);
+  const notes = document.getElementById('sv-loan-notes').value.trim();
+  if (!venture_id) { alert('Select a venture'); return; }
+  if (lender === borrower) { alert('Lender and borrower cannot be the same person'); return; }
+  if (!principal || principal <= 0) { alert('Enter a valid loan amount'); return; }
+  const loan = {
+    id: 'ln_' + Date.now(),
+    venture_id,
+    lender,
+    borrower,
+    principal,
+    monthly_repayment: monthly_repayment || 0,
+    repaid: 0,
+    notes,
+    status: 'active',
+    created_at: new Date().toISOString()
+  };
+  svData.loans.unshift(loan);
+  const v = svData.ventures.find(x=>x.id===venture_id);
+  svAuditLog('loan_created', `Loan created: R${principal} (${lender} → ${borrower}) for ${v?v.name:''}`, 'ntobeko');
+  await svSaveToCloud();
+  ['sv-loan-principal','sv-loan-repayment','sv-loan-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  svRenderLoans();
+}
+
+function svRenderLoans() {
+  const el = document.getElementById('sv-loans-list');
+  if (!el) return;
+  if (svData.loans.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;padding:10px 0">No startup loans recorded.</div>';
+    return;
+  }
+  el.innerHTML = svData.loans.map(l => {
+    const v = svData.ventures.find(x=>x.id===l.venture_id);
+    const outstanding = Math.max(0, l.principal - (l.repaid||0));
+    const pct = Math.min(100, Math.round((l.repaid||0)/l.principal*100));
+    const statusBadge = l.status==='paid_off'?`<span class="sv-approval-badge sv-approved">Paid Off</span>`:`<span class="sv-approval-badge sv-pending">Active</span>`;
+    return `<div class="sv-settlement-box">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:12px">${l.lender==='ntobeko'?'Ntobeko':'Tshegofatso'} lent R ${l.principal.toLocaleString()} to ${l.borrower==='ntobeko'?'Ntobeko':'Tshegofatso'}</span>
+        ${statusBadge}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">${v?svEsc(v.name):'—'} · Repayment: R ${(l.monthly_repayment||0).toLocaleString()}/mo ${l.notes?'· '+svEsc(l.notes):''}</div>
+      <div class="prog-row" style="border:none;padding:0">
+        <div class="prog-label" style="font-size:11px">Repaid: R ${(l.repaid||0).toLocaleString()} / R ${l.principal.toLocaleString()}</div>
+        <div class="prog-bar" style="width:100px"><div class="prog-fill" style="width:${pct}%;background:${pct===100?'var(--green)':'var(--gold)'}"></div></div>
+        <div class="prog-pct">${pct}%</div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        ${l.status==='active'?`<button class="btn" style="font-size:9px;padding:2px 8px" onclick="svLogLoanRepayment('${l.id}')">Log Repayment</button>`:''}
+        <button class="btn-del" onclick="svDeleteLoan('${l.id}')">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function svLogLoanRepayment(id) {
+  const loan = svData.loans.find(l=>l.id===id);
+  if (!loan) return;
+  const outstanding = Math.max(0, loan.principal - (loan.repaid||0));
+  const amtStr = prompt(`Log repayment for loan.\nOutstanding: R ${outstanding.toLocaleString()}\nMonthly instalment: R ${loan.monthly_repayment.toLocaleString()}\n\nAmount to record (R):`);
+  if (!amtStr) return;
+  const amt = parseFloat(amtStr);
+  if (!amt || amt <= 0) { alert('Invalid amount'); return; }
+  loan.repaid = (loan.repaid||0) + amt;
+  if (loan.repaid >= loan.principal) { loan.status = 'paid_off'; loan.paid_at = new Date().toISOString(); alert('🎉 Loan fully paid off!'); }
+  svAuditLog('loan_repayment', `Loan repayment R${amt} recorded`, loan.borrower);
+  await svSaveToCloud();
+  svRenderLoans();
+}
+
+async function svDeleteLoan(id) {
+  if (!confirm('Delete this loan record?')) return;
+  svData.loans = svData.loans.filter(l=>l.id!==id);
+  await svSaveToCloud();
+  svRenderLoans();
+}
+
+// ─── AUDIT LOG ───
+
+function svAuditLog(action, detail, actor) {
+  svData.audit.unshift({ id:'al_'+Date.now(), action, detail, actor: actor||'ntobeko', timestamp: new Date().toISOString() });
+  // Keep last 200 entries
+  if (svData.audit.length > 200) svData.audit = svData.audit.slice(0,200);
+}
+
+function svRenderAudit() {
+  const el = document.getElementById('sv-audit-list');
+  if (!el) return;
+  if (svData.audit.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;padding:10px 0">No activity logged yet.</div>';
+    return;
+  }
+  el.innerHTML = svData.audit.map(a => {
+    const d = new Date(a.timestamp).toLocaleString('en-ZA',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    return `<div class="sv-tx-row">
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:300">${svEsc(a.detail)}</div>
+        <div style="font-size:10px;color:var(--muted)">${a.actor} · ${d}</div>
+      </div>
+      <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">${a.action.replace(/_/g,' ')}</span>
+    </div>`;
+  }).join('');
+}
+
+// ─── UTILITIES ───
+
+function svEsc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+// ─── RENDER ALL SHARED VENTURES ───
+
+function svRenderAll() {
+  svRenderVentures();
+  svPopulateVentureSelects();
+  svRenderTransactions();
+  svRenderSettlements();
+  svPopulateSettlementSelect();
+  svRenderTransfers();
+  svRenderLoans();
+  svRenderAudit();
+}
+
+// ─── INITIALIZE SHARED VENTURES ───
+// Load shared data on startup after sync is ready
+const _origInit = typeof initDashboard === 'function' ? initDashboard : null;
+document.addEventListener('DOMContentLoaded', () => {
+  // Load shared venture data from localStorage immediately
+  svLoadLocal();
+  svRenderAll();
+  // Set default month to current
+  const monthEl = document.getElementById('sv-settle-month');
+  if (monthEl) {
+    const now = new Date();
+    monthEl.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  }
+});
+// Also reload from cloud after sync is established (hook into existing sync flow)
+const _origLoadCloud = loadFromCloud;
+window.loadFromCloud = async function(showStatus=true) {
+  const result = await _origLoadCloud.call(this, showStatus);
+  if (syncEnabled) { svLoadFromCloud().then(()=>svRenderAll()); }
+  return result;
+};
 </script>
 
 </html>
