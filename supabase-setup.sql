@@ -32,3 +32,23 @@ CREATE INDEX IF NOT EXISTS idx_estate_data_user_id ON estate_data(user_id);
 
 -- Grant access
 GRANT ALL ON estate_data TO anon;
+
+-- ═══════════════════════════════════════════════════════════════
+-- SHARED VENTURES SUPPORT
+-- The shared_ventures record uses user_id = 'masemula-ventures-shared'
+-- and is stored in the existing estate_data table above.
+-- Both partners access this single shared record by its user_id key.
+--
+-- To pre-create the shared record, run:
+--   INSERT INTO estate_data (user_id, data)
+--   VALUES ('masemula-ventures-shared', '{"ventures":[],"transactions":[],"settlements":[],"transfers":[],"loans":[],"audit":[]}')
+--   ON CONFLICT (user_id) DO NOTHING;
+-- ═══════════════════════════════════════════════════════════════
+
+-- Pre-create the shared ventures record so both partners can use it immediately
+INSERT INTO estate_data (user_id, data)
+VALUES (
+  'masemula-ventures-shared',
+  '{"ventures":[],"transactions":[],"settlements":[],"transfers":[],"loans":[],"audit":[]}'
+)
+ON CONFLICT (user_id) DO NOTHING;
