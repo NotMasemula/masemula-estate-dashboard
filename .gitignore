@@ -1,0 +1,108 @@
+# === SECRETS & ENVIRONMENT VARIABLES ===
+# NEVER commit these files - they contain API keys and passwords
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# Supabase local config (contains service role key)
+supabase/.env
+supabase/config.toml.local
+
+# === API KEYS & CREDENTIALS ===
+# Nedbank API credentials
+nedbank-credentials.json
+nedbank-keys.txt
+nedbank.config.js
+
+# Stitch API credentials
+stitch-credentials.json
+stitch-keys.txt
+
+# Shopify credentials
+shopify-credentials.json
+shopify-keys.txt
+
+# Stripe credentials
+stripe-credentials.json
+stripe-keys.txt
+
+# Any file with 'secret' or 'key' in the name
+# (exceptions below for safe helper files)
+*secret*
+*secrets*
+*credentials*
+*api-key*
+*apikey*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Exceptions: safe helper/template files that mention "secrets" in name
+!config/secrets-loader.js
+!docs/SECRETS-MANAGEMENT.md
+!supabase/SECURITY-CHECKLIST.md
+!scripts/audit-secrets.sh
+!scripts/cleanup-git-history.sh
+
+# === SUPABASE ===
+# Local Supabase development files (not for production)
+.supabase/
+supabase/.branches/
+supabase/.temp/
+
+# === NODE.JS ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+.yarn/
+
+# === BUILD ARTIFACTS ===
+dist/
+build/
+.cache/
+.parcel-cache/
+
+# === EDITOR & OS ===
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# VS Code
+.vscode/settings.json
+.vscode/launch.json
+
+# JetBrains IDEs
+.idea/
+*.iml
+
+# === LOGS ===
+logs/
+*.log
+npm-debug.log*
+
+# === TEMPORARY FILES ===
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# === AUDIT REPORTS (may contain sensitive findings) ===
+audit-report.txt
+audit-report.json
+secrets-audit-*.txt
+
+# === TASK LOGS (auto-generated) ===
+.tasks/
