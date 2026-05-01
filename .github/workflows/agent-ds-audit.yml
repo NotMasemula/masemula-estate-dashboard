@@ -1,0 +1,14 @@
+name: Agent — DS Audit
+on:
+  workflow_dispatch:
+    inputs:
+      context:
+        description: JSON context from dashboard
+        required: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/agents/ds-audit.js '${{ inputs.context }}'
+

@@ -8,6 +8,8 @@
 <meta http-equiv="Expires" content="0">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
 <title>Masemula Estate OS</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config/env.js"></script>
 <!-- v7 - REST API sync with merge logic -->
 <!-- Using direct REST API instead of Supabase JS (works on all browsers including Safari) -->
 <style>
@@ -376,9 +378,33 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 .dark .sv-status-planning,.dark .sv-status-capital,.dark .sv-status-active,.dark .sv-status-paused,.dark .sv-status-closed{background:rgba(240,237,231,0.1);color:#F0EDE7}
 .dark .sv-pending,.dark .sv-approved,.dark .sv-disputed{background:rgba(240,237,231,0.1);color:#F0EDE7}
 .dark .sv-settlement-box{background:var(--surface)}
+/* AUTH + TOAST */
+#auth-screen{display:none;min-height:100vh;background:#0E0A08;color:#F0EDE7;align-items:center;justify-content:center;padding:20px}
+.auth-card{width:100%;max-width:420px;background:#1A1210;border:1px solid #4A3828;border-radius:10px;padding:24px}
+.auth-title{font-family:'Cormorant Garamond',serif;font-size:30px;letter-spacing:.08em;text-align:center;color:#C9A84C;margin-bottom:6px}
+.auth-sub{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#C49A6C;text-align:center;margin-bottom:18px}
+.auth-input{width:100%;background:#120E0B;border:1px solid #4A3828;color:#F0EDE7;border-radius:8px;padding:10px 12px;margin-bottom:10px;outline:none}
+.auth-input:focus{border-color:#C9A84C}
+.auth-btn{width:100%;background:#C9A84C;color:#120E0B;border:none;border-radius:8px;padding:10px 12px;cursor:pointer;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.auth-error{min-height:18px;margin-top:10px;font-size:12px;color:#E04E4E;text-align:center}
+#toast{position:fixed;right:16px;bottom:16px;background:#1A1210;border:1px solid #4A3828;color:#F0EDE7;padding:10px 12px;border-radius:8px;font-size:12px;display:none;z-index:9999}
 </style>
 
-<div id="os">
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-title">MASEMULA</div>
+    <div class="auth-sub">Estate Access</div>
+    <form id="auth-form">
+      <input id="auth-email" class="auth-input" type="email" placeholder="Email" autocomplete="email" required>
+      <input id="auth-password" class="auth-input" type="password" placeholder="Password" autocomplete="current-password" required>
+      <button class="auth-btn" type="submit">Enter the Estate</button>
+      <div id="auth-error" class="auth-error"></div>
+    </form>
+  </div>
+</div>
+<div id="toast"></div>
+
+<div id="os" style="display:none">
 <!-- SIDEBAR -->
 <div id="sidebar">
   <div class="wordmark-v">MASEMULA</div>
@@ -464,6 +490,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
         <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <svg id="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
+      <button class="btn" onclick="handleSignOut()" title="Sign out">Sign Out</button>
       <span class="status-pill">System Online</span>
       <span class="time-tag" id="live-time"></span>
     </div>
@@ -483,19 +510,15 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       </div>
       
       <div class="grid-4 mb-10">
-        <div class="stat"><div class="stat-n">4</div><div class="stat-l">Active ventures</div></div>
-        <div class="stat"><div class="stat-n stat-pos">R 2k</div><div class="stat-l">DS revenue</div></div>
-        <div class="stat"><div class="stat-n">6/7</div><div class="stat-l">Gym sessions</div></div>
-        <div class="stat"><div class="stat-n">18h</div><div class="stat-l">Deep work hrs</div></div>
+        <div class="stat"><div class="stat-n" id="stat-active-ventures">0</div><div class="stat-l">Active ventures</div></div>
+        <div class="stat"><div class="stat-n stat-pos" id="stat-ds-revenue">R 0</div><div class="stat-l">DS revenue</div></div>
+        <div class="stat"><div class="stat-n" id="stat-gym-sessions">0</div><div class="stat-l">Gym sessions <a href="#" onclick="openWeeklyHistory('gym');return false;" style="font-size:10px">History</a></div></div>
+        <div class="stat"><div class="stat-n" id="stat-deep-work">0h</div><div class="stat-l">Deep work hrs <a href="#" onclick="openWeeklyHistory('deep_work');return false;" style="font-size:10px">History</a></div></div>
       </div>
       <div class="grid-2 mb-10">
         <div class="card">
           <div class="card-title">Empire pillars</div>
-          <div class="prog-row"><div class="prog-label">Dropshipping</div><div class="prog-bar"><div class="prog-fill" style="width:55%"></div></div><div class="prog-pct">55%</div></div>
-          <div class="prog-row"><div class="prog-label">Music</div><div class="prog-bar"><div class="prog-fill" style="width:40%"></div></div><div class="prog-pct">40%</div></div>
-          <div class="prog-row"><div class="prog-label">Masemula Brand</div><div class="prog-bar"><div class="prog-fill" style="width:20%"></div></div><div class="prog-pct">20%</div></div>
-          <div class="prog-row"><div class="prog-label">Academic</div><div class="prog-bar"><div class="prog-fill" style="width:72%"></div></div><div class="prog-pct">72%</div></div>
-          <div class="prog-row"><div class="prog-label">Health</div><div class="prog-bar"><div class="prog-fill" style="width:85%"></div></div><div class="prog-pct">85%</div></div>
+          <div id="empire-pillars-list"></div>
         </div>
         <div class="card">
           <div class="card-title">Today's priorities</div>
@@ -508,18 +531,20 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       <div class="grid-2">
         <div class="card">
           <div class="card-title">Estate flags</div>
-          <div class="item-row"><span class="badge b-urgent">Urgent</span><span style="flex:1;font-size:12px">Register with SAMRO — royalties uncollected</span></div>
-          <div class="item-row"><span class="badge b-watch">Watch</span><span style="flex:1;font-size:12px">DS store setup — Store Ops not built yet</span></div>
-          <div class="item-row"><span class="badge b-track">On track</span><span style="flex:1;font-size:12px">Gym habit — 6 of 7 days this week</span></div>
-          <div class="item-row"><span class="badge b-track">On track</span><span style="flex:1;font-size:12px">Masemula concept development progressing</span></div>
+          <div id="estate-flags-list"></div>
         </div>
         <div class="card">
           <div class="card-title">Weekly targets</div>
-          <div class="prog-row"><div class="prog-label">Deep work hrs</div><div class="prog-bar"><div class="prog-fill" style="width:90%"></div></div><div class="prog-pct">18/20</div></div>
-          <div class="prog-row"><div class="prog-label">DS hours</div><div class="prog-bar"><div class="prog-fill" style="width:80%"></div></div><div class="prog-pct">8/10</div></div>
-          <div class="prog-row"><div class="prog-label">Music hours</div><div class="prog-bar"><div class="prog-fill" style="width:67%"></div></div><div class="prog-pct">4/6</div></div>
-          <div class="prog-row"><div class="prog-label">Reading</div><div class="prog-bar"><div class="prog-fill" style="width:57%"></div></div><div class="prog-pct">4/7</div></div>
-          <div class="prog-row"><div class="prog-label">Sleep 11:30pm</div><div class="prog-bar"><div class="prog-fill" style="width:71%"></div></div><div class="prog-pct">5/7</div></div>
+          <div id="weekly-targets-list"></div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+            <input id="weekly-target-text" class="ledger-input" placeholder="Target text">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+              <input id="weekly-target-value" class="ledger-input" type="number" step="0.01" placeholder="Target">
+              <input id="weekly-target-current" class="ledger-input" type="number" step="0.01" placeholder="Current">
+              <input id="weekly-target-unit" class="ledger-input" placeholder="Unit">
+            </div>
+            <button class="btn btn-gold" style="width:100%;margin-top:8px" onclick="addWeeklyTarget()">Add Weekly Target</button>
+          </div>
         </div>
       </div>
       <!-- Agents Overview -->
@@ -583,6 +608,17 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
         <button class="itab" onclick="itab('ventures','portfolio',this)">Long-term Portfolio</button>
       </div>
       <div class="itab-panel active" id="ventures-active">
+        <div class="card mb-10">
+          <div class="card-title">Venture Workspace</div>
+          <div id="ventures-live-list" style="margin-bottom:10px"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <input id="venture-name" class="ledger-input" placeholder="Venture name">
+            <input id="venture-category" class="ledger-input" placeholder="Category">
+            <select id="venture-status" class="ledger-input"><option value="active">active</option><option value="planning">planning</option><option value="archived">archived</option></select>
+          </div>
+          <textarea id="venture-description" class="ledger-input" placeholder="Description"></textarea>
+          <button class="btn btn-gold" style="width:100%" onclick="addVenture()">Add Venture</button>
+        </div>
         <div class="grid-2 mb-10">
           <div class="vc vc-interactive" onclick="showVentureDetails('ds')">
             <div class="vc-top"><div><div class="vc-name">Dropshipping</div><div class="vc-stage">Active · Primary funding vehicle</div></div><div class="dot dot-active pulse"></div></div>
@@ -789,7 +825,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
     <div class="section" id="s-goals">
       <div class="sec-head">
         <div><div class="sec-title">Goals</div><div class="sec-sub">Long-term thinking over short-term gains</div></div>
-        <button class="btn btn-gold" onclick="sendPrompt('Help me define a new goal for the Masemula Estate. Ask me: the goal name, which pillar it falls under, what success looks like, timeline, and break it into 3–5 milestones.')">+ Add goal ↗</button>
+        <button class="btn btn-gold" onclick="openAddGoalModal()">+ Add Goal</button>
       </div>
       <div id="goal-list"></div>
     </div>
@@ -1611,6 +1647,11 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
         <div><div class="sec-title">Content</div><div class="sec-sub">Social presence across ventures · Metrics tracking</div></div>
         <button class="btn btn-gold" onclick="sendPrompt('I need a content strategy for my ventures: Dropshipping (TikTok focus), Music (all platforms), Masemula Brand (Instagram first). Create a content calendar for the next week.')">Content plan ↗</button>
       </div>
+      <div class="card mb-10">
+        <div class="card-title">Live Analytics</div>
+        <div id="content-live-analytics" style="margin-bottom:10px"></div>
+        <button class="btn btn-gold" onclick="addContentMetric()">Add Metric</button>
+      </div>
       <div class="inner-tabs">
         <button class="itab active" onclick="itab('content','music-c',this)">Music</button>
         <button class="itab" onclick="itab('content','masemula-c',this)">Masemula</button>
@@ -1720,8 +1761,13 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
     <div class="section" id="s-moodboard">
       <div class="sec-head">
         <div><div class="sec-title">Vision Board</div><div class="sec-sub">The life I am building — not wishing for</div></div>
-        <button class="btn btn-gold" onclick="sendPrompt('Help me build a vivid vision of the life I am designing — the Masemula estate, the businesses, the home, the relationships, the legacy. Ask me questions and then paint the picture in detail.')">Define my vision ↗</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gold" onclick="triggerVisionUpload()">+ Add Image</button>
+          <button class="btn" onclick="sendPrompt('Help me build a vivid vision of the life I am designing — the Masemula estate, the businesses, the home, the relationships, the legacy. Ask me questions and then paint the picture in detail.')">Define my vision ↗</button>
+        </div>
       </div>
+      <input id="vision-file-input" type="file" accept="image/*" style="display:none" onchange="handleVisionImageUpload(event)">
+      <div id="vision-board-uploaded" class="mb-grid mb-10"></div>
       <div class="mb-grid mb-10">
         <div class="mb-tile" style="grid-column:span 2;grid-row:span 1">
           <div class="mb-visual" style="height:140px;background:linear-gradient(135deg,#2C1A0E 0%,#5C3317 50%,#C9A84C 100%);font-size:16px;flex-direction:column;gap:8px">
@@ -1786,11 +1832,15 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
         <button class="btn btn-gold" onclick="sendPrompt('I need help with design work for the Masemula Estate. Which business do you want to work on — Masemula brand, Music artwork, Dropshipping store, or Events?')">Design session ↗</button>
       </div>
       <div class="inner-tabs">
-        <button class="itab active" onclick="itab('des','masemula',this)">Masemula</button>
-        <button class="itab" onclick="itab('des','music',this)">Music</button>
-        <button class="itab" onclick="itab('des','ds',this)">Dropshipping</button>
-        <button class="itab" onclick="itab('des','events',this)">Events</button>
+        <button class="itab active design-tab-btn" data-tab="masemula">Masemula</button>
+        <button class="itab design-tab-btn" data-tab="music">Music</button>
+        <button class="itab design-tab-btn" data-tab="ds">Dropshipping</button>
+        <button class="itab design-tab-btn" data-tab="events">Events</button>
       </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button class="btn btn-gold" onclick="triggerDesignUpload()">Upload Design</button>
+      </div>
+      <input id="design-file-input" type="file" accept="image/*,application/pdf" style="display:none" onchange="handleDesignUpload(event)">
       <div class="itab-panel active" id="des-masemula">
         <div class="design-grid">
           <div class="design-card"><div class="design-header"><span style="font-size:12px;font-weight:400">Wordmark</span><span class="badge b-watch">In progress</span></div><div class="design-canvas" style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--deep);letter-spacing:0.2em;font-weight:300">MASEMULA</div></div>
@@ -2019,15 +2069,81 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 </div><!-- end os -->
 
 <script>
-// ═══ SUPABASE SYNC v8 - Works with existing table structure ═══
-const SUPABASE_URL = 'https://romytadgdnpphqzlseaa.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_ggs07ym7m21ZKiTwQdB94g_lFACej5D';
-const USER_ID = 'ntobeko-masemula-estate';
+// ═══ SUPABASE AUTH + SYNC ═══
+const ESTATE_ENV = window.__ESTATE_ENV || {};
+const SUPABASE_URL = ESTATE_ENV.SUPABASE_URL || '';
+const SUPABASE_KEY = ESTATE_ENV.SUPABASE_ANON_KEY || '';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let USER_ID = null;
+let authSession = null;
 let syncEnabled = false;
 let isSyncing = false;
 let cloudStore = {}; // In-memory cache of cloud data
 
-console.log('🔧 Estate OS v8: Cloud sync with Realtime');
+console.log('🔧 Estate OS v9: Auth-gated Supabase dashboard');
+
+function showToast(message, isError = false) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = message;
+  el.style.display = 'block';
+  el.style.borderColor = isError ? '#E04E4E' : '#4A3828';
+  setTimeout(() => { el.style.display = 'none'; }, 2800);
+}
+
+function showAuthScreen(show) {
+  const auth = document.getElementById('auth-screen');
+  const os = document.getElementById('os');
+  if (!auth || !os) return;
+  auth.style.display = show ? 'flex' : 'none';
+  os.style.display = show ? 'none' : 'flex';
+}
+
+async function handleLoginSubmit(event) {
+  event.preventDefault();
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errorEl = document.getElementById('auth-error');
+  errorEl.textContent = '';
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data?.session) {
+      errorEl.textContent = 'Access denied.';
+      return;
+    }
+    window.location.reload();
+  } catch (err) {
+    errorEl.textContent = 'Access denied.';
+  }
+}
+
+async function handleSignOut() {
+  try {
+    await supabase.auth.signOut();
+  } finally {
+    window.location.reload();
+  }
+}
+
+async function bootstrapAuth() {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    showAuthScreen(true);
+    const errorEl = document.getElementById('auth-error');
+    if (errorEl) errorEl.textContent = 'Missing config/env.js';
+    return;
+  }
+  const form = document.getElementById('auth-form');
+  if (form) form.addEventListener('submit', handleLoginSubmit);
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    showAuthScreen(true);
+    return;
+  }
+  authSession = session;
+  USER_ID = session.user.id;
+  showAuthScreen(false);
+  await initDashboard();
+}
 
 // ═══ SYNC STATUS INDICATOR ═══
 function setSyncStatus(state) {
@@ -2050,12 +2166,10 @@ function setSyncStatus(state) {
 
 // ═══ UNIVERSAL SAVE FUNCTION ═══
 async function saveData(key, value) {
-  // Always save to localStorage first (offline cache)
-  localStorage.setItem(key, JSON.stringify(value));
   cloudStore[key] = value;
   
   if (!syncEnabled || isSyncing) {
-    console.log(`💾 Saved "${key}" locally`);
+    console.log(`💾 Saved "${key}" in memory`);
     return;
   }
   
@@ -2066,22 +2180,9 @@ async function saveData(key, value) {
 
 // ═══ UNIVERSAL LOAD FUNCTION ═══
 function loadData(key, fallback = null) {
-  // Return from memory cache if available
   if (cloudStore[key] !== undefined) {
     return cloudStore[key];
   }
-  
-  // Try localStorage
-  const local = localStorage.getItem(key);
-  if (local) {
-    try {
-      cloudStore[key] = JSON.parse(local);
-      return cloudStore[key];
-    } catch (e) {
-      return local;
-    }
-  }
-  
   return fallback;
 }
 
@@ -2119,7 +2220,7 @@ async function syncToCloud(updateStatus = true) {
       method: 'PATCH',
       headers: {
         'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Authorization': `Bearer ${authSession?.access_token || SUPABASE_KEY}`,
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
@@ -2155,7 +2256,7 @@ async function loadFromCloud(showStatus = true) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${USER_ID}&select=data,updated_at`, {
       headers: {
         'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`
+        'Authorization': `Bearer ${authSession?.access_token || SUPABASE_KEY}`
       }
     });
     
@@ -2179,12 +2280,6 @@ async function loadFromCloud(showStatus = true) {
     for (const key of keys) {
       if (cloudData[key] !== undefined) {
         cloudStore[key] = cloudData[key];
-        // Also update localStorage directly to keep it in sync
-        if (typeof cloudData[key] === 'object') {
-          localStorage.setItem(key, JSON.stringify(cloudData[key]));
-        } else {
-          localStorage.setItem(key, cloudData[key]);
-        }
       }
     }
     
@@ -2220,7 +2315,7 @@ async function initDashboard() {
     const timeoutId = setTimeout(() => controller.abort(), 5000);
     
     const testResp = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?select=user_id&limit=1`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${authSession?.access_token || SUPABASE_KEY}` },
       signal: controller.signal
     });
     
@@ -2230,12 +2325,23 @@ async function initDashboard() {
     
     syncEnabled = true;
     console.log('☁️ Connected to Supabase');
+
+    await applyThemeFromPreferences();
     
     // Load data from cloud on initial page load
     await loadFromCloud();
+    await loadHabitsWeekFromSupabase();
+    await loadOverviewData();
+    await loadVenturesFromSupabase();
+    await loadGoalsFromSupabase();
+    await loadVisionBoardFromSupabase();
+    await loadDesignsFromSupabase();
+    await loadContentAnalyticsFromSupabase();
+    wireAgentOverviewButtons();
     
     // Setup Realtime subscription for live updates
     setupRealtime();
+    setupSupabaseRealtime();
     
     setSyncStatus('synced');
     console.log('✅ Dashboard initialized');
@@ -2300,7 +2406,6 @@ function setupRealtime() {
             keys.forEach(key => {
               if (cloudData[key] !== undefined) {
                 cloudStore[key] = cloudData[key];
-                localStorage.setItem(key, JSON.stringify(cloudData[key]));
                 // Silently update only the affected section
                 reloadSection(key, cloudData[key]);
               }
@@ -2373,8 +2478,7 @@ function reloadSection(key, value) {
       if (typeof checkPendingRecurring === 'function') checkPendingRecurring();
       break;
     case 'theme':
-      if (value === 'dark') document.getElementById('os').classList.add('dark');
-      else document.getElementById('os').classList.remove('dark');
+      applyTheme(value === 'dark');
       break;
     default:
       // Silently ignore unknown keys
@@ -2446,30 +2550,49 @@ async function manualSync() {
   }
 }
 
-// Start on page load
-document.addEventListener('DOMContentLoaded', initDashboard);
-
-// Start on page load
-document.addEventListener('DOMContentLoaded', initDashboard);
-setTimeout(initDashboard, 500);
+document.addEventListener('DOMContentLoaded', bootstrapAuth);
 
 // ─── THEME TOGGLE ───
-function toggleTheme(){
-  const os=document.getElementById('os');
-  const isDark=os.classList.toggle('dark');
-  localStorage.setItem('theme',isDark?'dark':'light');
-  document.getElementById('icon-sun').style.display=isDark?'none':'block';
-  document.getElementById('icon-moon').style.display=isDark?'block':'none';
+let userPreferences = { dark_mode: true };
+function applyTheme(isDark){
+  const os = document.getElementById('os');
+  if (!os) return;
+  os.classList.toggle('dark', !!isDark);
+  document.getElementById('icon-sun').style.display = isDark ? 'none' : 'block';
+  document.getElementById('icon-moon').style.display = isDark ? 'block' : 'none';
 }
-// Load saved theme
-(function(){
-  const saved=localStorage.getItem('theme');
-  if(saved==='dark'){
-    document.getElementById('os').classList.add('dark');
-    document.getElementById('icon-sun').style.display='none';
-    document.getElementById('icon-moon').style.display='block';
+
+async function loadUserPreferences(){
+  try {
+    const { data, error } = await supabase.from('user_preferences').select('id,dark_mode').eq('owner_uid', USER_ID).maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      const { data: inserted, error: insertError } = await supabase.from('user_preferences').insert({ owner_uid: USER_ID, dark_mode: true }).select('id,dark_mode').single();
+      if (insertError) throw insertError;
+      userPreferences = inserted;
+    } else {
+      userPreferences = data;
+    }
+    applyTheme(!!userPreferences.dark_mode);
+  } catch (err) {
+    applyTheme(true);
+    showToast('Failed to load theme preferences', true);
   }
-})();
+}
+
+async function toggleTheme(){
+  const next = !document.getElementById('os').classList.contains('dark');
+  applyTheme(next);
+  try {
+    const { error } = await supabase.from('user_preferences').upsert({ owner_uid: USER_ID, dark_mode: next }, { onConflict: 'owner_uid' });
+    if (error) throw error;
+    userPreferences.dark_mode = next;
+  } catch (err) {
+    showToast('Failed to save theme preference', true);
+  }
+}
+
+async function applyThemeFromPreferences() { await loadUserPreferences(); }
 
 // ─── LIVE TIME ───
 function tick(){
@@ -2715,36 +2838,19 @@ function showVentureDetails(id){
 }
 
 // ─── TODAY PRIORITIES ───
-const todos=[
-  {t:'Morning SAMRO registration',d:false,cat:'Music'},
-  {t:'Dropshipping — store ops setup',d:false,cat:'Business'},
-  {t:'GEOG111 readings',d:true,cat:'School'},
-  {t:'Evening gym (4am done ✓)',d:true,cat:'Health'},
-];
-const tl=document.getElementById('today-list');
-if(tl)tl.innerHTML=todos.map((g,i)=>`<div class="item-row"><div class="check ${g.d?'done':''}" onclick="this.classList.toggle('done')">${g.d?'✓':''}</div><div style="flex:1;font-size:12px;font-weight:300;${g.d?'text-decoration:line-through;color:var(--muted)':''}">${g.t}</div><span style="font-size:9px;color:var(--accent)">${g.cat}</span></div>`).join('');
+let todayPriorities = [];
+function renderTodayPriorities() {
+  const tl = document.getElementById('today-list');
+  if (!tl) return;
+  if (!todayPriorities.length) {
+    tl.innerHTML = '<div style="font-size:12px;color:var(--muted)">No priorities set — add tasks or configure your routine.</div>';
+    return;
+  }
+  tl.innerHTML = todayPriorities.map((g) => `<div class="item-row"><div style="flex:1;font-size:12px;font-weight:300">${g.t}</div><span style="font-size:9px;color:var(--accent)">${g.cat}</span></div>`).join('');
+}
 
 // ─── GOALS ───
-const goals=[
-  {n:'Finish degree with distinction',p:'Academic',pct:38,badge:'b-acad',ms:['Sem 1 pass','Assignment 3','Exams','Graduate']},
-  {n:'Dropshipping to $4,000 profit',p:'Business',pct:8,badge:'b-biz',ms:['First sale','Break even','$1k profit','$4k target']},
-  {n:'SAMRO registered + royalties claimed',p:'Music',pct:5,badge:'b-music',ms:['Register SAMRO','Register SAMPRA','Claim royalties']},
-  {n:'Masemula — Collection 1 ready',p:'Brand',pct:20,badge:'b-brand',ms:['Identity doc','Suppliers','Samples','Launch']},
-  {n:'Gym 4am — 90 day streak',p:'Health',pct:60,badge:'b-health',ms:['30 days','60 days','90 days']},
-];
-const gl=document.getElementById('goal-list');
-if(gl)gl.innerHTML=goals.map(g=>`
-<div class="card mb-10">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-    <div style="font-size:14px;font-family:'Cormorant Garamond',serif;font-weight:400">${g.n}</div>
-    <span class="badge ${g.badge}">${g.p}</span>
-  </div>
-  <div class="prog-row" style="border:none;padding:0;margin-bottom:8px">
-    <div class="prog-bar" style="flex:1;width:auto"><div class="prog-fill" style="width:${g.pct}%"></div></div>
-    <div class="prog-pct">${g.pct}%</div>
-  </div>
-  <div style="display:flex;gap:6px;flex-wrap:wrap">${g.ms.map((m,i)=>`<div onclick="this.classList.toggle('done-ms')" style="font-size:10px;padding:3px 8px;border:0.5px solid var(--border);border-radius:10px;color:var(--muted);cursor:pointer;transition:all 0.2s" class="${i<Math.floor(g.pct/100*g.ms.length)?'done-ms':''}">${m}</div>`).join('')}</div>
-</div>`).join('');
+let goals = [];
 
 // ─── EMOTION WHEEL ───
 const emoData=[
@@ -3782,7 +3888,7 @@ async function syncNedbank() {
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Authorization': `Bearer ${authSession?.access_token || SUPABASE_KEY}`,
           'Content-Type': 'application/json'
         }
       }
@@ -3912,7 +4018,7 @@ async function refreshLiveBalance() {
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Authorization': `Bearer ${authSession?.access_token || SUPABASE_KEY}`,
           'Content-Type': 'application/json'
         }
       }
@@ -4294,6 +4400,35 @@ async function createAgentTask(){
   const task={id:Date.now(),agent,priority,desc,status:'pending',created:new Date().toISOString()};
   agentTasks.push(task);
   await saveData('agentTasks', agentTasks);
+  try {
+    const workflowByAgent = {
+      pa: 'agent-morning-brief.yml',
+      estate: 'agent-weekly-review.yml',
+      business: 'agent-ds-audit.yml',
+      music: 'agent-content-ideas.yml',
+      brand: 'agent-goal-check.yml',
+      finance: 'agent-ds-audit.yml',
+      legal: 'agent-weekly-review.yml',
+      intel: 'agent-content-ideas.yml',
+      archive: 'agent-weekly-review.yml',
+      portfolio: 'agent-goal-check.yml',
+      tutor: 'agent-goal-check.yml'
+    };
+    await supabase.functions.invoke('trigger-github-action', {
+      body: {
+        workflowFile: workflowByAgent[agent] || 'agent-weekly-review.yml',
+        context: JSON.stringify({ agent, priority, task: desc, createdAt: task.created })
+      }
+    });
+    await supabase.from('agent_logs').insert({
+      owner_uid: USER_ID,
+      agent_name: agent,
+      status: 'running',
+      output: { task: desc, priority }
+    });
+  } catch (err) {
+    showToast('Agent dispatch failed', true);
+  }
   document.getElementById('task-desc').value='';
   renderAgentTasks();updateDashboardAgents();
 }
@@ -4411,8 +4546,18 @@ function renderRoutineHabits(){
     <div class="habit-row"><span class="habit-name">Deep work total</span><div class="habit-ctrl">${inp('deep')}</div></div>`;
   updateStreaks();
 }
-function toggleHabit(k,d){weekData[k][d]=weekData[k][d]?0:1;saveWeekData();renderRoutineHabits();renderRoutineWeeklyProg();renderRoutineFlags();}
-function setHabitHrs(k,d,v){weekData[k][d]=parseFloat(v)||0;saveWeekData();renderRoutineWeeklyProg();renderRoutineFlags();}
+async function toggleHabit(k,d){
+  weekData[k][d]=weekData[k][d]?0:1;
+  await saveWeekData();
+  await syncHabitToSupabase(k, d, !!weekData[k][d], null);
+  renderRoutineHabits();renderRoutineWeeklyProg();renderRoutineFlags();
+}
+async function setHabitHrs(k,d,v){
+  weekData[k][d]=parseFloat(v)||0;
+  await saveWeekData();
+  await syncHabitToSupabase(k, d, weekData[k][d] > 0, String(weekData[k][d]));
+  renderRoutineWeeklyProg();renderRoutineFlags();
+}
 function updateStreaks(){
   let gs=0,ss=0;
   for(let i=getTodayIndex();i>=0;i--){if(weekData.gym[i])gs++;else break;}
@@ -5242,6 +5387,439 @@ window.loadFromCloud = async function(showStatus=true) {
   }
   return result;
 };
+// ─── ENHANCED SUPABASE FEATURES ───
+function getWeekMeta(date = new Date()) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return { week, year: d.getUTCFullYear() };
+}
+
+function fmtCurrency(value) {
+  const n = Number(value || 0);
+  return `R ${n.toLocaleString('en-ZA', { maximumFractionDigits: 2 })}`;
+}
+
+async function addWeeklyTarget() {
+  const target_text = document.getElementById('weekly-target-text').value.trim();
+  if (!target_text) return showToast('Target text required', true);
+  const target_value = parseFloat(document.getElementById('weekly-target-value').value || '0') || 0;
+  const current_value = parseFloat(document.getElementById('weekly-target-current').value || '0') || 0;
+  const unit = document.getElementById('weekly-target-unit').value.trim() || null;
+  const wm = getWeekMeta();
+  try {
+    const { error } = await supabase.from('weekly_targets').insert({ owner_uid: USER_ID, week_number: wm.week, year: wm.year, target_text, target_value, current_value, unit });
+    if (error) throw error;
+    document.getElementById('weekly-target-text').value = '';
+    document.getElementById('weekly-target-value').value = '';
+    document.getElementById('weekly-target-current').value = '';
+    document.getElementById('weekly-target-unit').value = '';
+    await loadOverviewData();
+  } catch (err) {
+    showToast('Failed to add weekly target', true);
+  }
+}
+
+async function deleteWeeklyTarget(id) {
+  try {
+    const { error } = await supabase.from('weekly_targets').delete().eq('id', id);
+    if (error) throw error;
+    await loadOverviewData();
+  } catch (err) {
+    showToast('Failed to remove target', true);
+  }
+}
+
+async function loadOverviewData() {
+  if (!USER_ID) return;
+  const wm = getWeekMeta();
+  try {
+    await supabase.functions.invoke('evaluate-flags', { body: { owner_uid: USER_ID } });
+    const [{ count: activeVentures }, { data: dsRows }, { count: gymSessions }, { data: deepRows }, { data: routinesToday }, { data: dueTasks }, { data: targets }, { data: flags }] = await Promise.all([
+      supabase.from('ventures').select('*', { count: 'exact', head: true }).eq('owner_uid', USER_ID).eq('status', 'active'),
+      supabase.from('metrics').select('amount').eq('owner_uid', USER_ID).eq('metric_key', 'ds_revenue').gte('period_start', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
+      supabase.from('habits_log').select('*', { count: 'exact', head: true }).eq('owner_uid', USER_ID).eq('habit_key', 'gym').eq('completed', true).gte('logged_date', new Date(Date.now() - ((new Date().getDay() + 6) % 7) * 86400000).toISOString().slice(0, 10)),
+      supabase.from('focus_sessions').select('duration_minutes').eq('owner_uid', USER_ID).eq('type', 'deep_work').gte('started_at', new Date(Date.now() - ((new Date().getDay() + 6) % 7) * 86400000).toISOString()),
+      supabase.from('routines').select('title,category').eq('owner_uid', USER_ID).eq('day_of_week', new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()),
+      supabase.from('tasks').select('title,category').eq('owner_uid', USER_ID).eq('due_date', new Date().toISOString().slice(0, 10)).neq('status', 'complete'),
+      supabase.from('weekly_targets').select('*').eq('owner_uid', USER_ID).eq('week_number', wm.week).eq('year', wm.year).order('created_at', { ascending: true }),
+      supabase.from('estate_flags').select('*').eq('owner_uid', USER_ID).order('evaluated_at', { ascending: false }).limit(10)
+    ]);
+
+    document.getElementById('stat-active-ventures').textContent = String(activeVentures || 0);
+    const dsRevenue = (dsRows || []).reduce((s, r) => s + Number(r.amount || 0), 0);
+    document.getElementById('stat-ds-revenue').textContent = fmtCurrency(dsRevenue);
+    document.getElementById('stat-gym-sessions').textContent = String(gymSessions || 0);
+    const deepHours = ((deepRows || []).reduce((s, r) => s + Number(r.duration_minutes || 0), 0) / 60);
+    document.getElementById('stat-deep-work').textContent = `${deepHours.toFixed(1)}h`;
+
+    todayPriorities = [
+      ...(routinesToday || []).map(r => ({ t: r.title, cat: r.category || 'Routine' })),
+      ...(dueTasks || []).map(t => ({ t: t.title, cat: t.category || 'Task' }))
+    ];
+    renderTodayPriorities();
+
+    const wtEl = document.getElementById('weekly-targets-list');
+    wtEl.innerHTML = (targets || []).length
+      ? (targets || []).map(t => {
+          const pct = Math.min(100, Math.round((Number(t.current_value || 0) / Math.max(1, Number(t.target_value || 1))) * 100));
+          const current = Number(t.current_value || 0);
+          const target = Number(t.target_value || 0);
+          return `<div class="prog-row"><div class="prog-label">${t.target_text}</div><div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div><div class="prog-pct">${current}/${target}${t.unit ? ' ' + t.unit : ''}</div><button class="btn-del" onclick="deleteWeeklyTarget('${t.id}')">×</button></div>`;
+        }).join('')
+      : '<div style="font-size:12px;color:var(--muted)">No weekly targets yet.</div>';
+
+    const flagsEl = document.getElementById('estate-flags-list');
+    flagsEl.innerHTML = (flags || []).length
+      ? (flags || []).map(f => `<div class="item-row"><span class="badge ${f.flag_level === 'red' ? 'b-urgent' : f.flag_level === 'amber' ? 'b-watch' : 'b-track'}">${f.flag_level.toUpperCase()}</span><span style="flex:1;font-size:12px">${f.flag_message || f.flag_key}</span></div>`).join('')
+      : '<div style="font-size:12px;color:var(--muted)">No flags yet.</div>';
+
+    renderEmpirePillars({
+      business: Math.min(100, (activeVentures || 0) * 20),
+      music: Math.min(100, deepHours * 8),
+      brand: 0,
+      fitness: Math.min(100, (gymSessions || 0) * 14.3),
+      deepWork: Math.min(100, (deepHours / 20) * 100),
+      finance: Math.min(100, dsRevenue > 0 ? (dsRevenue / 30000) * 100 : 0)
+    });
+  } catch (err) {
+    showToast('Failed to load overview', true);
+  }
+}
+
+async function addVenture() {
+  const name = document.getElementById('venture-name').value.trim();
+  const category = document.getElementById('venture-category').value.trim();
+  const status = document.getElementById('venture-status').value;
+  const description = document.getElementById('venture-description').value.trim();
+  if (!name) return showToast('Venture name required', true);
+  try {
+    const { error } = await supabase.from('ventures').insert({ owner_uid: USER_ID, name, category, status, description });
+    if (error) throw error;
+    document.getElementById('venture-name').value = '';
+    document.getElementById('venture-category').value = '';
+    document.getElementById('venture-description').value = '';
+    await loadVenturesFromSupabase();
+    await loadOverviewData();
+  } catch (err) {
+    showToast('Failed to add venture', true);
+  }
+}
+
+async function archiveVenture(id) {
+  try {
+    const { error } = await supabase.from('ventures').update({ status: 'archived' }).eq('id', id).eq('owner_uid', USER_ID);
+    if (error) throw error;
+    await loadVenturesFromSupabase();
+    await loadOverviewData();
+  } catch (err) {
+    showToast('Failed to archive venture', true);
+  }
+}
+
+async function loadVenturesFromSupabase() {
+  const el = document.getElementById('ventures-live-list');
+  if (!el) return;
+  try {
+    const { data, error } = await supabase.from('ventures').select('*').eq('owner_uid', USER_ID).order('created_at', { ascending: false });
+    if (error) throw error;
+    el.innerHTML = (data || []).length
+      ? (data || []).map(v => `<div class="item-row"><span class="badge ${v.status === 'active' ? 'b-track' : v.status === 'planning' ? 'b-watch' : 'b-urgent'}">${v.status}</span><span style="flex:1;font-size:12px">${v.name}${v.category ? ' · ' + v.category : ''}</span><button class="btn" style="font-size:10px" onclick="archiveVenture('${v.id}')">Archive</button></div>`).join('')
+      : '<div style="font-size:12px;color:var(--muted)">No ventures added yet.</div>';
+  } catch (err) {
+    showToast('Failed to load ventures', true);
+  }
+}
+
+function renderEmpirePillars(p) {
+  const map = [
+    ['Business', p.business || 0],
+    ['Music', p.music || 0],
+    ['Brand/Content', p.brand || 0],
+    ['Fitness', p.fitness || 0],
+    ['Deep Work', p.deepWork || 0],
+    ['Finance', p.finance || 0]
+  ];
+  const el = document.getElementById('empire-pillars-list');
+  if (!el) return;
+  el.innerHTML = map.map(([label, pct]) => `<div class="prog-row"><div class="prog-label">${label}</div><div class="prog-bar"><div class="prog-fill" style="width:${Math.min(100, Math.round(pct))}%"></div></div><div class="prog-pct">${Math.min(100, Math.round(pct))}%</div></div>`).join('');
+}
+
+async function loadGoalsFromSupabase() {
+  try {
+    const { data, error } = await supabase.from('goals').select('*').eq('owner_uid', USER_ID).order('created_at', { ascending: false });
+    if (error) throw error;
+    goals = data || [];
+    renderGoals();
+  } catch (err) {
+    showToast('Failed to load goals', true);
+  }
+}
+
+function renderGoals() {
+  const gl = document.getElementById('goal-list');
+  if (!gl) return;
+  if (!goals.length) {
+    gl.innerHTML = '<div class="card"><div style="font-size:12px;color:var(--muted)">No goals yet.</div></div>';
+    return;
+  }
+  gl.innerHTML = goals.map(g => {
+    const target = Number(g.target_value || 0);
+    const current = Number(g.current_value || 0);
+    const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+    return `<div class="card mb-10"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:14px;font-family:'Cormorant Garamond',serif">${g.title}</div><button class="btn-del" onclick="deleteGoal('${g.id}')">🗑</button></div><div style="font-size:11px;color:var(--muted);margin-bottom:6px">${g.category || 'general'}${g.deadline ? ' · due ' + g.deadline : ''}</div><div class="prog-row" style="border:none;padding:0;margin-bottom:8px"><div class="prog-bar" style="flex:1"><div class="prog-fill" style="width:${pct}%"></div></div><div class="prog-pct">${pct}%</div></div><div style="display:flex;gap:8px;align-items:center"><div style="font-size:11px;color:var(--muted)">${current}/${target}${g.unit ? ' ' + g.unit : ''}</div>${g.data_source === 'manual' ? `<input class="habit-input" type="number" value="${current}" onchange="updateGoalManualValue('${g.id}', this.value)">` : `<div style="font-size:10px;color:var(--muted)">Source: ${g.data_source || 'manual'}</div>`}</div></div>`;
+  }).join('');
+}
+
+async function openAddGoalModal() {
+  const title = prompt('Goal title');
+  if (!title) return;
+  const category = prompt('Category (business, music, brand, fitness, finance, personal)', 'business') || 'business';
+  const target_value = parseFloat(prompt('Target value', '0') || '0') || 0;
+  const unit = prompt('Unit (e.g. hrs, R, sessions)', '') || null;
+  const deadline = prompt('Deadline (YYYY-MM-DD)', '') || null;
+  const data_source = prompt('Data source (manual or table:key)', 'manual') || 'manual';
+  try {
+    const { error } = await supabase.from('goals').insert({ owner_uid: USER_ID, title, category, target_value, unit, deadline, data_source, current_value: 0 });
+    if (error) throw error;
+    await loadGoalsFromSupabase();
+  } catch (err) {
+    showToast('Failed to add goal', true);
+  }
+}
+
+async function deleteGoal(goalId) {
+  try {
+    const { error } = await supabase.from('goals').delete().eq('id', goalId);
+    if (error) throw error;
+    await loadGoalsFromSupabase();
+  } catch (err) {
+    showToast('Failed to remove goal', true);
+  }
+}
+
+async function updateGoalManualValue(goalId, value) {
+  const current_value = parseFloat(value || '0') || 0;
+  try {
+    const { error } = await supabase.from('goals').update({ current_value }).eq('id', goalId).eq('owner_uid', USER_ID);
+    if (error) throw error;
+    goals = goals.map(g => g.id === goalId ? { ...g, current_value } : g);
+    renderGoals();
+  } catch (err) {
+    showToast('Failed to update goal value', true);
+  }
+}
+
+function triggerVisionUpload() { document.getElementById('vision-file-input')?.click(); }
+
+async function handleVisionImageUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const path = `${USER_ID}/${Date.now()}-${file.name}`.replace(/\s+/g, '-');
+  try {
+    const { error: uploadError } = await supabase.storage.from('vision-board').upload(path, file, { upsert: false });
+    if (uploadError) throw uploadError;
+    const { error } = await supabase.from('vision_board').insert({ owner_uid: USER_ID, storage_path: path, caption: file.name });
+    if (error) throw error;
+    await loadVisionBoardFromSupabase();
+  } catch (err) {
+    showToast('Vision upload failed', true);
+  } finally {
+    event.target.value = '';
+  }
+}
+
+async function loadVisionBoardFromSupabase() {
+  const el = document.getElementById('vision-board-uploaded');
+  if (!el) return;
+  try {
+    const { data, error } = await supabase.from('vision_board').select('*').eq('owner_uid', USER_ID).order('position_order', { ascending: true });
+    if (error) throw error;
+    if (!data?.length) {
+      el.innerHTML = '';
+      return;
+    }
+    el.innerHTML = data.map(item => {
+      const { data: urlData } = supabase.storage.from('vision-board').getPublicUrl(item.storage_path);
+      return `<div class="mb-tile" draggable="true"><div class="mb-visual" style="background-image:url('${urlData.publicUrl}');background-size:cover;background-position:center"></div><div class="mb-overlay">${item.caption || 'Vision'}</div></div>`;
+    }).join('');
+  } catch (err) {
+    showToast('Failed to load vision board', true);
+  }
+}
+
+function triggerDesignUpload() { document.getElementById('design-file-input')?.click(); }
+
+async function handleDesignUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const activeTab = document.querySelector('#s-designs .design-tab-btn.active')?.dataset.tab || 'masemula';
+  const path = `${activeTab}/${USER_ID}-${Date.now()}-${file.name}`.replace(/\s+/g, '-');
+  try {
+    const { error: uploadError } = await supabase.storage.from('designs').upload(path, file, { upsert: false });
+    if (uploadError) throw uploadError;
+    const { error } = await supabase.from('designs').insert({ owner_uid: USER_ID, storage_path: path, tab_category: activeTab, title: file.name, version: 1 });
+    if (error) throw error;
+    await loadDesignsFromSupabase();
+  } catch (err) {
+    showToast('Design upload failed', true);
+  } finally {
+    event.target.value = '';
+  }
+}
+
+async function loadDesignsFromSupabase() {
+  document.querySelectorAll('#s-designs .design-tab-btn').forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('#s-designs .design-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#s-designs .itab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`des-${tab}`)?.classList.add('active');
+    };
+  });
+}
+
+async function loadContentAnalyticsFromSupabase() {
+  try {
+    const { data, error } = await supabase.from('content_analytics').select('*').eq('owner_uid', USER_ID).order('recorded_at', { ascending: false }).limit(100);
+    if (error) throw error;
+    const grouped = {};
+    (data || []).forEach((row) => {
+      const k = `${row.platform}:${row.metric_key}`;
+      grouped[k] = grouped[k] || [];
+      grouped[k].push(row);
+    });
+    const el = document.getElementById('content-live-analytics');
+    if (!el) return;
+    const rows = Object.entries(grouped).map(([k, values]) => {
+      const latest = Number(values[0]?.metric_value || 0);
+      const previous = Number(values[1]?.metric_value || 0);
+      const delta = latest - previous;
+      return { k, latest, delta };
+    });
+    el.innerHTML = rows.length
+      ? rows.map(r => `<div class="item-row"><span style="flex:1;font-size:12px">${r.k}</span><span style="font-size:12px;font-weight:500">${r.latest}</span><span style="font-size:10px;color:${r.delta >= 0 ? 'var(--green)' : 'var(--red)'}">${r.delta >= 0 ? '+' : ''}${r.delta}</span></div>`).join('')
+      : '<div style="font-size:12px;color:var(--muted)">No analytics data yet. Connect platform APIs or add metrics manually.</div>';
+  } catch (err) {
+    showToast('Failed to load content analytics', true);
+  }
+}
+
+async function addContentMetric() {
+  const platform = prompt('Platform (youtube, instagram, tiktok, spotify)', 'youtube');
+  if (!platform) return;
+  const metric_key = prompt('Metric key (views, followers, streams, likes)', 'views');
+  if (!metric_key) return;
+  const metric_value = Number(prompt('Metric value', '0') || 0);
+  try {
+    const { error } = await supabase.from('content_analytics').insert({ owner_uid: USER_ID, platform, metric_key, metric_value, period_date: new Date().toISOString().slice(0, 10) });
+    if (error) throw error;
+    await loadContentAnalyticsFromSupabase();
+  } catch (err) {
+    showToast('Failed to add metric', true);
+  }
+}
+
+async function setupSupabaseRealtime() {
+  try {
+    const channel = supabase.channel('estate-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'habits_log', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadHabitsWeekFromSupabase(); await loadOverviewData(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'goals', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadGoalsFromSupabase(); await loadOverviewData(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadOverviewData(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ventures', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadOverviewData(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'agent_logs', filter: `owner_uid=eq.${USER_ID}` }, async () => { showToast('Agent update received'); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'estate_flags', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadOverviewData(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'focus_sessions', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadOverviewData(); })
+      .subscribe();
+    void channel;
+  } catch (err) {
+    showToast('Realtime subscription failed', true);
+  }
+}
+
+function wireAgentOverviewButtons() {
+  document.querySelectorAll('#agents-overview .agent-card[data-agent]').forEach((card) => {
+    card.onclick = async () => {
+      const agent = card.getAttribute('data-agent');
+      if (!agent) return;
+      const desc = prompt(`Task for ${agentNames[agent] || agent}`);
+      if (!desc) return;
+      card.style.opacity = '0.6';
+      try {
+        await supabase.functions.invoke('trigger-github-action', {
+          body: {
+            workflowFile: 'agent-weekly-review.yml',
+            context: JSON.stringify({ agent, task: desc, source: 'overview-card' })
+          }
+        });
+        await supabase.from('agent_logs').insert({ owner_uid: USER_ID, agent_name: agent, status: 'running', output: { task: desc } });
+        showToast(`${agent} dispatched`);
+      } catch (err) {
+        showToast('Failed to dispatch agent', true);
+      } finally {
+        card.style.opacity = '1';
+      }
+    };
+  });
+}
+
+async function loadHabitsWeekFromSupabase() {
+  try {
+    const weekStart = new Date(Date.now() - ((new Date().getDay() + 6) % 7) * 86400000).toISOString().slice(0, 10);
+    const { data, error } = await supabase.from('habits_log').select('habit_key,logged_date,completed,notes').eq('owner_uid', USER_ID).gte('logged_date', weekStart);
+    if (error) throw error;
+    weekData = emptyWeek();
+    (data || []).forEach(row => {
+      const dayIndex = (new Date(row.logged_date).getDay() + 6) % 7;
+      const valueFromNotes = parseFloat(row.notes || '');
+      if (Number.isFinite(valueFromNotes)) {
+        weekData[row.habit_key]?.splice(dayIndex, 1, valueFromNotes);
+      } else {
+        weekData[row.habit_key]?.splice(dayIndex, 1, row.completed ? 1 : 0);
+      }
+    });
+    renderRoutineHabits();
+    renderRoutineWeeklyProg();
+    renderRoutineFlags();
+  } catch (err) {
+    showToast('Failed to load habits', true);
+  }
+}
+
+async function syncHabitToSupabase(habitKey, dayOffset, completed, notes = null) {
+  const date = new Date();
+  date.setDate(date.getDate() - ((getTodayIndex() - dayOffset + 7) % 7));
+  const logged_date = date.toISOString().slice(0, 10);
+  try {
+    const { error } = await supabase.from('habits_log').upsert(
+      { owner_uid: USER_ID, habit_key: habitKey, logged_date, completed, notes },
+      { onConflict: 'owner_uid,habit_key,logged_date' }
+    );
+    if (error) throw error;
+  } catch (err) {
+    showToast('Failed to sync habit', true);
+  }
+}
+
+async function openWeeklyHistory(type) {
+  try {
+    if (type === 'gym') {
+      const { data, error } = await supabase.from('habits_log').select('logged_date,completed').eq('owner_uid', USER_ID).eq('habit_key', 'gym').order('logged_date', { ascending: false }).limit(12);
+      if (error) throw error;
+      alert((data || []).map(r => `${r.logged_date}: ${r.completed ? 'done' : 'missed'}`).join('\n') || 'No history yet');
+      return;
+    }
+    const { data, error } = await supabase.from('focus_sessions').select('started_at,duration_minutes').eq('owner_uid', USER_ID).eq('type', 'deep_work').order('started_at', { ascending: false }).limit(12);
+    if (error) throw error;
+    alert((data || []).map(r => `${new Date(r.started_at).toLocaleDateString('en-ZA')}: ${(Number(r.duration_minutes) / 60).toFixed(1)}h`).join('\n') || 'No history yet');
+  } catch (err) {
+    showToast('Failed to load weekly history', true);
+  }
+}
 </script>
 
 </html>
+
