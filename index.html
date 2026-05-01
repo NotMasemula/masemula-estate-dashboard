@@ -1032,7 +1032,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
               Last synced: <span id="last-sync-time">Never</span>
             </div>
           </div>
-          <button class="btn btn-gold" style="width:100%" onclick="syncNedbank()">🔄 Sync Nedbank Transactions</button>
+          <button class="btn btn-gold" style="width:100%" onclick="syncNedbank(event)">🔄 Sync Nedbank Transactions</button>
           <div style="font-size:10px;color:var(--muted);margin-top:10px;text-align:center">
             <a href="https://stitch.money/" target="_blank" style="color:var(--gold);text-decoration:none">Sign up for Stitch</a> · 
             <a href="javascript:showStitchInstructions()" style="color:var(--gold);text-decoration:none">Setup Instructions</a>
@@ -1229,7 +1229,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
           <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:10px">50/50 partnership management. Track revenue, expenses, settlements and transfers between partners. All data syncs in real-time via your Supabase account.</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-gold" onclick="openCreateVentureModal()">+ New Venture</button>
-            <button class="btn" onclick="svSyncSharedData()">↻ Sync Partner Data</button>
+            <button class="btn" onclick="svSyncSharedData(event)">↻ Sync Partner Data</button>
             <button class="btn" style="font-size:10px" onclick="svShowSetup()">⚙ Setup</button>
           </div>
           <div id="sv-sync-status" style="font-size:10px;color:var(--muted);margin-top:8px">Last synced: <span id="sv-sync-time">Never</span></div>
@@ -2073,7 +2073,11 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 const ESTATE_ENV = window.__ESTATE_ENV || {};
 const SUPABASE_URL = ESTATE_ENV.SUPABASE_URL || '';
 const SUPABASE_KEY = ESTATE_ENV.SUPABASE_ANON_KEY || '';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Only initialise the Supabase client when both the library and real
+// credentials are present; bootstrapAuth() shows the config screen otherwise.
+const supabase = (window.supabase && SUPABASE_URL && SUPABASE_KEY)
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  : null;
 let USER_ID = null;
 let authSession = null;
 let syncEnabled = false;
@@ -2126,10 +2130,14 @@ async function handleSignOut() {
 }
 
 async function bootstrapAuth() {
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
+  if (!supabase) {
     showAuthScreen(true);
     const errorEl = document.getElementById('auth-error');
-    if (errorEl) errorEl.textContent = 'Missing config/env.js';
+    if (errorEl) {
+      errorEl.textContent = (!window.supabase)
+        ? 'Supabase library failed to load. Check your network connection.'
+        : 'Please open config/env.js and fill in your Supabase URL and anon key.';
+    }
     return;
   }
   const form = document.getElementById('auth-form');
@@ -2330,6 +2338,8 @@ async function initDashboard() {
     
     // Load data from cloud on initial page load
     await loadFromCloud();
+    // Also sync shared venture data (independent from main sync)
+    svLoadFromCloud().then(() => svRenderAll()).catch(e => console.warn('SV sync error:', e));
     await loadHabitsWeekFromSupabase();
     await loadOverviewData();
     await loadVenturesFromSupabase();
@@ -2340,7 +2350,6 @@ async function initDashboard() {
     wireAgentOverviewButtons();
     
     // Setup Realtime subscription for live updates
-    setupRealtime();
     setupSupabaseRealtime();
     
     setSyncStatus('synced');
@@ -2351,93 +2360,6 @@ async function initDashboard() {
     syncEnabled = false;
     setSyncStatus('offline');
     renderAllSections();
-  }
-}
-
-// ═══ REALTIME SYNC ═══
-let realtimeWs = null;
-let heartbeatInterval = null;
-
-function setupRealtime() {
-  if (realtimeWs) return;
-  
-  try {
-    const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + 
-      '/realtime/v1/websocket?apikey=' + SUPABASE_KEY + '&vsn=1.0.0';
-    
-    realtimeWs = new WebSocket(wsUrl);
-    
-    realtimeWs.onopen = () => {
-      console.log('🔌 Realtime connected');
-      
-      // Subscribe to estate_data changes
-      realtimeWs.send(JSON.stringify({
-        topic: 'realtime:public:estate_data',
-        event: 'phx_join',
-        payload: { config: { postgres_changes: [{ event: '*', schema: 'public', table: 'estate_data' }] } },
-        ref: '1'
-      }));
-      
-      // Heartbeat to keep connection alive
-      heartbeatInterval = setInterval(() => {
-        if (realtimeWs.readyState === WebSocket.OPEN) {
-          realtimeWs.send(JSON.stringify({ 
-            topic: 'phoenix', 
-            event: 'heartbeat', 
-            payload: {}, 
-            ref: Date.now().toString() 
-          }));
-        }
-      }, 30000);
-    };
-    
-    realtimeWs.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        
-        // Handle Realtime updates from other devices
-        if (msg.event === 'postgres_changes' && msg.payload?.data?.record?.user_id === USER_ID) {
-          const cloudData = msg.payload.data.record.data;
-          console.log('🔄 Realtime update received');
-          
-          // Update affected sections silently in background
-          if (cloudData) {
-            const keys = Object.keys(cloudData);
-            keys.forEach(key => {
-              if (cloudData[key] !== undefined) {
-                cloudStore[key] = cloudData[key];
-                // Silently update only the affected section
-                reloadSection(key, cloudData[key]);
-              }
-            });
-          }
-        }
-      } catch (e) {
-        console.warn('⚠️ Realtime message error:', e);
-      }
-    };
-    
-    realtimeWs.onclose = () => {
-      console.log('🔌 Realtime disconnected, reconnecting...');
-      clearInterval(heartbeatInterval);
-      heartbeatInterval = null;
-      realtimeWs = null;
-      
-      // Reconnect after 3 seconds
-      setTimeout(() => {
-        if (syncEnabled) {
-          setupRealtime();
-        }
-      }, 3000);
-    };
-    
-    realtimeWs.onerror = (err) => {
-      console.warn('⚠️ Realtime error:', err);
-      realtimeWs.close();
-    };
-    
-  } catch (err) {
-    console.warn('⚠️ Realtime setup failed:', err);
   }
 }
 
@@ -2520,6 +2442,8 @@ async function manualSync() {
     
     // Then pull latest data from cloud and re-render all sections
     await loadFromCloud(true);
+    // Also re-sync shared venture data
+    svLoadFromCloud().then(() => svRenderAll()).catch(e => console.warn('SV sync error:', e));
     
     setSyncStatus('synced');
     console.log('✅ Manual sync complete');
@@ -3141,6 +3065,23 @@ function startJarvis(){
 }
 // stop jarvis when leaving
 document.querySelectorAll('.nav-icon').forEach(n=>n.addEventListener('click',()=>{if(!n.getAttribute('onclick').includes('jarvis')&&jarvisRunning){jarvisRunning=false;if(jraf)cancelAnimationFrame(jraf)}}));
+
+// ─── SEND PROMPT (copy + navigate to Jarvis) ───
+function sendPrompt(text) {
+  // Navigate to Jarvis section using the existing nav() helper
+  nav('jarvis', document.querySelector('.nav-icon[onclick*="jarvis"]') || document.createElement('div'));
+  // Copy prompt to clipboard
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast('Prompt copied — paste into Claude or ChatGPT'))
+      .catch(() => {
+        // Fallback: show prompt in an alert so the user can copy manually
+        prompt('Copy this prompt:', text);
+      });
+  } else {
+    prompt('Copy this prompt:', text);
+  }
+}
 
 // ─── STUDY NOTES GENERATOR ───
 function generateStudyNotes(){
@@ -3873,11 +3814,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ─── STITCH NEDBANK AUTO-SYNC ───
-async function syncNedbank() {
-  const btn = event.target;
-  const originalText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = '⏳ Syncing...';
+async function syncNedbank(event = null) {
+  const btn = event && event.target;
+  const originalText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Syncing...'; }
   
   const statusEl = document.getElementById('stitch-connected');
   
@@ -3926,8 +3866,7 @@ async function syncNedbank() {
       alert('❌ Sync failed: ' + err.message + '\n\nCheck if Stitch is configured correctly.');
     }
   } finally {
-    btn.disabled = false;
-    btn.textContent = originalText;
+    if (btn) { btn.disabled = false; btn.textContent = originalText; }
   }
 }
 
@@ -4633,10 +4572,10 @@ let svData = {
 // ─── LOAD / SAVE SHARED DATA ───
 
 async function svLoadFromCloud() {
-  if (!syncEnabled) { svLoadLocal(); return; }
+  if (!syncEnabled || !authSession) { svLoadLocal(); return; }
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${SV_KEY}&select=data,updated_at`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${authSession.access_token}` }
     });
     if (!res.ok) throw new Error('Load failed');
     const rows = await res.json();
@@ -4664,14 +4603,14 @@ function svLoadLocal() {
 
 async function svSaveToCloud() {
   localStorage.setItem('sv_data', JSON.stringify(svData));
-  if (!syncEnabled) return;
+  if (!syncEnabled || !authSession) return;
   try {
     // Upsert shared record
     const res = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${SV_KEY}`, {
       method: 'PATCH',
       headers: {
         'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Authorization': `Bearer ${authSession.access_token}`,
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
@@ -4683,7 +4622,7 @@ async function svSaveToCloud() {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Authorization': `Bearer ${authSession.access_token}`,
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
@@ -4697,7 +4636,7 @@ async function svSaveToCloud() {
   }
 }
 
-async function svSyncSharedData() {
+async function svSyncSharedData(event) {
   const btn = event && event.target;
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Syncing...'; }
   await svLoadFromCloud();
@@ -5376,17 +5315,6 @@ document.addEventListener('DOMContentLoaded', () => {
     monthEl.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   }
 });
-// Also reload from cloud after sync is established (hook into existing sync flow)
-const _origLoadCloud = loadFromCloud;
-window.loadFromCloud = async function(showStatus=true) {
-  const result = await _origLoadCloud.call(this, showStatus);
-  if (syncEnabled) {
-    // Load shared venture data independently — not awaited so it does not
-    // delay the main dashboard sync from returning to callers.
-    svLoadFromCloud().then(() => svRenderAll()).catch(e => console.warn('SV sync error:', e));
-  }
-  return result;
-};
 // ─── ENHANCED SUPABASE FEATURES ───
 function getWeekMeta(date = new Date()) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -5670,6 +5598,7 @@ async function handleDesignUpload(event) {
 }
 
 async function loadDesignsFromSupabase() {
+  // Wire up tab click handlers
   document.querySelectorAll('#s-designs .design-tab-btn').forEach(btn => {
     btn.onclick = (e) => {
       e.preventDefault();
@@ -5680,6 +5609,56 @@ async function loadDesignsFromSupabase() {
       document.getElementById(`des-${tab}`)?.classList.add('active');
     };
   });
+
+  // Fetch uploaded designs from Supabase and append them to the matching tab panels
+  if (!syncEnabled || !USER_ID || !supabase) return;
+  try {
+    const { data, error } = await supabase
+      .from('designs')
+      .select('*')
+      .eq('owner_uid', USER_ID)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    if (!data || data.length === 0) return;
+
+    // Group by tab_category
+    const byTab = {};
+    data.forEach(row => {
+      const tab = row.tab_category || 'masemula';
+      byTab[tab] = byTab[tab] || [];
+      byTab[tab].push(row);
+    });
+
+    for (const [tab, rows] of Object.entries(byTab)) {
+      const panel = document.getElementById(`des-${tab}`);
+      if (!panel) continue;
+      const grid = panel.querySelector('.design-grid') || panel;
+      // Remove previously appended cloud cards to avoid duplicates on re-load
+      grid.querySelectorAll('.design-card[data-cloud]').forEach(c => c.remove());
+      rows.forEach(row => {
+        const { data: publicUrlData } = supabase.storage.from('designs').getPublicUrl(row.storage_path);
+        const url = publicUrlData?.publicUrl || '';
+        const card = document.createElement('div');
+        card.className = 'design-card';
+        card.dataset.cloud = '1';
+        const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(row.storage_path);
+        card.innerHTML = `
+          <div class="design-header">
+            <span style="font-size:12px;font-weight:400">${row.title || row.storage_path.split('/').pop()}</span>
+            <span class="badge b-track">v${row.version || 1}</span>
+          </div>
+          <div class="design-canvas" style="padding:0;overflow:hidden">
+            ${isImage
+              ? `<img src="${url}" alt="${row.title || ''}" style="width:100%;height:100%;object-fit:cover;border-radius:4px">`
+              : `<a href="${url}" target="_blank" rel="noopener" style="font-size:11px;color:var(--gold)">Open file ↗</a>`
+            }
+          </div>`;
+        grid.appendChild(card);
+      });
+    }
+  } catch (err) {
+    console.warn('Designs load failed:', err.message);
+  }
 }
 
 async function loadContentAnalyticsFromSupabase() {

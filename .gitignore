@@ -106,6 +106,5 @@ secrets-audit-*.txt
 
 # === TASK LOGS (auto-generated) ===
 .tasks/
-config/env.js
 
 
