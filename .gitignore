@@ -106,6 +106,7 @@ secrets-audit-*.txt
 
 # === TASK LOGS (auto-generated) ===
 .tasks/
-config/env.js
+# config/env.js is committed with placeholder values; add real values locally without committing
+# config/env.js
 
 
