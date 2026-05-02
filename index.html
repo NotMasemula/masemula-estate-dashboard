@@ -5639,7 +5639,7 @@ async function loadDesignsFromSupabase() {
   // Fetch uploaded designs from Supabase and append them to the matching tab panels
   if (!syncEnabled || !USER_ID || !sbClient) return;
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sbClient
       .from('designs')
       .select('*')
       .eq('owner_uid', USER_ID)
