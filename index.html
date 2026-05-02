@@ -2071,13 +2071,18 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 <script>
 // ═══ SUPABASE AUTH + SYNC ═══
 const ESTATE_ENV = window.__ESTATE_ENV || {};
-const SUPABASE_URL = ESTATE_ENV.SUPABASE_URL || '';
-const SUPABASE_KEY = ESTATE_ENV.SUPABASE_ANON_KEY || '';
-// Only initialise the Supabase client when both the library and real
-// credentials are present; bootstrapAuth() shows the config screen otherwise.
-const supabase = (window.supabase && SUPABASE_URL && SUPABASE_KEY)
-  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-  : null;
+const DEFAULT_SUPABASE_URL = 'https://romytadgdnpphqzlseaa.supabase.co';
+const DEFAULT_SUPABASE_KEY = 'sb_publishable_ggs07ym7m21ZKiTwQdB94g_lFACej5D';
+const SUPABASE_URL = ESTATE_ENV.SUPABASE_URL || window.SUPABASE_URL || window.supabaseUrl || DEFAULT_SUPABASE_URL;
+const SUPABASE_KEY = ESTATE_ENV.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY || window.supabaseAnonKey || window.supabaseKey || DEFAULT_SUPABASE_KEY;
+let supabase = null;
+if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
+  try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  } catch (err) {
+    console.error('Supabase client initialization failed:', err);
+  }
+}
 let USER_ID = null;
 let authSession = null;
 let syncEnabled = false;
@@ -2105,6 +2110,11 @@ function showAuthScreen(show) {
 
 async function handleLoginSubmit(event) {
   event.preventDefault();
+  if (!supabase) {
+    const errorEl = document.getElementById('auth-error');
+    if (errorEl) errorEl.textContent = 'Config error: Supabase not available.';
+    return;
+  }
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   const errorEl = document.getElementById('auth-error');
@@ -2122,6 +2132,10 @@ async function handleLoginSubmit(event) {
 }
 
 async function handleSignOut() {
+  if (!supabase) {
+    window.location.reload();
+    return;
+  }
   try {
     await supabase.auth.signOut();
   } finally {
@@ -2130,13 +2144,13 @@ async function handleSignOut() {
 }
 
 async function bootstrapAuth() {
-  if (!supabase) {
+  if (!window.supabase || !supabase || !SUPABASE_URL || !SUPABASE_KEY) {
     showAuthScreen(true);
     const errorEl = document.getElementById('auth-error');
     if (errorEl) {
       errorEl.textContent = (!window.supabase)
         ? 'Supabase library failed to load. Check your network connection.'
-        : 'Please open config/env.js and fill in your Supabase URL and anon key.';
+        : 'Unable to load Supabase config.';
     }
     return;
   }
