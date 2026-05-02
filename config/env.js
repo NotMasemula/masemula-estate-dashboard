@@ -11,6 +11,6 @@
 //     environment-injection at deploy time) before filling in values.
 // ============================================================
 window.__ESTATE_ENV = {
-  SUPABASE_URL: '',
-  SUPABASE_ANON_KEY: ''
+  SUPABASE_URL: 'https://romytadgdnpphqzlseaa.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_u-YXLTGOqQfQvGGczoFJfg_Nr7fNFcf'
 };
