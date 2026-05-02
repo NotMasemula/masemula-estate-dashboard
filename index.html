@@ -2075,10 +2075,10 @@ const DEFAULT_SUPABASE_URL = 'https://romytadgdnpphqzlseaa.supabase.co';
 const DEFAULT_SUPABASE_KEY = 'sb_publishable_ggs07ym7m21ZKiTwQdB94g_lFACej5D';
 const SUPABASE_URL = ESTATE_ENV.SUPABASE_URL || window.SUPABASE_URL || window.supabaseUrl || DEFAULT_SUPABASE_URL;
 const SUPABASE_KEY = ESTATE_ENV.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY || window.supabaseAnonKey || window.supabaseKey || DEFAULT_SUPABASE_KEY;
-let supabase = null;
+let sbClient = null;
 if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
   try {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   } catch (err) {
     console.error('Supabase client initialization failed:', err);
   }
@@ -2110,7 +2110,7 @@ function showAuthScreen(show) {
 
 async function handleLoginSubmit(event) {
   event.preventDefault();
-  if (!supabase) {
+  if (!sbClient) {
     const errorEl = document.getElementById('auth-error');
     if (errorEl) errorEl.textContent = 'Config error: Supabase not available.';
     return;
@@ -2120,7 +2120,7 @@ async function handleLoginSubmit(event) {
   const errorEl = document.getElementById('auth-error');
   errorEl.textContent = '';
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
     if (error || !data?.session) {
       errorEl.textContent = 'Access denied.';
       return;
@@ -2132,19 +2132,19 @@ async function handleLoginSubmit(event) {
 }
 
 async function handleSignOut() {
-  if (!supabase) {
+  if (!sbClient) {
     window.location.reload();
     return;
   }
   try {
-    await supabase.auth.signOut();
+    await sbClient.auth.signOut();
   } finally {
     window.location.reload();
   }
 }
 
 async function bootstrapAuth() {
-  if (!window.supabase || !supabase || !SUPABASE_URL || !SUPABASE_KEY) {
+  if (!window.supabase || !sbClient || !SUPABASE_URL || !SUPABASE_KEY) {
     showAuthScreen(true);
     const errorEl = document.getElementById('auth-error');
     if (errorEl) {
@@ -2156,7 +2156,7 @@ async function bootstrapAuth() {
   }
   const form = document.getElementById('auth-form');
   if (form) form.addEventListener('submit', handleLoginSubmit);
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sbClient.auth.getSession();
   if (!session) {
     showAuthScreen(true);
     return;
@@ -2502,10 +2502,10 @@ function applyTheme(isDark){
 
 async function loadUserPreferences(){
   try {
-    const { data, error } = await supabase.from('user_preferences').select('id,dark_mode').eq('owner_uid', USER_ID).maybeSingle();
+    const { data, error } = await sbClient.from('user_preferences').select('id,dark_mode').eq('owner_uid', USER_ID).maybeSingle();
     if (error) throw error;
     if (!data) {
-      const { data: inserted, error: insertError } = await supabase.from('user_preferences').insert({ owner_uid: USER_ID, dark_mode: true }).select('id,dark_mode').single();
+      const { data: inserted, error: insertError } = await sbClient.from('user_preferences').insert({ owner_uid: USER_ID, dark_mode: true }).select('id,dark_mode').single();
       if (insertError) throw insertError;
       userPreferences = inserted;
     } else {
@@ -2522,7 +2522,7 @@ async function toggleTheme(){
   const next = !document.getElementById('os').classList.contains('dark');
   applyTheme(next);
   try {
-    const { error } = await supabase.from('user_preferences').upsert({ owner_uid: USER_ID, dark_mode: next }, { onConflict: 'owner_uid' });
+    const { error } = await sbClient.from('user_preferences').upsert({ owner_uid: USER_ID, dark_mode: next }, { onConflict: 'owner_uid' });
     if (error) throw error;
     userPreferences.dark_mode = next;
   } catch (err) {
@@ -4367,13 +4367,13 @@ async function createAgentTask(){
       portfolio: 'agent-goal-check.yml',
       tutor: 'agent-goal-check.yml'
     };
-    await supabase.functions.invoke('trigger-github-action', {
+    await sbClient.functions.invoke('trigger-github-action', {
       body: {
         workflowFile: workflowByAgent[agent] || 'agent-weekly-review.yml',
         context: JSON.stringify({ agent, priority, task: desc, createdAt: task.created })
       }
     });
-    await supabase.from('agent_logs').insert({
+    await sbClient.from('agent_logs').insert({
       owner_uid: USER_ID,
       agent_name: agent,
       status: 'running',
@@ -5351,7 +5351,7 @@ async function addWeeklyTarget() {
   const unit = document.getElementById('weekly-target-unit').value.trim() || null;
   const wm = getWeekMeta();
   try {
-    const { error } = await supabase.from('weekly_targets').insert({ owner_uid: USER_ID, week_number: wm.week, year: wm.year, target_text, target_value, current_value, unit });
+    const { error } = await sbClient.from('weekly_targets').insert({ owner_uid: USER_ID, week_number: wm.week, year: wm.year, target_text, target_value, current_value, unit });
     if (error) throw error;
     document.getElementById('weekly-target-text').value = '';
     document.getElementById('weekly-target-value').value = '';
@@ -5365,7 +5365,7 @@ async function addWeeklyTarget() {
 
 async function deleteWeeklyTarget(id) {
   try {
-    const { error } = await supabase.from('weekly_targets').delete().eq('id', id);
+    const { error } = await sbClient.from('weekly_targets').delete().eq('id', id);
     if (error) throw error;
     await loadOverviewData();
   } catch (err) {
@@ -5377,16 +5377,16 @@ async function loadOverviewData() {
   if (!USER_ID) return;
   const wm = getWeekMeta();
   try {
-    await supabase.functions.invoke('evaluate-flags', { body: { owner_uid: USER_ID } });
+    await sbClient.functions.invoke('evaluate-flags', { body: { owner_uid: USER_ID } });
     const [{ count: activeVentures }, { data: dsRows }, { count: gymSessions }, { data: deepRows }, { data: routinesToday }, { data: dueTasks }, { data: targets }, { data: flags }] = await Promise.all([
-      supabase.from('ventures').select('*', { count: 'exact', head: true }).eq('owner_uid', USER_ID).eq('status', 'active'),
-      supabase.from('metrics').select('amount').eq('owner_uid', USER_ID).eq('metric_key', 'ds_revenue').gte('period_start', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
-      supabase.from('habits_log').select('*', { count: 'exact', head: true }).eq('owner_uid', USER_ID).eq('habit_key', 'gym').eq('completed', true).gte('logged_date', new Date(Date.now() - ((new Date().getDay() + 6) % 7) * 86400000).toISOString().slice(0, 10)),
-      supabase.from('focus_sessions').select('duration_minutes').eq('owner_uid', USER_ID).eq('type', 'deep_work').gte('started_at', new Date(Date.now() - ((new Date().getDay() + 6) % 7) * 86400000).toISOString()),
-      supabase.from('routines').select('title,category').eq('owner_uid', USER_ID).eq('day_of_week', new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()),
-      supabase.from('tasks').select('title,category').eq('owner_uid', USER_ID).eq('due_date', new Date().toISOString().slice(0, 10)).neq('status', 'complete'),
-      supabase.from('weekly_targets').select('*').eq('owner_uid', USER_ID).eq('week_number', wm.week).eq('year', wm.year).order('created_at', { ascending: true }),
-      supabase.from('estate_flags').select('*').eq('owner_uid', USER_ID).order('evaluated_at', { ascending: false }).limit(10)
+      sbClient.from('ventures').select('*', { count: 'exact', head: true }).eq('owner_uid', USER_ID).eq('status', 'active'),
+      sbClient.from('metrics').select('amount').eq('owner_uid', USER_ID).eq('metric_key', 'ds_revenue').gte('period_start', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
+      sbClient.from('habits_log').select('*', { count: 'exact', head: true }).eq('owner_uid', USER_ID).eq('habit_key', 'gym').eq('completed', true).gte('logged_date', new Date(Date.now() - ((new Date().getDay() + 6) % 7) * 86400000).toISOString().slice(0, 10)),
+      sbClient.from('focus_sessions').select('duration_minutes').eq('owner_uid', USER_ID).eq('type', 'deep_work').gte('started_at', new Date(Date.now() - ((new Date().getDay() + 6) % 7) * 86400000).toISOString()),
+      sbClient.from('routines').select('title,category').eq('owner_uid', USER_ID).eq('day_of_week', new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()),
+      sbClient.from('tasks').select('title,category').eq('owner_uid', USER_ID).eq('due_date', new Date().toISOString().slice(0, 10)).neq('status', 'complete'),
+      sbClient.from('weekly_targets').select('*').eq('owner_uid', USER_ID).eq('week_number', wm.week).eq('year', wm.year).order('created_at', { ascending: true }),
+      sbClient.from('estate_flags').select('*').eq('owner_uid', USER_ID).order('evaluated_at', { ascending: false }).limit(10)
     ]);
 
     document.getElementById('stat-active-ventures').textContent = String(activeVentures || 0);
@@ -5437,7 +5437,7 @@ async function addVenture() {
   const description = document.getElementById('venture-description').value.trim();
   if (!name) return showToast('Venture name required', true);
   try {
-    const { error } = await supabase.from('ventures').insert({ owner_uid: USER_ID, name, category, status, description });
+    const { error } = await sbClient.from('ventures').insert({ owner_uid: USER_ID, name, category, status, description });
     if (error) throw error;
     document.getElementById('venture-name').value = '';
     document.getElementById('venture-category').value = '';
@@ -5451,7 +5451,7 @@ async function addVenture() {
 
 async function archiveVenture(id) {
   try {
-    const { error } = await supabase.from('ventures').update({ status: 'archived' }).eq('id', id).eq('owner_uid', USER_ID);
+    const { error } = await sbClient.from('ventures').update({ status: 'archived' }).eq('id', id).eq('owner_uid', USER_ID);
     if (error) throw error;
     await loadVenturesFromSupabase();
     await loadOverviewData();
@@ -5464,7 +5464,7 @@ async function loadVenturesFromSupabase() {
   const el = document.getElementById('ventures-live-list');
   if (!el) return;
   try {
-    const { data, error } = await supabase.from('ventures').select('*').eq('owner_uid', USER_ID).order('created_at', { ascending: false });
+    const { data, error } = await sbClient.from('ventures').select('*').eq('owner_uid', USER_ID).order('created_at', { ascending: false });
     if (error) throw error;
     el.innerHTML = (data || []).length
       ? (data || []).map(v => `<div class="item-row"><span class="badge ${v.status === 'active' ? 'b-track' : v.status === 'planning' ? 'b-watch' : 'b-urgent'}">${v.status}</span><span style="flex:1;font-size:12px">${v.name}${v.category ? ' · ' + v.category : ''}</span><button class="btn" style="font-size:10px" onclick="archiveVenture('${v.id}')">Archive</button></div>`).join('')
@@ -5490,7 +5490,7 @@ function renderEmpirePillars(p) {
 
 async function loadGoalsFromSupabase() {
   try {
-    const { data, error } = await supabase.from('goals').select('*').eq('owner_uid', USER_ID).order('created_at', { ascending: false });
+    const { data, error } = await sbClient.from('goals').select('*').eq('owner_uid', USER_ID).order('created_at', { ascending: false });
     if (error) throw error;
     goals = data || [];
     renderGoals();
@@ -5523,7 +5523,7 @@ async function openAddGoalModal() {
   const deadline = prompt('Deadline (YYYY-MM-DD)', '') || null;
   const data_source = prompt('Data source (manual or table:key)', 'manual') || 'manual';
   try {
-    const { error } = await supabase.from('goals').insert({ owner_uid: USER_ID, title, category, target_value, unit, deadline, data_source, current_value: 0 });
+    const { error } = await sbClient.from('goals').insert({ owner_uid: USER_ID, title, category, target_value, unit, deadline, data_source, current_value: 0 });
     if (error) throw error;
     await loadGoalsFromSupabase();
   } catch (err) {
@@ -5533,7 +5533,7 @@ async function openAddGoalModal() {
 
 async function deleteGoal(goalId) {
   try {
-    const { error } = await supabase.from('goals').delete().eq('id', goalId);
+    const { error } = await sbClient.from('goals').delete().eq('id', goalId);
     if (error) throw error;
     await loadGoalsFromSupabase();
   } catch (err) {
@@ -5544,7 +5544,7 @@ async function deleteGoal(goalId) {
 async function updateGoalManualValue(goalId, value) {
   const current_value = parseFloat(value || '0') || 0;
   try {
-    const { error } = await supabase.from('goals').update({ current_value }).eq('id', goalId).eq('owner_uid', USER_ID);
+    const { error } = await sbClient.from('goals').update({ current_value }).eq('id', goalId).eq('owner_uid', USER_ID);
     if (error) throw error;
     goals = goals.map(g => g.id === goalId ? { ...g, current_value } : g);
     renderGoals();
@@ -5560,9 +5560,9 @@ async function handleVisionImageUpload(event) {
   if (!file) return;
   const path = `${USER_ID}/${Date.now()}-${file.name}`.replace(/\s+/g, '-');
   try {
-    const { error: uploadError } = await supabase.storage.from('vision-board').upload(path, file, { upsert: false });
+    const { error: uploadError } = await sbClient.storage.from('vision-board').upload(path, file, { upsert: false });
     if (uploadError) throw uploadError;
-    const { error } = await supabase.from('vision_board').insert({ owner_uid: USER_ID, storage_path: path, caption: file.name });
+    const { error } = await sbClient.from('vision_board').insert({ owner_uid: USER_ID, storage_path: path, caption: file.name });
     if (error) throw error;
     await loadVisionBoardFromSupabase();
   } catch (err) {
@@ -5576,14 +5576,14 @@ async function loadVisionBoardFromSupabase() {
   const el = document.getElementById('vision-board-uploaded');
   if (!el) return;
   try {
-    const { data, error } = await supabase.from('vision_board').select('*').eq('owner_uid', USER_ID).order('position_order', { ascending: true });
+    const { data, error } = await sbClient.from('vision_board').select('*').eq('owner_uid', USER_ID).order('position_order', { ascending: true });
     if (error) throw error;
     if (!data?.length) {
       el.innerHTML = '';
       return;
     }
     el.innerHTML = data.map(item => {
-      const { data: urlData } = supabase.storage.from('vision-board').getPublicUrl(item.storage_path);
+      const { data: urlData } = sbClient.storage.from('vision-board').getPublicUrl(item.storage_path);
       return `<div class="mb-tile" draggable="true"><div class="mb-visual" style="background-image:url('${urlData.publicUrl}');background-size:cover;background-position:center"></div><div class="mb-overlay">${item.caption || 'Vision'}</div></div>`;
     }).join('');
   } catch (err) {
@@ -5599,9 +5599,9 @@ async function handleDesignUpload(event) {
   const activeTab = document.querySelector('#s-designs .design-tab-btn.active')?.dataset.tab || 'masemula';
   const path = `${activeTab}/${USER_ID}-${Date.now()}-${file.name}`.replace(/\s+/g, '-');
   try {
-    const { error: uploadError } = await supabase.storage.from('designs').upload(path, file, { upsert: false });
+    const { error: uploadError } = await sbClient.storage.from('designs').upload(path, file, { upsert: false });
     if (uploadError) throw uploadError;
-    const { error } = await supabase.from('designs').insert({ owner_uid: USER_ID, storage_path: path, tab_category: activeTab, title: file.name, version: 1 });
+    const { error } = await sbClient.from('designs').insert({ owner_uid: USER_ID, storage_path: path, tab_category: activeTab, title: file.name, version: 1 });
     if (error) throw error;
     await loadDesignsFromSupabase();
   } catch (err) {
@@ -5625,7 +5625,7 @@ async function loadDesignsFromSupabase() {
   });
 
   // Fetch uploaded designs from Supabase and append them to the matching tab panels
-  if (!syncEnabled || !USER_ID || !supabase) return;
+  if (!syncEnabled || !USER_ID || !sbClient) return;
   try {
     const { data, error } = await supabase
       .from('designs')
@@ -5650,7 +5650,7 @@ async function loadDesignsFromSupabase() {
       // Remove previously appended cloud cards to avoid duplicates on re-load
       grid.querySelectorAll('.design-card[data-cloud]').forEach(c => c.remove());
       rows.forEach(row => {
-        const { data: publicUrlData } = supabase.storage.from('designs').getPublicUrl(row.storage_path);
+        const { data: publicUrlData } = sbClient.storage.from('designs').getPublicUrl(row.storage_path);
         const url = publicUrlData?.publicUrl || '';
         const card = document.createElement('div');
         card.className = 'design-card';
@@ -5677,7 +5677,7 @@ async function loadDesignsFromSupabase() {
 
 async function loadContentAnalyticsFromSupabase() {
   try {
-    const { data, error } = await supabase.from('content_analytics').select('*').eq('owner_uid', USER_ID).order('recorded_at', { ascending: false }).limit(100);
+    const { data, error } = await sbClient.from('content_analytics').select('*').eq('owner_uid', USER_ID).order('recorded_at', { ascending: false }).limit(100);
     if (error) throw error;
     const grouped = {};
     (data || []).forEach((row) => {
@@ -5708,7 +5708,7 @@ async function addContentMetric() {
   if (!metric_key) return;
   const metric_value = Number(prompt('Metric value', '0') || 0);
   try {
-    const { error } = await supabase.from('content_analytics').insert({ owner_uid: USER_ID, platform, metric_key, metric_value, period_date: new Date().toISOString().slice(0, 10) });
+    const { error } = await sbClient.from('content_analytics').insert({ owner_uid: USER_ID, platform, metric_key, metric_value, period_date: new Date().toISOString().slice(0, 10) });
     if (error) throw error;
     await loadContentAnalyticsFromSupabase();
   } catch (err) {
@@ -5718,7 +5718,7 @@ async function addContentMetric() {
 
 async function setupSupabaseRealtime() {
   try {
-    const channel = supabase.channel('estate-live')
+    const channel = sbClient.channel('estate-live')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'habits_log', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadHabitsWeekFromSupabase(); await loadOverviewData(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'goals', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadGoalsFromSupabase(); await loadOverviewData(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadOverviewData(); })
@@ -5742,13 +5742,13 @@ function wireAgentOverviewButtons() {
       if (!desc) return;
       card.style.opacity = '0.6';
       try {
-        await supabase.functions.invoke('trigger-github-action', {
+        await sbClient.functions.invoke('trigger-github-action', {
           body: {
             workflowFile: 'agent-weekly-review.yml',
             context: JSON.stringify({ agent, task: desc, source: 'overview-card' })
           }
         });
-        await supabase.from('agent_logs').insert({ owner_uid: USER_ID, agent_name: agent, status: 'running', output: { task: desc } });
+        await sbClient.from('agent_logs').insert({ owner_uid: USER_ID, agent_name: agent, status: 'running', output: { task: desc } });
         showToast(`${agent} dispatched`);
       } catch (err) {
         showToast('Failed to dispatch agent', true);
@@ -5762,7 +5762,7 @@ function wireAgentOverviewButtons() {
 async function loadHabitsWeekFromSupabase() {
   try {
     const weekStart = new Date(Date.now() - ((new Date().getDay() + 6) % 7) * 86400000).toISOString().slice(0, 10);
-    const { data, error } = await supabase.from('habits_log').select('habit_key,logged_date,completed,notes').eq('owner_uid', USER_ID).gte('logged_date', weekStart);
+    const { data, error } = await sbClient.from('habits_log').select('habit_key,logged_date,completed,notes').eq('owner_uid', USER_ID).gte('logged_date', weekStart);
     if (error) throw error;
     weekData = emptyWeek();
     (data || []).forEach(row => {
@@ -5787,7 +5787,7 @@ async function syncHabitToSupabase(habitKey, dayOffset, completed, notes = null)
   date.setDate(date.getDate() - ((getTodayIndex() - dayOffset + 7) % 7));
   const logged_date = date.toISOString().slice(0, 10);
   try {
-    const { error } = await supabase.from('habits_log').upsert(
+    const { error } = await sbClient.from('habits_log').upsert(
       { owner_uid: USER_ID, habit_key: habitKey, logged_date, completed, notes },
       { onConflict: 'owner_uid,habit_key,logged_date' }
     );
@@ -5800,12 +5800,12 @@ async function syncHabitToSupabase(habitKey, dayOffset, completed, notes = null)
 async function openWeeklyHistory(type) {
   try {
     if (type === 'gym') {
-      const { data, error } = await supabase.from('habits_log').select('logged_date,completed').eq('owner_uid', USER_ID).eq('habit_key', 'gym').order('logged_date', { ascending: false }).limit(12);
+      const { data, error } = await sbClient.from('habits_log').select('logged_date,completed').eq('owner_uid', USER_ID).eq('habit_key', 'gym').order('logged_date', { ascending: false }).limit(12);
       if (error) throw error;
       alert((data || []).map(r => `${r.logged_date}: ${r.completed ? 'done' : 'missed'}`).join('\n') || 'No history yet');
       return;
     }
-    const { data, error } = await supabase.from('focus_sessions').select('started_at,duration_minutes').eq('owner_uid', USER_ID).eq('type', 'deep_work').order('started_at', { ascending: false }).limit(12);
+    const { data, error } = await sbClient.from('focus_sessions').select('started_at,duration_minutes').eq('owner_uid', USER_ID).eq('type', 'deep_work').order('started_at', { ascending: false }).limit(12);
     if (error) throw error;
     alert((data || []).map(r => `${new Date(r.started_at).toLocaleDateString('en-ZA')}: ${(Number(r.duration_minutes) / 60).toFixed(1)}h`).join('\n') || 'No history yet');
   } catch (err) {
@@ -5815,4 +5815,6 @@ async function openWeeklyHistory(type) {
 </script>
 
 </html>
+
+
 
