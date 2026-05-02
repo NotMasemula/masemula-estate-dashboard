@@ -2073,6 +2073,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 const ESTATE_ENV = window.__ESTATE_ENV || {};
 const DEFAULT_SUPABASE_URL = 'https://romytadgdnpphqzlseaa.supabase.co';
 const DEFAULT_SUPABASE_KEY = 'sb_publishable_ggs07ym7m21ZKiTwQdB94g_lFACej5D';
+const ALLOWED_LOGIN_EMAIL = 'masemula.ntobeko@icloud.com';
 const SUPABASE_URL = ESTATE_ENV.SUPABASE_URL || window.SUPABASE_URL || window.supabaseUrl || DEFAULT_SUPABASE_URL;
 const SUPABASE_KEY = ESTATE_ENV.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY || window.supabaseAnonKey || window.supabaseKey || DEFAULT_SUPABASE_KEY;
 let sbClient = null;
@@ -2119,6 +2120,10 @@ async function handleLoginSubmit(event) {
   const password = document.getElementById('auth-password').value;
   const errorEl = document.getElementById('auth-error');
   errorEl.textContent = '';
+  if (email.toLowerCase() !== ALLOWED_LOGIN_EMAIL.toLowerCase()) {
+    errorEl.textContent = 'Access denied.';
+    return;
+  }
   try {
     const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
     if (error || !data?.session) {
@@ -2159,6 +2164,13 @@ async function bootstrapAuth() {
   const { data: { session } } = await sbClient.auth.getSession();
   if (!session) {
     showAuthScreen(true);
+    return;
+  }
+  if ((session.user?.email || '').toLowerCase() !== ALLOWED_LOGIN_EMAIL.toLowerCase()) {
+    await sbClient.auth.signOut();
+    showAuthScreen(true);
+    const errorEl = document.getElementById('auth-error');
+    if (errorEl) errorEl.textContent = 'Access denied.';
     return;
   }
   authSession = session;
