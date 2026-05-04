@@ -403,6 +403,30 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
   </div>
 </div>
 <div id="toast"></div>
+<div id="capture-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9998;align-items:center;justify-content:center;padding:16px">
+  <div style="width:100%;max-width:460px;background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="card-title" style="margin-bottom:0">Quick capture</div>
+      <button class="btn" onclick="closeCaptureModal()">Close</button>
+    </div>
+    <input id="capture-text" class="ledger-input" placeholder="What do you need to capture?">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <select id="capture-type" class="ledger-input">
+        <option value="task">Task</option>
+        <option value="idea">Idea</option>
+        <option value="finance">Finance</option>
+        <option value="content">Content</option>
+      </select>
+      <select id="capture-priority" class="ledger-input">
+        <option value="high">High</option>
+        <option value="normal" selected>Normal</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+    <input id="capture-amount" class="ledger-input" type="number" step="0.01" placeholder="Amount (optional)">
+    <button class="btn btn-gold" style="width:100%;margin-top:8px" onclick="addInboxItem()">Save to inbox</button>
+  </div>
+</div>
 
 <div id="os" style="display:none">
 <!-- SIDEBAR -->
@@ -490,6 +514,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
         <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <svg id="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
+      <button class="btn" onclick="openCaptureModal()" title="Quick capture">+ Capture</button>
       <button class="btn" onclick="handleSignOut()" title="Sign out">Sign Out</button>
       <span class="status-pill">System Online</span>
       <span class="time-tag" id="live-time"></span>
@@ -528,6 +553,21 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
           </div>
         </div>
       </div>
+      <div class="grid-2 mb-10">
+        <div class="card">
+          <div class="card-title">Daily command center</div>
+          <div id="daily-command-list"></div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+            <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px">Top 3 today</div>
+            <div id="daily-top3-list"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Workflow inbox</div>
+          <div id="workflow-inbox-list"></div>
+          <button class="btn btn-gold" style="width:100%;margin-top:10px" onclick="openCaptureModal()">+ Quick capture</button>
+        </div>
+      </div>
       <div class="grid-2">
         <div class="card">
           <div class="card-title">Estate flags</div>
@@ -546,6 +586,10 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
             <button class="btn btn-gold" style="width:100%;margin-top:8px" onclick="addWeeklyTarget()">Add Weekly Target</button>
           </div>
         </div>
+      </div>
+      <div class="card" style="margin-top:10px">
+        <div class="card-title">Guided checklists</div>
+        <div id="workflow-checklist"></div>
       </div>
       <!-- Agents Overview -->
       <div class="card" style="margin-top:10px">
@@ -618,6 +662,26 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
           </div>
           <textarea id="venture-description" class="ledger-input" placeholder="Description"></textarea>
           <button class="btn btn-gold" style="width:100%" onclick="addVenture()">Add Venture</button>
+        </div>
+        <!-- Venture Health Dashboard -->
+        <div class="card mb-10">
+          <div class="card-title">Venture Health & KPI Dashboard</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Real-time health scores, trends, and critical alerts for all active ventures</div>
+          <div id="venture-health-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:12px"></div>
+          <div style="border-top:0.5px solid var(--border);padding-top:10px">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Update Venture Health</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+              <select id="health-venture" class="ledger-input" style="font-size:11px">
+                <option value="ds">Dropshipping</option>
+                <option value="music">Music</option>
+                <option value="brand">Masemula</option>
+                <option value="events">Events</option>
+              </select>
+              <input type="number" id="health-score" class="ledger-input" placeholder="Health Score (0-100)" min="0" max="100" style="font-size:11px">
+              <input type="text" id="health-notes" class="ledger-input" placeholder="Status notes" style="font-size:11px">
+              <button class="btn" style="font-size:11px;padding:6px" onclick="updateVentureHealth()">Update</button>
+            </div>
+          </div>
         </div>
         <div class="grid-2 mb-10">
           <div class="vc vc-interactive" onclick="showVentureDetails('ds')">
@@ -999,6 +1063,27 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
           <div class="stat"><div class="stat-n" id="fin-total-in">R 0</div><div class="stat-l">Total income</div></div>
           <div class="stat"><div class="stat-n stat-neg" id="fin-total-out">R 0</div><div class="stat-l">Total expenses</div></div>
           <div class="stat"><div class="stat-n stat-pos" id="fin-net">R 0</div><div class="stat-l">Net position</div></div>
+        </div>
+        <div class="card mb-10">
+          <div class="card-title">Cashflow Forecast & Budget Variance</div>
+          <div class="grid-4 mb-10" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+            <div class="stat"><div class="stat-n" id="forecast-current-cash">R 0</div><div class="stat-l">Current cash base</div></div>
+            <div class="stat"><div class="stat-n" id="forecast-daily-trend">R 0</div><div class="stat-l">Avg daily trend</div></div>
+            <div class="stat"><div class="stat-n" id="forecast-30">R 0</div><div class="stat-l">Projected 30 days</div></div>
+            <div class="stat"><div class="stat-n" id="forecast-60">R 0</div><div class="stat-l">Projected 60 days</div></div>
+          </div>
+          <div class="grid-2" style="margin-bottom:10px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Monthly income target</div>
+              <input class="ledger-input" id="budget-target-income" type="number" placeholder="R 0" onchange="updateFinanceForecastTargets()">
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Monthly expense target</div>
+              <input class="ledger-input" id="budget-target-expense" type="number" placeholder="R 0" onchange="updateFinanceForecastTargets()">
+            </div>
+          </div>
+          <div id="budget-variance-list" style="font-size:12px"></div>
+          <div id="finance-anomalies-list" style="margin-top:10px"></div>
         </div>
         <div class="card mb-10">
           <div class="card-title">DS budget breakdown</div>
@@ -2244,7 +2329,12 @@ async function syncToCloud(updateStatus = true) {
       academicModules: loadData('academicModules', []),
       personalProjects: loadData('personalProjects', []),
       recurringTransactions: loadData('recurringTransactions', []),
+      financeForecastTargets: loadData('financeForecastTargets', {}),
       rs3Income: loadData('rs3Income', ''),
+      workflowInbox: loadData('workflowInbox', []),
+      dailyTop3: loadData('dailyTop3', {}),
+      dailyWorkflow: loadData('dailyWorkflow', {}),
+      ventureHealth: loadData('ventureHealth', {}),
       theme: loadData('theme', 'light'),
       syncedAt: new Date().toISOString()
     };
@@ -2309,7 +2399,8 @@ async function loadFromCloud(showStatus = true) {
     // Hydrate localStorage and cloudStore
     const keys = ['journalDiary', 'financeLedger', 'savingsGoals', 'emotionLog', 'investments',
                   'agentTasks', 'agentHistory', 'accountBalances', 'moduleMarks', 'contentStats',
-                  'moodboardTiles', 'academicModules', 'personalProjects', 'recurringTransactions', 'rs3Income', 'theme'];
+                  'moodboardTiles', 'academicModules', 'personalProjects', 'recurringTransactions', 'financeForecastTargets', 'rs3Income',
+                  'workflowInbox', 'dailyTop3', 'dailyWorkflow', 'ventureHealth', 'theme'];
     
     for (const key of keys) {
       if (cloudData[key] !== undefined) {
@@ -2398,6 +2489,7 @@ function reloadSection(key, value) {
       break;
     case 'financeLedger':
       if (typeof renderLedger === 'function') renderLedger();
+      if (typeof renderFinanceForecasting === 'function') renderFinanceForecasting();
       break;
     case 'savingsGoals':
       if (typeof renderSavingsGoals === 'function') renderSavingsGoals();
@@ -2417,6 +2509,7 @@ function reloadSection(key, value) {
       break;
     case 'accountBalances':
       if (typeof renderAccountBalances === 'function') renderAccountBalances();
+      if (typeof renderFinanceForecasting === 'function') renderFinanceForecasting();
       break;
     case 'personalProjects':
       if (typeof renderPersonalProjects === 'function') renderPersonalProjects();
@@ -2424,9 +2517,27 @@ function reloadSection(key, value) {
     case 'recurringTransactions':
       if (typeof renderRecurringTransactions === 'function') renderRecurringTransactions();
       if (typeof checkPendingRecurring === 'function') checkPendingRecurring();
+      if (typeof renderFinanceForecasting === 'function') renderFinanceForecasting();
+      break;
+    case 'financeForecastTargets':
+      if (typeof renderFinanceForecasting === 'function') renderFinanceForecasting();
+      break;
+    case 'liveBalanceData':
+      if (typeof renderLiveBalance === 'function') renderLiveBalance();
+      if (typeof renderFinanceForecasting === 'function') renderFinanceForecasting();
       break;
     case 'theme':
       applyTheme(value === 'dark');
+      break;
+    case 'workflowInbox':
+    case 'dailyTop3':
+    case 'dailyWorkflow':
+      if (typeof renderWorkflowInbox === 'function') renderWorkflowInbox();
+      if (typeof renderWorkflowChecklist === 'function') renderWorkflowChecklist();
+      if (typeof renderDailyCommandCenter === 'function') renderDailyCommandCenter();
+      break;
+    case 'ventureHealth':
+      if (typeof renderVentureHealth === 'function') renderVentureHealth();
       break;
     default:
       // Silently ignore unknown keys
@@ -2446,6 +2557,11 @@ function renderAllSections() {
     if (typeof renderPersonalProjects === 'function') renderPersonalProjects();
     if (typeof renderRecurringTransactions === 'function') renderRecurringTransactions();
     if (typeof checkPendingRecurring === 'function') checkPendingRecurring();
+    if (typeof renderFinanceForecasting === 'function') renderFinanceForecasting();
+    if (typeof renderVentureHealth === 'function') renderVentureHealth();
+    if (typeof renderWorkflowInbox === 'function') renderWorkflowInbox();
+    if (typeof renderWorkflowChecklist === 'function') renderWorkflowChecklist();
+    if (typeof renderDailyCommandCenter === 'function') renderDailyCommandCenter();
     console.log('🎨 UI rendered');
   }, 100);
 }
@@ -2787,8 +2903,183 @@ function showVentureDetails(id){
   panel.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
+// ─── VENTURE HEALTH SYSTEM ───
+let ventureHealth = loadData('ventureHealth', {
+  ds: { score: 75, trend: 'up', notes: 'Strong sales momentum, margin tracking well' },
+  music: { score: 60, trend: 'neutral', notes: 'Releases on schedule, waiting on SAMRO/SAMPRA' },
+  brand: { score: 45, trend: 'up', notes: 'In collection design phase, suppliers sourced' },
+  events: { score: 55, trend: 'neutral', notes: 'Kea planning first event, support infrastructure ready' }
+});
+
+function renderVentureHealth() {
+  const container = document.getElementById('venture-health-summary');
+  if (!container) return;
+  
+  const ventures = ['ds', 'music', 'brand', 'events'];
+  const names = { ds: 'Dropshipping', music: 'Music', brand: 'Masemula', events: 'Events' };
+  
+  let html = ventures.map(id => {
+    const health = ventureHealth[id] || { score: 50, trend: 'neutral', notes: '' };
+    const color = health.score >= 70 ? 'var(--green)' : health.score >= 50 ? 'var(--gold)' : 'var(--warm)';
+    const trendIcon = health.trend === 'up' ? '📈' : health.trend === 'down' ? '📉' : '→';
+    return `
+      <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:8px;padding:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:500">${names[id]}</div>
+          <span style="font-size:12px">${trendIcon}</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:6px">
+          <div style="font-size:24px;font-weight:600;color:${color}">${health.score}</div>
+          <div style="font-size:10px;color:var(--muted)">/100</div>
+        </div>
+        <div style="font-size:9px;color:var(--muted);line-height:1.5">${health.notes}</div>
+      </div>
+    `;
+  }).join('');
+  
+  container.innerHTML = html;
+}
+
+function updateVentureHealth() {
+  const id = document.getElementById('health-venture').value;
+  const score = parseInt(document.getElementById('health-score').value) || 50;
+  const notes = document.getElementById('health-notes').value;
+  
+  if (score < 0 || score > 100) {
+    alert('Health score must be between 0 and 100');
+    return;
+  }
+  
+  const prevScore = ventureHealth[id]?.score || 50;
+  const trend = score > prevScore ? 'up' : score < prevScore ? 'down' : 'neutral';
+  
+  ventureHealth[id] = { score, trend, notes };
+  
+  saveData('ventureHealth', ventureHealth);
+  renderVentureHealth();
+  
+  document.getElementById('health-score').value = '';
+  document.getElementById('health-notes').value = '';
+}
+
 // ─── TODAY PRIORITIES ───
 let todayPriorities = [];
+let workflowInbox = loadData('workflowInbox', []);
+let dailyTop3 = loadData('dailyTop3', {});
+let dailyWorkflow = loadData('dailyWorkflow', {});
+const WORKFLOW_STEPS = [
+  { id: 'startup-review', label: 'Review daily command center', phase: 'start' },
+  { id: 'top3-locked', label: 'Lock Top 3 priorities', phase: 'start' },
+  { id: 'finance-check', label: 'Check cash and due expenses', phase: 'run' },
+  { id: 'priority-work', label: 'Complete at least 1 Top 3 item', phase: 'run' },
+  { id: 'shutdown-journal', label: 'Journal shutdown reflection', phase: 'close' },
+  { id: 'next-day-plan', label: 'Queue tomorrow priorities', phase: 'close' }
+];
+
+function getIsoDateKey(date = new Date()) {
+  return date.toISOString().slice(0, 10);
+}
+
+function getDailyWorkflowState() {
+  const key = getIsoDateKey();
+  if (!dailyWorkflow[key]) {
+    dailyWorkflow[key] = {};
+  }
+  return dailyWorkflow[key];
+}
+
+function getDailyTop3State() {
+  const key = getIsoDateKey();
+  if (!Array.isArray(dailyTop3[key])) {
+    dailyTop3[key] = [];
+  }
+  return dailyTop3[key];
+}
+
+function openCaptureModal() {
+  const modal = document.getElementById('capture-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  const text = document.getElementById('capture-text');
+  if (text) text.focus();
+}
+
+function closeCaptureModal() {
+  const modal = document.getElementById('capture-modal');
+  if (!modal) return;
+  modal.style.display = 'none';
+}
+
+async function addInboxItem() {
+  const textEl = document.getElementById('capture-text');
+  const typeEl = document.getElementById('capture-type');
+  const priorityEl = document.getElementById('capture-priority');
+  const amountEl = document.getElementById('capture-amount');
+  const text = (textEl?.value || '').trim();
+  if (!text) return showToast('Capture text required', true);
+
+  const item = {
+    id: 'inb_' + Date.now(),
+    text,
+    type: typeEl?.value || 'task',
+    priority: priorityEl?.value || 'normal',
+    amount: parseFloat(amountEl?.value || '0') || 0,
+    status: 'open',
+    createdAt: new Date().toISOString()
+  };
+
+  workflowInbox.unshift(item);
+  await saveData('workflowInbox', workflowInbox);
+  if (textEl) textEl.value = '';
+  if (amountEl) amountEl.value = '';
+  closeCaptureModal();
+  renderWorkflowInbox();
+  renderDailyCommandCenter();
+}
+
+async function markInboxDone(id) {
+  workflowInbox = workflowInbox.map(item => item.id === id ? { ...item, status: 'done', doneAt: new Date().toISOString() } : item);
+  await saveData('workflowInbox', workflowInbox);
+  renderWorkflowInbox();
+  renderDailyCommandCenter();
+}
+
+async function deleteInboxItem(id) {
+  workflowInbox = workflowInbox.filter(item => item.id !== id);
+  const key = getIsoDateKey();
+  dailyTop3[key] = (dailyTop3[key] || []).filter(x => x !== id);
+  await saveData('dailyTop3', dailyTop3);
+  await saveData('workflowInbox', workflowInbox);
+  renderWorkflowInbox();
+  renderDailyCommandCenter();
+}
+
+async function promoteInboxItem(id) {
+  const top3 = getDailyTop3State();
+  if (top3.includes(id)) return;
+  if (top3.length >= 3) return showToast('Top 3 is full for today', true);
+  top3.push(id);
+  await saveData('dailyTop3', dailyTop3);
+  renderWorkflowInbox();
+  renderDailyCommandCenter();
+}
+
+async function removeTop3Item(id) {
+  const key = getIsoDateKey();
+  dailyTop3[key] = (dailyTop3[key] || []).filter(x => x !== id);
+  await saveData('dailyTop3', dailyTop3);
+  renderWorkflowInbox();
+  renderDailyCommandCenter();
+}
+
+async function toggleWorkflowStep(stepId) {
+  const state = getDailyWorkflowState();
+  state[stepId] = !state[stepId];
+  await saveData('dailyWorkflow', dailyWorkflow);
+  renderWorkflowChecklist();
+  renderDailyCommandCenter();
+}
+
 function renderTodayPriorities() {
   const tl = document.getElementById('today-list');
   if (!tl) return;
@@ -2797,6 +3088,81 @@ function renderTodayPriorities() {
     return;
   }
   tl.innerHTML = todayPriorities.map((g) => `<div class="item-row"><div style="flex:1;font-size:12px;font-weight:300">${g.t}</div><span style="font-size:9px;color:var(--accent)">${g.cat}</span></div>`).join('');
+  renderDailyCommandCenter();
+}
+
+function renderWorkflowInbox() {
+  workflowInbox = loadData('workflowInbox', workflowInbox || []);
+  const el = document.getElementById('workflow-inbox-list');
+  if (!el) return;
+  const openItems = workflowInbox.filter(item => item.status !== 'done');
+  if (!openItems.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted)">Inbox clear. Capture something to keep momentum.</div>';
+    return;
+  }
+  el.innerHTML = openItems.slice(0, 8).map(item => `
+    <div class="item-row" style="align-items:flex-start">
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:300">${item.text}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">${item.type} · ${item.priority}${item.amount ? ` · R ${item.amount.toLocaleString('en-ZA')}` : ''}</div>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button class="btn" style="font-size:9px;padding:2px 6px" onclick="promoteInboxItem('${item.id}')">Top 3</button>
+        <button class="btn" style="font-size:9px;padding:2px 6px" onclick="markInboxDone('${item.id}')">Done</button>
+        <button class="btn-del" onclick="deleteInboxItem('${item.id}')">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderWorkflowChecklist() {
+  dailyWorkflow = loadData('dailyWorkflow', dailyWorkflow || {});
+  const el = document.getElementById('workflow-checklist');
+  if (!el) return;
+  const state = getDailyWorkflowState();
+  el.innerHTML = WORKFLOW_STEPS.map(step => `
+    <div class="item-row" style="padding:8px 0">
+      <div class="check${state[step.id] ? ' done' : ''}" onclick="toggleWorkflowStep('${step.id}')">${state[step.id] ? '✓' : ''}</div>
+      <div style="flex:1;font-size:12px${state[step.id] ? ';text-decoration:line-through;opacity:0.65' : ''}">${step.label}</div>
+      <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">${step.phase}</span>
+    </div>
+  `).join('');
+}
+
+function renderDailyCommandCenter() {
+  dailyTop3 = loadData('dailyTop3', dailyTop3 || {});
+  workflowInbox = loadData('workflowInbox', workflowInbox || []);
+  dailyWorkflow = loadData('dailyWorkflow', dailyWorkflow || {});
+  const listEl = document.getElementById('daily-command-list');
+  const top3El = document.getElementById('daily-top3-list');
+  if (!listEl || !top3El) return;
+
+  const openCount = workflowInbox.filter(item => item.status !== 'done').length;
+  const overdueCount = workflowInbox.filter(item => item.status !== 'done' && ((Date.now() - new Date(item.createdAt).getTime()) > 86400000)).length;
+  const checklistState = getDailyWorkflowState();
+  const checklistDone = WORKFLOW_STEPS.filter(step => checklistState[step.id]).length;
+
+  listEl.innerHTML = `
+    <div class="item-row"><span style="font-size:12px">Inbox open</span><span style="font-size:12px;font-weight:500">${openCount}</span></div>
+    <div class="item-row"><span style="font-size:12px">Needs attention (&gt;24h)</span><span style="font-size:12px;font-weight:500">${overdueCount}</span></div>
+    <div class="item-row"><span style="font-size:12px">Checklist progress</span><span style="font-size:12px;font-weight:500">${checklistDone}/${WORKFLOW_STEPS.length}</span></div>
+    <div class="item-row"><span style="font-size:12px">Routine + due priorities</span><span style="font-size:12px;font-weight:500">${todayPriorities.length}</span></div>
+  `;
+
+  const todayTop3Ids = getDailyTop3State();
+  const todayTop3Items = todayTop3Ids
+    .map(id => workflowInbox.find(item => item.id === id))
+    .filter(Boolean);
+
+  top3El.innerHTML = todayTop3Items.length
+    ? todayTop3Items.map((item, index) => `
+      <div class="item-row">
+        <span style="font-size:10px;color:var(--muted);width:16px">${index + 1}.</span>
+        <span style="flex:1;font-size:12px">${item.text}</span>
+        <button class="btn-del" onclick="removeTop3Item('${item.id}')">×</button>
+      </div>
+    `).join('')
+    : '<div style="font-size:12px;color:var(--muted)">No Top 3 set yet. Promote items from workflow inbox.</div>';
 }
 
 // ─── GOALS ───
@@ -3451,6 +3817,7 @@ renderAllChecklists();
 let ledger=loadData('financeLedger', []);
 let savingsGoals=loadData('savingsGoals', []);
 let recurringTransactions=loadData('recurringTransactions', []);
+let financeForecastTargets=loadData('financeForecastTargets', {monthlyIncome:0,monthlyExpense:0});
 
 async function addLedgerEntry(type){
   const descEl=document.getElementById(type+'-desc');
@@ -3504,6 +3871,161 @@ function updateFinanceTotals(){
   if(netEl){
     netEl.textContent='R '+net.toLocaleString();
     netEl.className='stat-n '+(net>=0?'stat-pos':'stat-neg');
+  }
+  renderFinanceForecasting();
+}
+
+function getCurrentCashBase(){
+  if (liveBalanceData && Array.isArray(liveBalanceData.accounts) && liveBalanceData.accounts.length > 0) {
+    return liveBalanceData.accounts.reduce((sum, acc) => {
+      const bal = Number(acc?.availableBalance ?? acc?.balance ?? 0);
+      return sum + (isFinite(bal) ? bal : 0);
+    }, 0);
+  }
+  if (accountBalances && typeof accountBalances === 'object') {
+    return Number(accountBalances.primary || 0) + Number(accountBalances.business || 0) + Number(accountBalances.savings || 0);
+  }
+  return 0;
+}
+
+function getLedgerDailyTrend(days = 30){
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  const recent = ledger.filter(e => e && e.date && new Date(e.date) >= cutoff);
+  if (recent.length === 0) return 0;
+  const net = recent.reduce((sum, e) => sum + (e.type === 'income' ? Number(e.amt || 0) : -Number(e.amt || 0)), 0);
+  const oldestMs = recent.reduce((min, e) => {
+    const ms = new Date(e.date).getTime();
+    return isNaN(ms) ? min : Math.min(min, ms);
+  }, Date.now());
+  const spanDays = Math.max(1, Math.ceil((Date.now() - oldestMs) / 86400000) + 1);
+  return net / spanDays;
+}
+
+function getStartOfWeek(date){
+  const d = new Date(date);
+  const day = d.getDay() === 0 ? 7 : d.getDay();
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() - day + 1);
+  return d.getTime();
+}
+
+function estimateRecurringImpact(daysAhead = 30){
+  if (!Array.isArray(recurringTransactions) || recurringTransactions.length === 0) return 0;
+  const now = new Date();
+  const total = recurringTransactions.reduce((sum, r) => {
+    const amt = Number(r?.amt || 0);
+    if (!amt) return sum;
+    let occurrences = 0;
+    const lastProcessed = r.lastProcessed ? new Date(r.lastProcessed) : null;
+    for (let i = 0; i <= daysAhead; i++) {
+      const d = new Date(now);
+      d.setHours(0,0,0,0);
+      d.setDate(d.getDate() + i);
+      let isOccurrence = false;
+      if (r.freq === 'daily') {
+        isOccurrence = true;
+      } else if (r.freq === 'weekly') {
+        const day = d.getDay() === 0 ? 7 : d.getDay();
+        isOccurrence = day === Number(r.day || 0);
+      } else if (r.freq === 'monthly') {
+        isOccurrence = d.getDate() === Number(r.day || 0);
+      }
+      if (!isOccurrence) continue;
+      if (lastProcessed && !isNaN(lastProcessed.getTime())) {
+        if (r.freq === 'daily' && d.toDateString() === lastProcessed.toDateString()) continue;
+        if (r.freq === 'weekly' && getStartOfWeek(d) === getStartOfWeek(lastProcessed)) continue;
+        if (r.freq === 'monthly' && d.getMonth() === lastProcessed.getMonth() && d.getFullYear() === lastProcessed.getFullYear()) continue;
+      }
+      occurrences++;
+    }
+    const signed = (r.type === 'income' ? 1 : -1) * amt * occurrences;
+    return sum + signed;
+  }, 0);
+  return total;
+}
+
+async function updateFinanceForecastTargets(){
+  const incomeEl = document.getElementById('budget-target-income');
+  const expenseEl = document.getElementById('budget-target-expense');
+  financeForecastTargets = {
+    monthlyIncome: Number(incomeEl?.value || 0),
+    monthlyExpense: Number(expenseEl?.value || 0)
+  };
+  await saveData('financeForecastTargets', financeForecastTargets);
+  renderFinanceForecasting();
+}
+
+function renderFinanceForecasting(){
+  const currentCash = getCurrentCashBase();
+  const dailyTrend = getLedgerDailyTrend(30);
+  const recurring30 = estimateRecurringImpact(30);
+  const recurring60 = estimateRecurringImpact(60);
+  const forecast30 = currentCash + (dailyTrend * 30) + recurring30;
+  const forecast60 = currentCash + (dailyTrend * 60) + recurring60;
+
+  const setText = (id, value, positiveClass = true) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = fmtCurrency(value);
+    if (positiveClass) el.className = 'stat-n ' + (value >= 0 ? 'stat-pos' : 'stat-neg');
+  };
+
+  setText('forecast-current-cash', currentCash, false);
+  setText('forecast-daily-trend', dailyTrend);
+  setText('forecast-30', forecast30);
+  setText('forecast-60', forecast60);
+
+  const targets = loadData('financeForecastTargets', financeForecastTargets || {});
+  financeForecastTargets = {
+    monthlyIncome: Number(targets?.monthlyIncome || 0),
+    monthlyExpense: Number(targets?.monthlyExpense || 0)
+  };
+  const incomeInput = document.getElementById('budget-target-income');
+  const expenseInput = document.getElementById('budget-target-expense');
+  if (incomeInput && document.activeElement !== incomeInput) incomeInput.value = financeForecastTargets.monthlyIncome || '';
+  if (expenseInput && document.activeElement !== expenseInput) expenseInput.value = financeForecastTargets.monthlyExpense || '';
+
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0,0,0,0);
+  const monthlyEntries = ledger.filter(e => e?.date && new Date(e.date) >= monthStart);
+  const actualIncome = monthlyEntries.filter(e => e.type === 'income').reduce((s,e)=>s+Number(e.amt||0),0);
+  const actualExpense = monthlyEntries.filter(e => e.type === 'expense').reduce((s,e)=>s+Number(e.amt||0),0);
+  const targetIncome = Number(financeForecastTargets.monthlyIncome || 0);
+  const targetExpense = Number(financeForecastTargets.monthlyExpense || 0);
+  const incomeVariance = actualIncome - targetIncome;
+  const expenseVariance = actualExpense - targetExpense;
+  const varianceEl = document.getElementById('budget-variance-list');
+  if (varianceEl) {
+    varianceEl.innerHTML = `
+      <div class="prog-row"><div class="prog-label">Income actual vs target</div><div class="prog-pct">${fmtCurrency(actualIncome)} / ${fmtCurrency(targetIncome)}</div></div>
+      <div class="prog-row"><div class="prog-label">Income variance</div><div class="prog-pct" style="color:${incomeVariance>=0?'var(--green)':'var(--red)'}">${incomeVariance>=0?'+':''}${fmtCurrency(incomeVariance)}</div></div>
+      <div class="prog-row"><div class="prog-label">Expense actual vs target</div><div class="prog-pct">${fmtCurrency(actualExpense)} / ${fmtCurrency(targetExpense)}</div></div>
+      <div class="prog-row"><div class="prog-label">Expense variance</div><div class="prog-pct" style="color:${expenseVariance<=0?'var(--green)':'var(--red)'}">${expenseVariance<=0?'':''}+${fmtCurrency(expenseVariance).replace(/^R\s/,'R ')}</div></div>
+    `;
+  }
+
+  const anomalies = [];
+  const recentExpenses = ledger
+    .filter(e => e?.type === 'expense' && e?.date && new Date(e.date) >= new Date(Date.now() - 30 * 86400000))
+    .map(e => Number(e.amt || 0))
+    .filter(v => v > 0);
+  const avgExpense = recentExpenses.length ? recentExpenses.reduce((s,v)=>s+v,0) / recentExpenses.length : 0;
+  if (avgExpense > 0) {
+    const unusuallyLarge = ledger
+      .filter(e => e?.type === 'expense' && Number(e.amt || 0) > avgExpense * 2)
+      .slice(0, 2);
+    unusuallyLarge.forEach(e => anomalies.push(`⚠️ Large expense flagged: ${e.desc} (${fmtCurrency(e.amt)}) vs avg ${fmtCurrency(avgExpense)}`));
+  }
+  if (forecast30 < 0 || forecast60 < 0) {
+    anomalies.push(`⚠️ Negative projected balance risk (${forecast30 < 0 ? '30d' : '60d'} forecast below zero).`);
+  }
+  const anomalyEl = document.getElementById('finance-anomalies-list');
+  if (anomalyEl) {
+    anomalyEl.innerHTML = anomalies.length
+      ? anomalies.map(a => `<div class="item-row"><span style="font-size:12px;flex:1">${a}</span></div>`).join('')
+      : '<div style="font-size:11px;color:var(--muted);font-style:italic">No anomalies flagged from current data.</div>';
   }
 }
 
@@ -3818,6 +4340,7 @@ function checkPendingRecurring() {
   
   if (pending.length === 0) {
     el.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;padding:10px 0">No pending transactions. All up to date!</div>';
+    renderFinanceForecasting();
     return;
   }
   
@@ -3830,6 +4353,7 @@ function checkPendingRecurring() {
       <button class="btn" style="padding:4px 10px;font-size:11px" onclick="processRecurringTransaction('${r.id}')">Add to Ledger</button>
     </div>
   `).join('');
+  renderFinanceForecasting();
 }
 
 // Check for pending recurring on page load
@@ -4169,6 +4693,7 @@ function renderLiveBalance() {
   
   if (dashboardList) dashboardList.innerHTML = dashboardHtml;
   if (financeList) financeList.innerHTML = financeHtml + (totalHtml ? totalHtml : '');
+  renderFinanceForecasting();
 }
 
 function renderRecentTransactions() {
@@ -4265,6 +4790,7 @@ async function deleteSavingsGoal(i){
 renderLedger();
 updateFinanceTotals();
 renderSavingsGoals();
+renderFinanceForecasting();
 const savedRS3=loadData('rs3Income', null);
 if(savedRS3){
   const el=document.getElementById('rs3-income');
@@ -4319,6 +4845,7 @@ async function updateAccountBalances(){
   accountBalances.savings=parseFloat(document.getElementById('bal-savings').value)||0;
   await saveData('accountBalances', accountBalances);
   renderAccountBalances();
+  renderFinanceForecasting();
 }
 function renderAccountBalances(){
   const bals=document.querySelectorAll('.account-bal');
@@ -4333,6 +4860,7 @@ function renderAccountBalances(){
   const p=document.getElementById('bal-primary');if(p&&accountBalances.primary)p.value=accountBalances.primary;
   const b=document.getElementById('bal-business');if(b&&accountBalances.business)b.value=accountBalances.business;
   const s=document.getElementById('bal-savings');if(s&&accountBalances.savings)s.value=accountBalances.savings;
+  renderFinanceForecasting();
 }
 renderAccountBalances();
 
@@ -5413,6 +5941,7 @@ async function loadOverviewData() {
       ...(dueTasks || []).map(t => ({ t: t.title, cat: t.category || 'Task' }))
     ];
     renderTodayPriorities();
+    renderDailyCommandCenter();
 
     const wtEl = document.getElementById('weekly-targets-list');
     wtEl.innerHTML = (targets || []).length
@@ -5824,6 +6353,10 @@ async function openWeeklyHistory(type) {
     showToast('Failed to load weekly history', true);
   }
 }
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closeCaptureModal();
+});
 </script>
 
 </html>
