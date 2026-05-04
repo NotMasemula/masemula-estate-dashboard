@@ -5190,21 +5190,152 @@ function selectDay(i){
   document.getElementById('routine-day-label').textContent=DAYS_FULL[i];
 }
 function renderRoutineNote(){
-  const note=NOTES_DAY[selectedDay];
-  document.getElementById('routine-note').innerHTML=note?`<div class="routine-note">${note}</div>`:'';
+  const dayName = DAYS_FULL[selectedDay];
+  const note = ROUTINE_NOTES[dayName] || '';
+  document.getElementById('routine-note').innerHTML = note ? `<div class="routine-note">${note}</div>` : '';
 }
+/* ═══ NTOBEKO'S DAILY ROUTINE ═══ */
+const ROUTINE_DATA = {
+  "Monday": [
+    { time: "4:00 - 5:30am", block: "Gym", category: "Health" },
+    { time: "5:30 - 7:00am", block: "Shower, breakfast, briefing review", category: "Health / Admin" },
+    { time: "7:00 - 7:30am", block: "Travel / prep for class", category: "Admin" },
+    { time: "7:30 - 9:00am", block: "GEOG111 - Language, Dr B", category: "School" },
+    { time: "9:15 - 10:45am", block: "SBSS111 - Cornelius, Ms. GS", category: "School" },
+    { time: "11:00am - 12:30pm", block: "ECON112 - Mariska Aucamp", category: "School" },
+    { time: "12:30 - 12:45pm", block: "Lunch", category: "Health" },
+    { time: "12:45 - 2:15pm", block: "ALDE112 - Motlhankane, Ms. KE", category: "School" },
+    { time: "2:15 - 2:45pm", block: "Travel home / decompress", category: "Admin" },
+    { time: "2:45 - 5:15pm", block: "Deep work block 1 - Dropshipping research", category: "Business" },
+    { time: "5:15 - 5:45pm", block: "Break / snack", category: "Health" },
+    { time: "5:45 - 8:00pm", block: "Deep work block 2 - Music production", category: "Creative" },
+    { time: "8:00 - 8:30pm", block: "Dinner", category: "Health" },
+    { time: "8:30 - 10:00pm", block: "Deep work block 3 - Masemula", category: "Business / Growth" },
+    { time: "10:00 - 10:45pm", block: "Wind-down", category: "Health" },
+    { time: "10:45 - 11:30pm", block: "Reading or quiet reset", category: "Growth" },
+    { time: "11:30pm", block: "Sleep", category: "Health" }
+  ],
+  "Tuesday": [
+    { time: "4:00 - 5:30am", block: "Gym", category: "Health" },
+    { time: "5:30 - 7:00am", block: "Shower, breakfast, briefing review", category: "Health / Admin" },
+    { time: "7:00 - 8:30am", block: "Deep work block 1 - Dropshipping", category: "Business" },
+    { time: "8:30 - 9:45am", block: "ECON112 - Mariska Aucamp", category: "School" },
+    { time: "10:00 - 11:30am", block: "SBSS111 - Cornelius, Ms. GS", category: "School" },
+    { time: "11:30am - 1:00pm", block: "GEOG111 - Language, Dr B", category: "School" },
+    { time: "1:00 - 1:30pm", block: "Lunch and travel", category: "Health / Admin" },
+    { time: "1:30 - 5:00pm", block: "Deep work block 2 - Music production", category: "Creative" },
+    { time: "5:00 - 5:45pm", block: "Break / snack", category: "Health" },
+    { time: "5:45 - 8:00pm", block: "Deep work block 3 - Masemula", category: "Business / Growth" },
+    { time: "8:00 - 8:30pm", block: "Dinner", category: "Health" },
+    { time: "8:30 - 10:45pm", block: "Reading and planning", category: "Growth" },
+    { time: "10:45 - 11:30pm", block: "Wind-down", category: "Health" },
+    { time: "11:30pm", block: "Sleep", category: "Health" }
+  ],
+  "Wednesday": [
+    { time: "4:00 - 5:30am", block: "Gym", category: "Health" },
+    { time: "5:30 - 7:00am", block: "Shower, breakfast, briefing review", category: "Health / Admin" },
+    { time: "7:00 - 8:30am", block: "Deep work block 1", category: "Business" },
+    { time: "8:30 - 10:00am", block: "ALDE112 - Motlhankane, Ms. KE", category: "School" },
+    { time: "10:15 - 11:45am", block: "ECON112 - Mariska Aucamp", category: "School" },
+    { time: "12:00 - 1:00pm", block: "Lunch", category: "Health" },
+    { time: "1:00 - 2:30pm", block: "Travel home / decompress", category: "Admin" },
+    { time: "2:30 - 5:00pm", block: "Deep work block 2 - Projects", category: "Business" },
+    { time: "5:00 - 5:45pm", block: "Break / snack", category: "Health" },
+    { time: "5:45 - 8:00pm", block: "Deep work block 3 - Creative", category: "Creative" },
+    { time: "8:00 - 8:30pm", block: "Dinner", category: "Health" },
+    { time: "8:30 - 10:45pm", block: "Reading and planning", category: "Growth" },
+    { time: "10:45 - 11:30pm", block: "Wind-down", category: "Health" },
+    { time: "11:30pm", block: "Sleep", category: "Health" }
+  ],
+  "Thursday": [
+    { time: "4:00 - 5:30am", block: "Gym", category: "Health" },
+    { time: "5:30 - 7:00am", block: "Shower, breakfast, briefing review", category: "Health / Admin" },
+    { time: "7:00 - 8:30am", block: "Deep work block 1", category: "Business" },
+    { time: "8:45 - 10:15am", block: "SBSS111 - Cornelius, Ms. GS", category: "School" },
+    { time: "10:30am - 12:00pm", block: "GEOG111 - Language, Dr B", category: "School" },
+    { time: "12:00 - 1:00pm", block: "Lunch", category: "Health" },
+    { time: "1:00 - 2:30pm", block: "Travel home / decompress", category: "Admin" },
+    { time: "2:30 - 5:00pm", block: "Deep work block 2 - Ventures", category: "Business" },
+    { time: "5:00 - 5:45pm", block: "Break / snack", category: "Health" },
+    { time: "5:45 - 8:00pm", block: "Deep work block 3 - Masemula", category: "Growth" },
+    { time: "8:00 - 8:30pm", block: "Dinner", category: "Health" },
+    { time: "8:30 - 10:45pm", block: "Reading and planning", category: "Growth" },
+    { time: "10:45 - 11:30pm", block: "Wind-down", category: "Health" },
+    { time: "11:30pm", block: "Sleep", category: "Health" }
+  ],
+  "Friday": [
+    { time: "4:00 - 5:30am", block: "Gym", category: "Health" },
+    { time: "5:30 - 7:00am", block: "Shower, breakfast, briefing review", category: "Health / Admin" },
+    { time: "7:00 - 8:30am", block: "Deep work block 1", category: "Business" },
+    { time: "8:30 - 10:00am", block: "ALDE112 - Motlhankane, Ms. KE", category: "School" },
+    { time: "10:15 - 11:45am", block: "ECON112 - Mariska Aucamp", category: "School" },
+    { time: "12:00 - 1:00pm", block: "Lunch", category: "Health" },
+    { time: "1:00 - 2:30pm", block: "Travel home / decompress", category: "Admin" },
+    { time: "2:30 - 5:00pm", block: "Deep work block 2 - Review", category: "Business" },
+    { time: "5:00 - 5:45pm", block: "Break / snack", category: "Health" },
+    { time: "5:45 - 8:00pm", block: "Ventures or creative work", category: "Creative" },
+    { time: "8:00 - 8:30pm", block: "Dinner", category: "Health" },
+    { time: "8:30 - 10:00pm", block: "Social or flexible work", category: "Social / Growth" },
+    { time: "10:00 - 10:45pm", block: "Wind-down", category: "Health" },
+    { time: "10:45 - 11:30pm", block: "Quiet reset", category: "Growth" },
+    { time: "11:30pm", block: "Sleep", category: "Health" }
+  ],
+  "Saturday": [
+    { time: "6:00 - 7:30am", block: "Optional gym or light exercise", category: "Health" },
+    { time: "7:30 - 9:00am", block: "Breakfast and morning admin", category: "Health / Admin" },
+    { time: "9:00am - 12:00pm", block: "Deep work - Ventures or projects", category: "Business" },
+    { time: "12:00 - 1:00pm", block: "Lunch", category: "Health" },
+    { time: "1:00 - 3:00pm", block: "Deep work - Creative or learning", category: "Creative / Growth" },
+    { time: "3:00 - 3:45pm", block: "Break / snack", category: "Health" },
+    { time: "3:45 - 5:30pm", block: "Personal projects or reading", category: "Growth" },
+    { time: "5:30 - 7:00pm", block: "Social time or family", category: "Social" },
+    { time: "7:00 - 9:00pm", block: "Flexible evening (dinner, wind-down)", category: "Health" },
+    { time: "9:00 - 11:30pm", block: "Sleep or personal time", category: "Health" }
+  ],
+  "Sunday": [
+    { time: "7:00 - 8:30am", block: "Light wake-up and breakfast", category: "Health" },
+    { time: "8:30 - 10:00am", block: "Morning review and planning", category: "Growth" },
+    { time: "10:00am - 12:00pm", block: "Deep work - Weekly review and goals", category: "Business / Growth" },
+    { time: "12:00 - 1:00pm", block: "Lunch", category: "Health" },
+    { time: "1:00 - 3:00pm", block: "Personal projects or learning", category: "Growth" },
+    { time: "3:00 - 3:45pm", block: "Break / snack", category: "Health" },
+    { time: "3:45 - 5:30pm", block: "Leisure, reading, or social prep", category: "Social / Growth" },
+    { time: "5:30 - 7:00pm", block: "Social time or family", category: "Social" },
+    { time: "7:00 - 8:30pm", block: "Dinner", category: "Health" },
+    { time: "8:30 - 10:00pm", block: "Reflection and prep for week", category: "Growth" },
+    { time: "10:00 - 11:30pm", block: "Sleep", category: "Health" }
+  ]
+};
+
+const ROUTINE_NOTES = {
+  "Monday": "Light class day, strong business day - focus on dropshipping and music",
+  "Tuesday": "Morning business, afternoon classes - save creative momentum for evening",
+  "Wednesday": "Balanced day - creative and research focus",
+  "Thursday": "Structured day with school - evening focus on Masemula growth",
+  "Friday": "Lighter academic load - planning and review focus, keep evening flexible",
+  "Saturday": "Recovery day - optional gym, deep work on ventures and creative projects",
+  "Sunday": "Planning and reflection - weekly review, prep for week, social time"
+};
+
 function renderRoutineSchedule(){
-  const blocks=SCHEDULE[selectedDay];
-  const now=new Date(),nm=now.getHours()*60+now.getMinutes();
-  const isToday=selectedDay===getTodayIndex();
-  document.getElementById('routine-schedule').innerHTML=blocks.map(b=>{
-    const sm=toMin(b.s),em=b.e==='00:00'?1440:toMin(b.e);
-    const isNow=isToday&&nm>=sm&&nm<em;
-    const isPast=isToday&&nm>=em;
-    const isBrk=b.c==='break';
-    const cls='sched-row'+(isNow?' is-now':isPast?' is-past':'');
-    const bdg=!isBrk&&CAT_LBL[b.c]?`<span class="sched-badge ${BDG_C[b.c]}">${CAT_LBL[b.c]}</span>`:'';
-    return`<div class="${cls}"><div class="sched-bar ${BAR_C[b.c]||'bar-break'}"></div><div class="sched-time">${b.s}–${b.e}${isNow?' ◆':''}</div><div class="sched-label">${b.l}</div>${bdg}</div>`;
+  const dayName = DAYS_FULL[selectedDay];
+  const schedule = ROUTINE_DATA[dayName] || [];
+  const el = document.getElementById('routine-schedule');
+  
+  el.innerHTML = schedule.map(block => {
+    const catColor = block.category.includes('School') ? '#8B6F47' :
+                     block.category.includes('Health') ? '#3B6D11' :
+                     block.category.includes('Business') ? '#C9A84C' :
+                     block.category.includes('Creative') ? '#993C1D' :
+                     block.category.includes('Growth') ? '#5C3317' :
+                     block.category.includes('Social') ? '#7A7570' :
+                     '#7A7570';
+    
+    return `<div class="day-block" style="border-left: 3px solid ${catColor}">
+      <div style="font-size:11px;font-weight:500;color:var(--muted)">${block.time}</div>
+      <div style="font-size:13px;margin-top:4px">${block.block}</div>
+      <div style="font-size:10px;color:${catColor};margin-top:4px;font-weight:500">${block.category}</div>
+    </div>`;
   }).join('');
 }
 function renderRoutineHabits(){
@@ -6932,6 +7063,10 @@ function resetAllCheckboxes() {
 </script>
 
 </html>
+
+
+
+
 
 
 
