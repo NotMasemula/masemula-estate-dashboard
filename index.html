@@ -5917,7 +5917,7 @@ async function loadOverviewData() {
   if (!USER_ID) return;
   const wm = getWeekMeta();
   try {
-    await sbClient.functions.invoke('evaluate-flags', { body: { owner_uid: USER_ID } });
+    // await sbClient.functions.invoke('evaluate-flags', { body: { owner_uid: USER_ID } });
     const [{ count: activeVentures }, { data: dsRows }, { count: gymSessions }, { data: deepRows }, { data: routinesToday }, { data: dueTasks }, { data: targets }, { data: flags }] = await Promise.all([
       sbClient.from('ventures').select('*', { count: 'exact', head: true }).eq('owner_uid', USER_ID).eq('status', 'active'),
       sbClient.from('metrics').select('amount').eq('owner_uid', USER_ID).eq('metric_key', 'ds_revenue').gte('period_start', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
@@ -6168,7 +6168,7 @@ async function loadDesignsFromSupabase() {
   // Fetch uploaded designs from Supabase and append them to the matching tab panels
   if (!syncEnabled || !USER_ID || !sbClient) return;
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sbClient
       .from('designs')
       .select('*')
       .eq('owner_uid', USER_ID)
