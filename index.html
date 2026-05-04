@@ -5487,10 +5487,10 @@ function renderRoutineSchedule(){
   const el = document.getElementById('routine-schedule');
   
   el.innerHTML = schedule.map(block => {
-    const catColor = block.category.includes('School') ? '#8B6F47' :
+    const catColor = block.category.includes('School') ? '#C9A84C' :
                      block.category.includes('Health') ? '#3B6D11' :
-                     block.category.includes('Business') ? '#C9A84C' :
-                     block.category.includes('Creative') ? '#993C1D' :
+                     block.category.includes('Business') ? '#8B6F47' :
+                     block.category.includes('Creative') ? '#E74C3C' :
                      block.category.includes('Growth') ? '#5C3317' :
                      block.category.includes('Social') ? '#7A7570' :
                      '#7A7570';
