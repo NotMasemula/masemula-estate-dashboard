@@ -428,6 +428,35 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
   </div>
 </div>
 
+<div id="goal-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9998;align-items:center;justify-content:center;padding:16px">
+  <div style="width:100%;max-width:480px;background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:16px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="card-title" style="margin-bottom:0">Add New Goal</div>
+      <button class="btn" onclick="closeGoalModal()">Close</button>
+    </div>
+    <input id="goal-title" class="ledger-input" placeholder="Goal title">
+    <select id="goal-category" class="ledger-input">
+      <option value="business">Business</option>
+      <option value="music">Music</option>
+      <option value="brand">Brand</option>
+      <option value="fitness">Fitness</option>
+      <option value="finance">Finance</option>
+      <option value="personal">Personal</option>
+    </select>
+    <input id="goal-target" class="ledger-input" type="number" step="0.01" placeholder="Target value">
+    <input id="goal-unit" class="ledger-input" placeholder="Unit (e.g. hrs, R, sessions)">
+    <input id="goal-deadline" class="ledger-input" type="date" placeholder="Deadline">
+    <select id="goal-source" class="ledger-input">
+      <option value="manual">Manual tracking</option>
+      <option value="finance:income">Finance - Income</option>
+      <option value="finance:savings">Finance - Savings</option>
+      <option value="ventures:count">Ventures - Project count</option>
+      <option value="ventures:revenue">Ventures - Revenue</option>
+    </select>
+    <button class="btn btn-gold" style="width:100%;margin-top:8px" onclick="submitNewGoal()">Create Goal</button>
+  </div>
+</div>
+
 <div id="os" style="display:none">
 <!-- SIDEBAR -->
 <div id="sidebar">
@@ -2580,7 +2609,7 @@ function renderAllSections() {
 // ═══ MANUAL SYNC BUTTON ═══
 async function manualSync() {
   if (!syncEnabled) {
-    alert('Cannot sync - not connected to Supabase');
+    showToast('Not connected to Supabase', true);
     return;
   }
   
@@ -2689,7 +2718,7 @@ async function addPersonalProject() {
   const category = document.getElementById('project-category').value;
   
   if (!name) {
-    alert('Please enter a project name');
+    showToast('Please enter a project name', true);
     return;
   }
   
@@ -2957,7 +2986,7 @@ function updateVentureHealth() {
   const notes = document.getElementById('health-notes').value;
   
   if (score < 0 || score > 100) {
-    alert('Health score must be between 0 and 100');
+    showToast('Health score must be between 0 and 100', true);
     return;
   }
   
@@ -3839,7 +3868,7 @@ async function addLedgerEntry(type){
   const desc=descEl.value.trim();
   const amt=parseFloat(amtEl.value);
   const cat=catEl.value;
-  if(!desc||isNaN(amt)||amt<=0){alert('Enter description and amount');return;}
+  if(!desc||isNaN(amt)||amt<=0){showToast('Enter description and amount', true);return;}
   ledger.unshift({type,desc,amt,cat,date:new Date().toISOString()});
   await saveData('financeLedger', ledger);
   descEl.value='';amtEl.value='';
@@ -6076,19 +6105,59 @@ function renderGoals() {
 }
 
 async function openAddGoalModal() {
-  const title = prompt('Goal title');
-  if (!title) return;
-  const category = prompt('Category (business, music, brand, fitness, finance, personal)', 'business') || 'business';
-  const target_value = parseFloat(prompt('Target value', '0') || '0') || 0;
-  const unit = prompt('Unit (e.g. hrs, R, sessions)', '') || null;
-  const deadline = prompt('Deadline (YYYY-MM-DD)', '') || null;
-  const data_source = prompt('Data source (manual or table:key)', 'manual') || 'manual';
+  const modal = document.getElementById('goal-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  document.getElementById('goal-title')?.focus();
+}
+
+function closeGoalModal() {
+  const modal = document.getElementById('goal-modal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  document.getElementById('goal-title').value = '';
+  document.getElementById('goal-category').value = 'business';
+  document.getElementById('goal-target').value = '';
+  document.getElementById('goal-unit').value = '';
+  document.getElementById('goal-deadline').value = '';
+  document.getElementById('goal-source').value = 'manual';
+}
+
+async function submitNewGoal() {
+  const title = (document.getElementById('goal-title')?.value || '').trim();
+  if (!title) {
+    showToast('Please enter a goal title', true);
+    return;
+  }
+  
+  const category = document.getElementById('goal-category')?.value || 'business';
+  const target_value = parseFloat(document.getElementById('goal-target')?.value || '0') || 0;
+  const unit = (document.getElementById('goal-unit')?.value || '').trim() || null;
+  const deadline = (document.getElementById('goal-deadline')?.value || '').trim() || null;
+  const data_source = document.getElementById('goal-source')?.value || 'manual';
+  
+  if (target_value <= 0) {
+    showToast('Target value must be greater than 0', true);
+    return;
+  }
+  
   try {
-    const { error } = await sbClient.from('goals').insert({ owner_uid: USER_ID, title, category, target_value, unit, deadline, data_source, current_value: 0 });
+    const { error } = await sbClient.from('goals').insert({ 
+      owner_uid: USER_ID, 
+      title, 
+      category, 
+      target_value, 
+      unit, 
+      deadline, 
+      data_source, 
+      current_value: 0 
+    });
     if (error) throw error;
     await loadGoalsFromSupabase();
+    closeGoalModal();
+    showToast('Goal created! 🎯');
   } catch (err) {
-    showToast('Failed to add goal', true);
+    showToast('Failed to create goal', true);
   }
 }
 
