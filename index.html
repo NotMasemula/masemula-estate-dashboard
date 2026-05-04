@@ -1014,6 +1014,10 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
             <div class="card-title">Weekly Progress</div>
             <div id="routine-weekly-prog"></div>
           </div>
+          <div class="card" style="margin-top:10px">
+            <div class="card-title">Daily Workflow Checklist</div>
+            <div id="routine-workflow-checklist" style="font-size:12px"></div>
+          </div>
         </div>
       </div>
       <!-- Routine Flags -->
@@ -3118,15 +3122,17 @@ function renderWorkflowInbox() {
 function renderWorkflowChecklist() {
   dailyWorkflow = loadData('dailyWorkflow', dailyWorkflow || {});
   const el = document.getElementById('workflow-checklist');
-  if (!el) return;
+  const routineEl = document.getElementById('routine-workflow-checklist');
   const state = getDailyWorkflowState();
-  el.innerHTML = WORKFLOW_STEPS.map(step => `
+  const html = WORKFLOW_STEPS.map(step => `
     <div class="item-row" style="padding:8px 0">
       <div class="check${state[step.id] ? ' done' : ''}" onclick="toggleWorkflowStep('${step.id}')">${state[step.id] ? '✓' : ''}</div>
       <div style="flex:1;font-size:12px${state[step.id] ? ';text-decoration:line-through;opacity:0.65' : ''}">${step.label}</div>
       <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">${step.phase}</span>
     </div>
   `).join('');
+  if (el) el.innerHTML = html;
+  if (routineEl) routineEl.innerHTML = html;
 }
 
 function renderDailyCommandCenter() {
