@@ -1858,42 +1858,42 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       <input id="vision-file-input" type="file" accept="image/*" style="display:none" onchange="handleVisionImageUpload(event)">
       <div id="vision-board-uploaded" class="mb-grid mb-10"></div>
       <div class="mb-grid mb-10">
-        <div class="mb-tile" style="grid-column:span 2;grid-row:span 1">
+        <div class="mb-tile" style="grid-column:span 2;grid-row:span 1" onclick="triggerVisionUpload()">
           <div class="mb-visual" style="height:140px;background:linear-gradient(135deg,#2C1A0E 0%,#5C3317 50%,#C9A84C 100%);font-size:16px;flex-direction:column;gap:8px">
             <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:#F5F0E8;font-weight:300;letter-spacing:0.1em">THE ESTATE</div>
             <div style="font-size:10px;color:#C49A6C;letter-spacing:0.12em;text-transform:uppercase">Financial independence · Creative legacy</div>
           </div>
           <div class="mb-overlay">Edit vision</div>
         </div>
-        <div class="mb-tile">
+        <div class="mb-tile" onclick="triggerVisionUpload()">
           <div class="mb-visual" style="background:#EAF3DE;flex-direction:column">
             <div style="font-size:28px">🏛</div>
             <div style="font-size:10px;color:#3B6D11;letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">Masemula HQ</div>
           </div>
           <div class="mb-overlay">Add image</div>
         </div>
-        <div class="mb-tile">
+        <div class="mb-tile" onclick="triggerVisionUpload()">
           <div class="mb-visual" style="background:#EEEDFE;flex-direction:column">
             <div style="font-size:28px">🎵</div>
             <div style="font-size:10px;color:#3C3489;letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">Music legacy</div>
           </div>
           <div class="mb-overlay">Add image</div>
         </div>
-        <div class="mb-tile">
+        <div class="mb-tile" onclick="triggerVisionUpload()">
           <div class="mb-visual" style="background:#FAEEDA;flex-direction:column">
             <div style="font-size:28px">🚗</div>
             <div style="font-size:10px;color:#854F0B;letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">The garage</div>
           </div>
           <div class="mb-overlay">Add image</div>
         </div>
-        <div class="mb-tile">
+        <div class="mb-tile" onclick="triggerVisionUpload()">
           <div class="mb-visual" style="background:#E1F5EE;flex-direction:column">
             <div style="font-size:28px">💍</div>
             <div style="font-size:10px;color:#0F6E56;letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">Kea &amp; family</div>
           </div>
           <div class="mb-overlay">Add image</div>
         </div>
-        <div class="mb-tile">
+        <div class="mb-tile" onclick="triggerVisionUpload()">
           <div class="mb-visual" style="background:#FAECE7;flex-direction:column">
             <div style="font-size:28px">🌍</div>
             <div style="font-size:10px;color:#993C1D;letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">SA legacy</div>
@@ -6125,16 +6125,30 @@ async function loadVisionBoardFromSupabase() {
   try {
     const { data, error } = await sbClient.from('vision_board').select('*').eq('owner_uid', USER_ID).order('position_order', { ascending: true });
     if (error) throw error;
-    if (!data?.length) {
-      el.innerHTML = '';
-      return;
-    }
+    if (!data?.length) { el.innerHTML = ''; return; }
     el.innerHTML = data.map(item => {
       const { data: urlData } = sbClient.storage.from('vision-board').getPublicUrl(item.storage_path);
-      return `<div class="mb-tile" draggable="true"><div class="mb-visual" style="background-image:url('${urlData.publicUrl}');background-size:cover;background-position:center"></div><div class="mb-overlay">${item.caption || 'Vision'}</div></div>`;
+      const esc = s => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      return `<div class="mb-tile" style="position:relative">
+        <div class="mb-visual" style="background-image:url('${urlData.publicUrl}');background-size:cover;background-position:center;height:90px"></div>
+        <div class="mb-overlay">${item.caption || 'Vision'}</div>
+        <button data-id="${esc(item.id)}" data-path="${esc(item.storage_path)}" onclick="deleteVisionImage(this.dataset.id,this.dataset.path)" aria-label="Remove image" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;z-index:10">×</button>
+      </div>`;
     }).join('');
   } catch (err) {
     showToast('Failed to load vision board', true);
+  }
+}
+
+async function deleteVisionImage(id, storagePath) {
+  if (!confirm('Remove this image from your vision board?')) return;
+  try {
+    const { error } = await sbClient.from('vision_board').delete().eq('id', id);
+    if (error) throw error;
+    await sbClient.storage.from('vision-board').remove([storagePath]);
+    await loadVisionBoardFromSupabase();
+  } catch (err) {
+    showToast('Failed to remove image', true);
   }
 }
 
