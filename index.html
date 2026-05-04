@@ -6412,11 +6412,10 @@ async function loadVisionBoardFromSupabase() {
     if (!data?.length) { el.innerHTML = ''; return; }
     el.innerHTML = data.map(item => {
       const { data: urlData } = sbClient.storage.from('vision-board').getPublicUrl(item.storage_path);
-      const esc = s => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
       return `<div class="mb-tile" style="position:relative">
         <div class="mb-visual" style="background-image:url('${urlData.publicUrl}');background-size:cover;background-position:center;height:90px"></div>
         <div class="mb-overlay">${item.caption || 'Vision'}</div>
-        <button data-id="${esc(item.id)}" data-path="${esc(item.storage_path)}" onclick="deleteVisionImage(this.dataset.id,this.dataset.path)" aria-label="Remove image" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;z-index:10">×</button>
+        <button onclick="deleteVisionImage('${item.id}','${item.storage_path}')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;z-index:10">×</button>
       </div>`;
     }).join('');
   } catch (err) {
@@ -6427,9 +6426,9 @@ async function loadVisionBoardFromSupabase() {
 async function deleteVisionImage(id, storagePath) {
   if (!confirm('Remove this image from your vision board?')) return;
   try {
+    await sbClient.storage.from('vision-board').remove([storagePath]);
     const { error } = await sbClient.from('vision_board').delete().eq('id', id);
     if (error) throw error;
-    await sbClient.storage.from('vision-board').remove([storagePath]);
     await loadVisionBoardFromSupabase();
   } catch (err) {
     showToast('Failed to remove image', true);
@@ -6611,18 +6610,20 @@ async function loadHabitsWeekFromSupabase() {
     if (error) throw error;
     weekData = emptyWeek();
     (data || []).forEach(row => {
+      if (!weekData[row.habit_key]) weekData[row.habit_key] = [0,0,0,0,0,0,0];
       const dayIndex = (new Date(row.logged_date).getDay() + 6) % 7;
       const valueFromNotes = parseFloat(row.notes || '');
       if (Number.isFinite(valueFromNotes)) {
-        weekData[row.habit_key]?.splice(dayIndex, 1, valueFromNotes);
+        weekData[row.habit_key][dayIndex] = valueFromNotes;
       } else {
-        weekData[row.habit_key]?.splice(dayIndex, 1, row.completed ? 1 : 0);
+        weekData[row.habit_key][dayIndex] = row.completed ? 1 : 0;
       }
     });
     renderRoutineHabits();
     renderRoutineWeeklyProg();
     renderRoutineFlags();
   } catch (err) {
+    console.error('Habits load error:', err);
     showToast('Failed to load habits', true);
   }
 }
