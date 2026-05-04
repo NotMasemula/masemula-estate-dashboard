@@ -456,41 +456,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
   .venture-stat{font-size:9px}
   select{padding:6px 8px;font-size:12px}
 }
-/* ═══ CLEANDESK CHECKLIST ═══ */
-.checklist-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
-.checklist-stat{background:var(--surface);padding:12px;border-radius:8px;text-align:center}
-.checklist-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
-.checklist-stat-value{font-size:20px;font-weight:500;color:var(--ink);font-family:'Cormorant Garamond',serif}
-.checklist-progress{margin-bottom:20px}
-.checklist-progress-label{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:8px;color:var(--muted)}
-.checklist-progress-bar{width:100%;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
-.checklist-progress-fill{height:100%;background:var(--gold);border-radius:4px;transition:width 0.3s}
-.checklist-phase{margin-bottom:14px;border:0.5px solid var(--border);border-radius:8px;background:var(--card)}
-.checklist-phase-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;background:var(--surface);border-bottom:0.5px solid var(--border);border-radius:8px 8px 0 0;transition:all 0.2s}
-.checklist-phase-header:hover{background:rgba(201,168,76,0.05)}
-.checklist-phase.collapsed .checklist-phase-header{border-radius:8px}
-.checklist-phase.collapsed .checklist-phase-body{display:none}
-.checklist-phase-toggle{font-size:12px;color:var(--muted);width:16px;text-align:center}
-.checklist-phase.collapsed .checklist-phase-toggle::before{content:'▶'}
-.checklist-phase:not(.collapsed) .checklist-phase-toggle::before{content:'▼'}
-.checklist-phase-title{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:400;flex:1}
-.checklist-phase-badge{background:var(--gold);color:var(--deep);font-size:9px;padding:3px 8px;border-radius:3px;letter-spacing:0.05em;font-weight:500}
-.checklist-phase-body{padding:12px 14px}
-.checklist-task{display:flex;align-items:flex-start;gap:10px;padding:8px 0;font-size:12px}
-.checklist-task:not(:last-child){border-bottom:0.5px solid var(--border)}
-.checklist-checkbox{width:18px;height:18px;border:1.5px solid var(--border);border-radius:3px;background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all 0.2s}
-.checklist-checkbox:hover{border-color:var(--gold)}
-.checklist-checkbox.checked{background:var(--gold);border-color:var(--gold)}
-.checklist-checkbox.checked::after{content:'✓';color:var(--deep);font-size:10px;font-weight:bold}
-.checklist-label{flex:1;cursor:pointer;color:var(--ink);transition:all 0.2s}
-.checklist-task.checked .checklist-label{text-decoration:line-through;color:var(--muted)}
-.checklist-reset-btn{margin-top:20px;width:100%;padding:10px;background:var(--surface);border:0.5px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted);cursor:pointer;transition:all 0.2s}
-.checklist-reset-btn:hover{background:var(--border);color:var(--ink)}
-.dark .checklist-stat{background:var(--surface)}
-.dark .checklist-phase{background:var(--card);border-color:var(--border)}
-.dark .checklist-phase-header{background:var(--surface);border-color:var(--border)}
-.dark .checklist-checkbox{background:var(--card);border-color:var(--border)}
-.dark .checklist-checkbox.checked{background:var(--gold);border-color:var(--gold)}
+
 </style>
 
 <div id="auth-screen">
@@ -575,10 +541,6 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
   <div class="nav-icon" onclick="nav('music',this)">
     <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
     <span class="nav-tip">Music</span>
-  </div>
-  <div class="nav-icon" onclick="nav('cleandesk',this)">
-    <svg viewBox="0 0 24 24"><path d="M3 5h18v2H3zm0 4h18v2H3zm0 4h18v2H3zm0 4h18v2H3z"/></svg>
-    <span class="nav-tip">CleanDesk</span>
   </div>
   <div class="nav-icon" onclick="nav('brand',this)">
     <svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
@@ -809,6 +771,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
               <select id="health-venture" class="ledger-input" style="font-size:11px">
                 <option value="ds">Dropshipping</option>
+                <option value="cleandesk">Clean Desk Co.</option>
                 <option value="music">Music</option>
                 <option value="brand">Masemula</option>
                 <option value="events">Events</option>
@@ -824,6 +787,11 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
             <div class="vc-top"><div><div class="vc-name">Dropshipping</div><div class="vc-stage">Active · Primary funding vehicle</div></div><div class="dot dot-active pulse"></div></div>
             <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.7">Clean Desk Bundle · $55 sell price · $40 profit · 73% margin<br>Target: $4,000 total profit by Month 3–5</div>
             <div class="kpi-row"><div class="kpi"><div class="kpi-v">R 2k</div><div class="kpi-l">Revenue</div></div><div class="kpi"><div class="kpi-v">R 6k</div><div class="kpi-l">Budget</div></div><div class="kpi"><div class="kpi-v">73%</div><div class="kpi-l">Margin</div></div></div>
+          </div>
+          <div class="vc vc-interactive" onclick="showVentureDetails('cleandesk')">
+            <div class="vc-top"><div><div class="vc-name">Clean Desk Co.</div><div class="vc-stage">Active · Launch phase</div></div><div class="dot dot-active pulse"></div></div>
+            <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.7">Dropshipping store · 56-task go-live checklist<br>Tap to expand complete launch sequence</div>
+            <div class="kpi-row"><div class="kpi"><div class="kpi-v" id="cdc-tasks-done">0</div><div class="kpi-l">Tasks Done</div></div><div class="kpi"><div class="kpi-v" id="cdc-tasks-remaining">56</div><div class="kpi-l">Remaining</div></div><div class="kpi"><div class="kpi-v" id="cdc-progress">0%</div><div class="kpi-l">Complete</div></div></div>
           </div>
           <div class="vc vc-interactive" onclick="showVentureDetails('music')">
             <div class="vc-top"><div><div class="vc-name">Music — Amapiano</div><div class="vc-stage">Active · 2 projects released</div></div><div class="dot dot-active"></div></div>
@@ -907,38 +875,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
     </div>
 
         </div>
-    <!-- ═══ CLEANDESK ═══ -->
-    <div class="section" id="s-cleandesk">
-      <div class="sec-head">
-        <div><div class="sec-title">GO-LIVE CHECKLIST</div><div class="sec-sub">Launch sequence — do not skip steps.</div></div>
-        <button class="btn btn-gold" onclick="sendPrompt('Review my Clean Desk Co. progress. Which phase should I focus on next?')">Review progress ↗</button>
-      </div>
-      <div class="checklist-stats">
-        <div class="checklist-stat">
-          <div class="checklist-stat-label">Tasks Completed</div>
-          <div class="checklist-stat-value" id="checklist-completed">0</div>
-        </div>
-        <div class="checklist-stat">
-          <div class="checklist-stat-label">Tasks Remaining</div>
-          <div class="checklist-stat-value" id="checklist-remaining">0</div>
-        </div>
-        <div class="checklist-stat">
-          <div class="checklist-stat-label">Overall Complete</div>
-          <div class="checklist-stat-value" id="checklist-percentage">0%</div>
-        </div>
-      </div>
-      <div class="checklist-progress">
-        <div class="checklist-progress-label">
-          <span>Progress</span>
-          <span id="checklist-progress-pct">0%</span>
-        </div>
-        <div class="checklist-progress-bar">
-          <div class="checklist-progress-fill" id="checklist-progress-fill" style="width:0%"></div>
-        </div>
-      </div>
-      <div id="checklist-phases-container"></div>
-      <button class="checklist-reset-btn" onclick="if(confirm('Are you sure? This will clear all progress.')) resetAllCheckboxes()">↻ Reset All Progress</button>
-    </div>
+
     <!-- ═══ MUSIC ═══ --><!-- ═══ MUSIC ═══ -->
     <div class="section" id="s-music">
       <div class="sec-head">
@@ -2996,6 +2933,22 @@ const VENTURE_DATA={
     ],
     tasks:['Launch 3 TikTok videos daily','Test new hook styles','Respond to all comments','Setup retargeting pixel']
   },
+  cleandesk:{
+    name:'Clean Desk Co. — Launch Checklist',
+    phase:'Go-Live Sequence',
+    status:'active',
+    description:'6-week launch sequence for Clean Desk Co. dropshipping store. 56 tasks across Foundation, Product Setup, Store Build, Testing, Content, and Go Live phases.',
+    phases:[
+      {name:'Foundation',done:false,current:true},{name:'Product Setup',done:false},{name:'Store Build',done:false},
+      {name:'Testing',done:false},{name:'Content',done:false},{name:'Go Live',done:false}
+    ],
+    metrics:[
+      {label:'Tasks Done',value:'0',trend:''},
+      {label:'Tasks Total',value:'56',trend:''},
+      {label:'Progress',value:'0%',trend:''}
+    ],
+    tasks:['View full checklist below','Track all phases','Complete systematically']
+  },
   music:{
     name:'Music — Amapiano Production',
     phase:'Growth',
@@ -3048,6 +3001,206 @@ const VENTURE_DATA={
     tasks:['Support Kea with planning','Business registration research','Create social presence']
   }
 };
+
+// ═══ CLEAN DESK CO. CHECKLIST ═══
+const CLEANDESK_PHASES = [
+  {
+    title: "Foundation",
+    week: "WEEK 1",
+    tasks: [
+      "Agree on store name",
+      "Create Shopify account — use \$1/3-month trial, not full price",
+      "Purchase domain on Namecheap (~R200)",
+      "Connect domain to Shopify store",
+      "Install CJ Dropshipping app on Shopify (free)",
+      "Install DSers on Shopify (free)",
+      "Create Klaviyo account and connect to Shopify (free up to 500 contacts)",
+      "Create store TikTok account",
+      "Create store Instagram account",
+      "Both partners confirm R1,750 each is liquid and accessible"
+    ]
+  },
+  {
+    title: "Product & Supplier Setup",
+    week: "WEEK 2",
+    tasks: [
+      "Search CJ Dropshipping for cable management kit — shortlist top 2 US warehouse suppliers",
+      "Search CJ Dropshipping for XL desk mat — shortlist top 2 US warehouse suppliers",
+      "Order 2 samples from each supplier (4 orders total, ~R800 split)",
+      "Contact CJ agent and request bundle SKU creation",
+      "Confirm US warehouse availability for both products",
+      "Begin building Shopify store using free Dawn or Refresh theme"
+    ]
+  },
+  {
+    title: "Store Build",
+    week: "WEEK 2–3",
+    tasks: [
+      "Install free Shopify theme (Dawn recommended)",
+      "Build Clean Desk Bundle product listing plus 2 standalone listings",
+      "Add product page copy into Shopify",
+      "Add trust badges — secure checkout, free shipping, 30-day guarantee",
+      "Set up 30-day returns policy (keep product, full refund)",
+      "Set up FAQ page",
+      "Connect Stripe as primary payment processor",
+      "Connect PayPal Business as second payment processor",
+      "Set up all 3 Klaviyo email flows (pre-launch, abandoned cart, post-purchase)",
+      "Add email capture popup with 10% discount offer",
+      "Install Facebook Pixel (free)",
+      "Install TikTok Pixel (free)"
+    ]
+  },
+  {
+    title: "Sample Testing",
+    week: "WEEK 3",
+    tasks: [
+      "Test cable adhesive clips on wood desk surface",
+      "Test cable adhesive clips on glass desk surface",
+      "Test desk mat stitching along all edges",
+      "Test desk mat non-slip base",
+      "Test desk mat size against standard desk",
+      "Photograph unboxing experience as a customer would",
+      "Score all 4 suppliers on quality, shipping, packaging, communication",
+      "Select primary cable kit supplier",
+      "Select primary desk mat supplier",
+      "Confirm bundle SKU is live with CJ agent"
+    ]
+  },
+  {
+    title: "Content Creation",
+    week: "WEEK 3–4",
+    tasks: [
+      "Film Script 1 — The Transformation Hook",
+      "Film Script 2 — The Productivity Hook",
+      "Film Script 3 — The Social Proof Hook",
+      "Edit all 3 videos in CapCut with text overlays and captions",
+      "Post first video on TikTok immediately",
+      "Post second video 24–48 hours later",
+      "Post third video 24–48 hours after that",
+      "Commit to 1–2 organic videos per day going forward"
+    ]
+  },
+  {
+    title: "Go Live",
+    week: "WEEK 4",
+    tasks: [
+      "Remove Shopify password page — store is live",
+      "Activate pre-launch Klaviyo email flow",
+      "Send launch announcement to email list",
+      "Continue daily TikTok content",
+      "Respond to every comment and DM",
+      "Begin weekly Friday P&L review with Ntobeko",
+      "Watch ROAS — organic only until one video hits 5,000+ views",
+      "When 5,000+ views hit — run best organic video as first paid ad at R500 budget"
+    ]
+  }
+];
+
+function getCleanDeskChecklistPhases() {
+  const state = localStorage.getItem('cleandesk_phases') || '{}';
+  return JSON.parse(state);
+}
+
+function getCleanDeskChecklistTasks() {
+  const state = localStorage.getItem('cleandesk_checklist') || '{}';
+  return JSON.parse(state);
+}
+
+function saveCleanDeskPhases(phases) {
+  localStorage.setItem('cleandesk_phases', JSON.stringify(phases));
+}
+
+function saveCleanDeskTasks(tasks) {
+  localStorage.setItem('cleandesk_checklist', JSON.stringify(tasks));
+}
+
+function renderCleanDeskChecklist() {
+  const phases = getCleanDeskChecklistPhases();
+  const tasks = getCleanDeskChecklistTasks();
+  
+  let html = `<div style="margin-top:16px"><div style="font-size:12px;font-weight:500;margin-bottom:12px">GO-LIVE CHECKLIST — 6 Phases</div>`;
+  
+  CLEANDESK_PHASES.forEach((phase, i) => {
+    const phaseNum = i + 1;
+    const phaseId = `phase${phaseNum}`;
+    const isCollapsed = phases[phaseId] === false;
+    
+    let tasksList = phase.tasks.map((task, j) => {
+      const taskId = `phase${phaseNum}_task${j}`;
+      const isChecked = tasks[taskId] === true;
+      return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;font-size:12px;${!isCollapsed?'':'display:none'}">
+        <div class="check${isChecked?' done':''}" onclick="toggleCleanDeskTask(${phaseNum}, ${j})" style="cursor:pointer;margin-top:2px">${isChecked?'✓':''}</div>
+        <label style="flex:1;cursor:pointer;${isChecked?'text-decoration:line-through;color:var(--muted)':''}" onclick="toggleCleanDeskTask(${phaseNum}, ${j})">${task}</label>
+      </div>`;
+    }).join('');
+    
+    html += `<div style="border:0.5px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden">
+      <div onclick="toggleCleanDeskPhase(${phaseNum})" style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;background:var(--surface);border-bottom:${isCollapsed?'none':'0.5px solid var(--border)'};user-select:none">
+        <div style="font-size:11px;width:12px;text-align:center">${isCollapsed?'▶':'▼'}</div>
+        <div style="font-weight:500;flex:1;font-size:12px">${phase.title}</div>
+        <div style="background:var(--gold);color:var(--deep);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:500">${phase.week}</div>
+      </div>
+      <div style="${isCollapsed?'display:none':''}padding:12px;border-top:0.5px solid var(--border)">${tasksList}</div>
+    </div>`;
+  });
+  
+  html += `</div>`;
+  return html;
+}
+
+function toggleCleanDeskPhase(phaseNum) {
+  const phases = getCleanDeskChecklistPhases();
+  phases[`phase${phaseNum}`] = phases[`phase${phaseNum}`] === false ? true : false;
+  saveCleanDeskPhases(phases);
+  updateCleanDeskDisplay();
+}
+
+function toggleCleanDeskTask(phaseNum, taskNum) {
+  const tasks = getCleanDeskChecklistTasks();
+  const taskId = `phase${phaseNum}_task${taskNum}`;
+  tasks[taskId] = !tasks[taskId];
+  saveCleanDeskTasks(tasks);
+  updateCleanDeskStats();
+  updateCleanDeskDisplay();
+}
+
+function updateCleanDeskStats() {
+  const tasks = getCleanDeskChecklistTasks();
+  let completed = 0;
+  let total = 0;
+  
+  CLEANDESK_PHASES.forEach((phase, i) => {
+    phase.tasks.forEach((task, j) => {
+      total++;
+      if (tasks[`phase${i+1}_task${j}`]) completed++;
+    });
+  });
+  
+  const remaining = total - completed;
+  const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+  
+  const cdcTasksDone = document.getElementById('cdc-tasks-done');
+  const cdcTasksRemaining = document.getElementById('cdc-tasks-remaining');
+  const cdcProgress = document.getElementById('cdc-progress');
+  
+  if (cdcTasksDone) cdcTasksDone.textContent = completed;
+  if (cdcTasksRemaining) cdcTasksRemaining.textContent = remaining;
+  if (cdcProgress) cdcProgress.textContent = percentage + '%';
+}
+
+function updateCleanDeskDisplay() {
+  const content = document.getElementById('venture-detail-content');
+  if (content && content.querySelector('[data-cleandesk-checklist]')) {
+    const checklistDiv = content.querySelector('[data-cleandesk-checklist]');
+    checklistDiv.innerHTML = renderCleanDeskChecklist();
+  }
+  updateCleanDeskStats();
+}
+
+function initCleanDeskChecklist() {
+  updateCleanDeskStats();
+}
+
 function showVentureDetails(id){
   const v=VENTURE_DATA[id];
   if(!v)return;
@@ -3078,9 +3231,18 @@ function showVentureDetails(id){
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Priority Tasks</div>
       ${v.tasks.map(t=>`<div class="item-row"><div class="check" onclick="this.classList.toggle('done');this.textContent=this.classList.contains('done')?'✓':''"></div><span style="flex:1;font-size:12px">${t}</span></div>`).join('')}
     </div>`;
+  
+  if(id === 'cleandesk') {
+    html += `<div data-cleandesk-checklist>${renderCleanDeskChecklist()}</div>`;
+  }
+  
   content.innerHTML=html;
   panel.style.display='block';
   panel.scrollIntoView({behavior:'smooth',block:'start'});
+  
+  if(id === 'cleandesk') {
+    initCleanDeskChecklist();
+  }
 }
 
 // ─── VENTURE HEALTH SYSTEM ───
@@ -5206,105 +5368,107 @@ const ROUTINE_DATA = {
     { time: "12:30 - 12:45pm", block: "Lunch", category: "Health" },
     { time: "12:45 - 2:15pm", block: "ALDE112 - Motlhankane, Ms. KE", category: "School" },
     { time: "2:15 - 2:45pm", block: "Travel home / decompress", category: "Admin" },
-    { time: "2:45 - 5:15pm", block: "Deep work block 1 - Dropshipping research", category: "Business" },
+    { time: "2:45 - 5:15pm", block: "Deep work block 1 - Dropshipping research, store, offers", category: "Business" },
     { time: "5:15 - 5:45pm", block: "Break / snack", category: "Health" },
-    { time: "5:45 - 8:00pm", block: "Deep work block 2 - Music production", category: "Creative" },
+    { time: "5:45 - 8:00pm", block: "Deep work block 2 - Music production, admin, releases", category: "Creative" },
     { time: "8:00 - 8:30pm", block: "Dinner", category: "Health" },
-    { time: "8:30 - 10:00pm", block: "Deep work block 3 - Masemula", category: "Business / Growth" },
+    { time: "8:30 - 10:00pm", block: "Deep work block 3 - Masemula, reading, planning", category: "Business / Growth" },
     { time: "10:00 - 10:45pm", block: "Wind-down", category: "Health" },
     { time: "10:45 - 11:30pm", block: "Reading or quiet reset", category: "Growth" },
-    { time: "11:30pm", block: "Sleep", category: "Health" }
+    { time: "11:30pm", block: "Sleep", category: "Health" },
   ],
   "Tuesday": [
     { time: "4:00 - 5:30am", block: "Gym", category: "Health" },
     { time: "5:30 - 7:00am", block: "Shower, breakfast, briefing review", category: "Health / Admin" },
-    { time: "7:00 - 8:30am", block: "Deep work block 1 - Dropshipping", category: "Business" },
-    { time: "8:30 - 9:45am", block: "ECON112 - Mariska Aucamp", category: "School" },
-    { time: "10:00 - 11:30am", block: "SBSS111 - Cornelius, Ms. GS", category: "School" },
-    { time: "11:30am - 1:00pm", block: "GEOG111 - Language, Dr B", category: "School" },
-    { time: "1:00 - 1:30pm", block: "Lunch and travel", category: "Health / Admin" },
-    { time: "1:30 - 5:00pm", block: "Deep work block 2 - Music production", category: "Creative" },
-    { time: "5:00 - 5:45pm", block: "Break / snack", category: "Health" },
-    { time: "5:45 - 8:00pm", block: "Deep work block 3 - Masemula", category: "Business / Growth" },
-    { time: "8:00 - 8:30pm", block: "Dinner", category: "Health" },
-    { time: "8:30 - 10:45pm", block: "Reading and planning", category: "Growth" },
-    { time: "10:45 - 11:30pm", block: "Wind-down", category: "Health" },
-    { time: "11:30pm", block: "Sleep", category: "Health" }
+    { time: "7:00 - 10:30am", block: "Deep work block - Dropshipping priority task", category: "Business" },
+    { time: "10:30 - 11:00am", block: "Travel to campus", category: "Admin" },
+    { time: "11:00am - 12:30pm", block: "MTHS114 - Marewo, Dr GT", category: "School" },
+    { time: "12:30 - 12:45pm", block: "Lunch", category: "Health" },
+    { time: "12:45 - 2:15pm", block: "GEOG111 - Language, Dr B", category: "School" },
+    { time: "2:15 - 2:30pm", block: "Break", category: "Recovery" },
+    { time: "2:30 - 4:00pm", block: "STTN111 - Van Heerden, Dr CJL", category: "School" },
+    { time: "4:00 - 4:30pm", block: "Travel home", category: "Admin" },
+    { time: "4:30 - 7:00pm", block: "Deep work block - Music or Masemula", category: "Creative / Business" },
+    { time: "7:00 - 7:30pm", block: "Dinner", category: "Health" },
+    { time: "7:30 - 10:00pm", block: "Reading, planning, Estate review", category: "Growth" },
+    { time: "10:00 - 10:45pm", block: "Wind-down", category: "Health" },
+    { time: "10:45 - 11:30pm", block: "Reading or quiet reset", category: "Growth" },
+    { time: "11:30pm", block: "Sleep", category: "Health" },
   ],
   "Wednesday": [
     { time: "4:00 - 5:30am", block: "Gym", category: "Health" },
-    { time: "5:30 - 7:00am", block: "Shower, breakfast, briefing review", category: "Health / Admin" },
-    { time: "7:00 - 8:30am", block: "Deep work block 1", category: "Business" },
-    { time: "8:30 - 10:00am", block: "ALDE112 - Motlhankane, Ms. KE", category: "School" },
-    { time: "10:15 - 11:45am", block: "ECON112 - Mariska Aucamp", category: "School" },
-    { time: "12:00 - 1:00pm", block: "Lunch", category: "Health" },
-    { time: "1:00 - 2:30pm", block: "Travel home / decompress", category: "Admin" },
-    { time: "2:30 - 5:00pm", block: "Deep work block 2 - Projects", category: "Business" },
-    { time: "5:00 - 5:45pm", block: "Break / snack", category: "Health" },
-    { time: "5:45 - 8:00pm", block: "Deep work block 3 - Creative", category: "Creative" },
-    { time: "8:00 - 8:30pm", block: "Dinner", category: "Health" },
-    { time: "8:30 - 10:45pm", block: "Reading and planning", category: "Growth" },
-    { time: "10:45 - 11:30pm", block: "Wind-down", category: "Health" },
-    { time: "11:30pm", block: "Sleep", category: "Health" }
+    { time: "5:30 - 8:45am", block: "Shower, breakfast, light prep only", category: "Health" },
+    { time: "8:45 - 9:15am", block: "Travel to campus", category: "Admin" },
+    { time: "9:15 - 10:45am", block: "ECON112 - Mariska Aucamp", category: "School" },
+    { time: "10:45 - 11:00am", block: "Break", category: "Recovery" },
+    { time: "11:00am - 12:30pm", block: "SBSS111 - Cornelius, Ms. GS", category: "School" },
+    { time: "12:30 - 2:30pm", block: "Lunch + recovery break", category: "Health" },
+    { time: "2:30 - 4:00pm", block: "SBSS111 - Cornelius, Ms. GS", category: "School" },
+    { time: "4:00 - 4:15pm", block: "Break", category: "Recovery" },
+    { time: "4:15 - 5:45pm", block: "SBSS111 - Cornelius, Ms. GS", category: "School" },
+    { time: "5:45 - 6:30pm", block: "Travel home + decompress", category: "Admin" },
+    { time: "6:30 - 8:30pm", block: "Light work only - email, review, planning", category: "Admin" },
+    { time: "8:30 - 9:00pm", block: "Dinner", category: "Health" },
+    { time: "9:00 - 10:30pm", block: "Reading or downtime", category: "Growth" },
+    { time: "10:30 - 11:30pm", block: "Wind-down and sleep prep", category: "Health" },
   ],
   "Thursday": [
     { time: "4:00 - 5:30am", block: "Gym", category: "Health" },
-    { time: "5:30 - 7:00am", block: "Shower, breakfast, briefing review", category: "Health / Admin" },
-    { time: "7:00 - 8:30am", block: "Deep work block 1", category: "Business" },
-    { time: "8:45 - 10:15am", block: "SBSS111 - Cornelius, Ms. GS", category: "School" },
-    { time: "10:30am - 12:00pm", block: "GEOG111 - Language, Dr B", category: "School" },
-    { time: "12:00 - 1:00pm", block: "Lunch", category: "Health" },
-    { time: "1:00 - 2:30pm", block: "Travel home / decompress", category: "Admin" },
-    { time: "2:30 - 5:00pm", block: "Deep work block 2 - Ventures", category: "Business" },
-    { time: "5:00 - 5:45pm", block: "Break / snack", category: "Health" },
-    { time: "5:45 - 8:00pm", block: "Deep work block 3 - Masemula", category: "Growth" },
-    { time: "8:00 - 8:30pm", block: "Dinner", category: "Health" },
-    { time: "8:30 - 10:45pm", block: "Reading and planning", category: "Growth" },
-    { time: "10:45 - 11:30pm", block: "Wind-down", category: "Health" },
-    { time: "11:30pm", block: "Sleep", category: "Health" }
+    { time: "5:30 - 10:30am", block: "Shower, breakfast, deep work block - Dropshipping", category: "Business" },
+    { time: "10:30 - 11:00am", block: "Travel to campus", category: "Admin" },
+    { time: "11:00am - 12:30pm", block: "ALDE111 - Groenen, Mrs. GH", category: "School" },
+    { time: "12:30 - 12:45pm", block: "Lunch", category: "Health" },
+    { time: "12:45 - 2:15pm", block: "MTHS114 - Marewo, Dr GT", category: "School" },
+    { time: "2:15 - 2:30pm", block: "Break", category: "Recovery" },
+    { time: "2:30 - 4:00pm", block: "GEOG111 - Language, Dr B", category: "School" },
+    { time: "4:00 - 4:15pm", block: "Break", category: "Recovery" },
+    { time: "4:15 - 5:45pm", block: "GEOG111 - Language, Dr B", category: "School" },
+    { time: "5:45 - 6:30pm", block: "Travel home + decompress", category: "Admin" },
+    { time: "6:30 - 8:30pm", block: "Light work, review, personal time", category: "Admin / Personal" },
+    { time: "8:30 - 9:00pm", block: "Dinner", category: "Health" },
+    { time: "9:00 - 10:30pm", block: "Reading or downtime", category: "Growth" },
+    { time: "10:30 - 11:30pm", block: "Wind-down and sleep prep", category: "Health" },
   ],
   "Friday": [
     { time: "4:00 - 5:30am", block: "Gym", category: "Health" },
-    { time: "5:30 - 7:00am", block: "Shower, breakfast, briefing review", category: "Health / Admin" },
-    { time: "7:00 - 8:30am", block: "Deep work block 1", category: "Business" },
-    { time: "8:30 - 10:00am", block: "ALDE112 - Motlhankane, Ms. KE", category: "School" },
-    { time: "10:15 - 11:45am", block: "ECON112 - Mariska Aucamp", category: "School" },
-    { time: "12:00 - 1:00pm", block: "Lunch", category: "Health" },
-    { time: "1:00 - 2:30pm", block: "Travel home / decompress", category: "Admin" },
-    { time: "2:30 - 5:00pm", block: "Deep work block 2 - Review", category: "Business" },
-    { time: "5:00 - 5:45pm", block: "Break / snack", category: "Health" },
-    { time: "5:45 - 8:00pm", block: "Ventures or creative work", category: "Creative" },
+    { time: "5:30 - 7:00am", block: "Shower, breakfast, morning briefing", category: "Health / Admin" },
+    { time: "7:00 - 7:30am", block: "Travel to campus", category: "Admin" },
+    { time: "7:30 - 9:00am", block: "STTN111 - Van Heerden, Dr CJL", category: "School" },
+    { time: "9:00 - 11:00am", block: "Study / break on campus", category: "School" },
+    { time: "11:00am - 12:30pm", block: "SBSS111 - Cornelius, Ms. GS", category: "School" },
+    { time: "12:30 - 2:30pm", block: "Lunch + break", category: "Health" },
+    { time: "2:30 - 4:00pm", block: "MTHS114 - Marewo, Dr GT", category: "School" },
+    { time: "4:00 - 4:15pm", block: "Break", category: "Recovery" },
+    { time: "4:15 - 5:45pm", block: "MTHS114 - Marewo, Dr GT", category: "School" },
+    { time: "5:45 - 6:30pm", block: "Travel home", category: "Admin" },
+    { time: "6:30 - 8:00pm", block: "Weekly review + Estate digest prep", category: "Admin" },
     { time: "8:00 - 8:30pm", block: "Dinner", category: "Health" },
-    { time: "8:30 - 10:00pm", block: "Social or flexible work", category: "Social / Growth" },
-    { time: "10:00 - 10:45pm", block: "Wind-down", category: "Health" },
-    { time: "10:45 - 11:30pm", block: "Quiet reset", category: "Growth" },
-    { time: "11:30pm", block: "Sleep", category: "Health" }
+    { time: "8:30pm onwards", block: "Personal time, social time, rest", category: "Personal" },
+    { time: "11:30pm", block: "Sleep", category: "Health" },
   ],
   "Saturday": [
-    { time: "6:00 - 7:30am", block: "Optional gym or light exercise", category: "Health" },
-    { time: "7:30 - 9:00am", block: "Breakfast and morning admin", category: "Health / Admin" },
-    { time: "9:00am - 12:00pm", block: "Deep work - Ventures or projects", category: "Business" },
-    { time: "12:00 - 1:00pm", block: "Lunch", category: "Health" },
-    { time: "1:00 - 3:00pm", block: "Deep work - Creative or learning", category: "Creative / Growth" },
-    { time: "3:00 - 3:45pm", block: "Break / snack", category: "Health" },
-    { time: "3:45 - 5:30pm", block: "Personal projects or reading", category: "Growth" },
-    { time: "5:30 - 7:00pm", block: "Social time or family", category: "Social" },
-    { time: "7:00 - 9:00pm", block: "Flexible evening (dinner, wind-down)", category: "Health" },
-    { time: "9:00 - 11:30pm", block: "Sleep or personal time", category: "Health" }
+    { time: "4:00 - 5:30am", block: "Gym", category: "Health" },
+    { time: "5:30 - 7:00am", block: "Shower, breakfast, weekly digest review", category: "Health / Admin" },
+    { time: "7:00 - 10:00am", block: "Deep work block 1 - Dropshipping biggest task", category: "Business" },
+    { time: "10:00 - 10:30am", block: "Break", category: "Recovery" },
+    { time: "10:30am - 1:00pm", block: "Deep work block 2 - Music production / creative work", category: "Creative" },
+    { time: "1:00 - 2:00pm", block: "Lunch + rest", category: "Health" },
+    { time: "2:00 - 5:00pm", block: "Deep work block 3 - Masemula / brand planning / reading", category: "Business / Growth" },
+    { time: "5:00pm onwards", block: "Personal time", category: "Personal" },
+    { time: "11:30pm", block: "Sleep", category: "Health" },
   ],
   "Sunday": [
-    { time: "7:00 - 8:30am", block: "Light wake-up and breakfast", category: "Health" },
-    { time: "8:30 - 10:00am", block: "Morning review and planning", category: "Growth" },
-    { time: "10:00am - 12:00pm", block: "Deep work - Weekly review and goals", category: "Business / Growth" },
+    { time: "4:00 - 5:30am", block: "Gym optional - can shift to 6:00am", category: "Health" },
+    { time: "5:30 - 8:00am", block: "Slower morning, longer breakfast, no rush", category: "Health" },
+    { time: "8:00 - 10:00am", block: "Weekly planning - review last week, plan next week", category: "Admin" },
+    { time: "10:00am - 12:00pm", block: "Church, family, or personal time", category: "Personal" },
     { time: "12:00 - 1:00pm", block: "Lunch", category: "Health" },
-    { time: "1:00 - 3:00pm", block: "Personal projects or learning", category: "Growth" },
-    { time: "3:00 - 3:45pm", block: "Break / snack", category: "Health" },
-    { time: "3:45 - 5:30pm", block: "Leisure, reading, or social prep", category: "Social / Growth" },
-    { time: "5:30 - 7:00pm", block: "Social time or family", category: "Social" },
-    { time: "7:00 - 8:30pm", block: "Dinner", category: "Health" },
-    { time: "8:30 - 10:00pm", block: "Reflection and prep for week", category: "Growth" },
-    { time: "10:00 - 11:30pm", block: "Sleep", category: "Health" }
-  ]
+    { time: "1:00 - 4:00pm", block: "Reading block - business, biography, strategy", category: "Growth" },
+    { time: "4:00 - 6:00pm", block: "Music or creative exploration, low pressure", category: "Creative" },
+    { time: "6:00 - 7:00pm", block: "Dinner + wind-down prep for the week", category: "Health" },
+    { time: "7:00 - 10:00pm", block: "Kea time / personal", category: "Personal" },
+    { time: "10:00 - 11:30pm", block: "Wind-down, sleep", category: "Health" },
+  ],
 };
 
 const ROUTINE_NOTES = {
@@ -6866,199 +7030,7 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') closeCaptureModal();
 });
 
-/* ═══ CLEANDESK CHECKLIST ═══ */
-const CLEANDESK_PHASES = [
-  {
-    title: "Foundation",
-    week: "WEEK 1",
-    tasks: [
-      "Agree on store name",
-      "Create Shopify account — use \$1/3-month trial, not full price",
-      "Purchase domain on Namecheap (~R200)",
-      "Connect domain to Shopify store",
-      "Install CJ Dropshipping app on Shopify (free)",
-      "Install DSers on Shopify (free)",
-      "Create Klaviyo account and connect to Shopify (free up to 500 contacts)",
-      "Create store TikTok account",
-      "Create store Instagram account",
-      "Both partners confirm R1,750 each is liquid and accessible"
-    ]
-  },
-  {
-    title: "Product & Supplier Setup",
-    week: "WEEK 2",
-    tasks: [
-      "Search CJ Dropshipping for cable management kit — shortlist top 2 US warehouse suppliers",
-      "Search CJ Dropshipping for XL desk mat — shortlist top 2 US warehouse suppliers",
-      "Order 2 samples from each supplier (4 orders total, ~R800 split)",
-      "Contact CJ agent and request bundle SKU creation",
-      "Confirm US warehouse availability for both products",
-      "Begin building Shopify store using free Dawn or Refresh theme"
-    ]
-  },
-  {
-    title: "Store Build",
-    week: "WEEK 2–3",
-    tasks: [
-      "Install free Shopify theme (Dawn recommended)",
-      "Build Clean Desk Bundle product listing plus 2 standalone listings",
-      "Add product page copy into Shopify",
-      "Add trust badges — secure checkout, free shipping, 30-day guarantee",
-      "Set up 30-day returns policy (keep product, full refund)",
-      "Set up FAQ page",
-      "Connect Stripe as primary payment processor",
-      "Connect PayPal Business as second payment processor",
-      "Set up all 3 Klaviyo email flows (pre-launch, abandoned cart, post-purchase)",
-      "Add email capture popup with 10% discount offer",
-      "Install Facebook Pixel (free)",
-      "Install TikTok Pixel (free)"
-    ]
-  },
-  {
-    title: "Sample Testing",
-    week: "WEEK 3",
-    tasks: [
-      "Test cable adhesive clips on wood desk surface",
-      "Test cable adhesive clips on glass desk surface",
-      "Test desk mat stitching along all edges",
-      "Test desk mat non-slip base",
-      "Test desk mat size against standard desk",
-      "Photograph unboxing experience as a customer would",
-      "Score all 4 suppliers on quality, shipping, packaging, communication",
-      "Select primary cable kit supplier",
-      "Select primary desk mat supplier",
-      "Confirm bundle SKU is live with CJ agent"
-    ]
-  },
-  {
-    title: "Content Creation",
-    week: "WEEK 3–4",
-    tasks: [
-      "Film Script 1 — The Transformation Hook",
-      "Film Script 2 — The Productivity Hook",
-      "Film Script 3 — The Social Proof Hook",
-      "Edit all 3 videos in CapCut with text overlays and captions",
-      "Post first video on TikTok immediately",
-      "Post second video 24–48 hours later",
-      "Post third video 24–48 hours after that",
-      "Commit to 1–2 organic videos per day going forward"
-    ]
-  },
-  {
-    title: "Go Live",
-    week: "WEEK 4",
-    tasks: [
-      "Remove Shopify password page — store is live",
-      "Activate pre-launch Klaviyo email flow",
-      "Send launch announcement to email list",
-      "Continue daily TikTok content",
-      "Respond to every comment and DM",
-      "Begin weekly Friday P&L review with Ntobeko",
-      "Watch ROAS — organic only until one video hits 5,000+ views",
-      "When 5,000+ views hit — run best organic video as first paid ad at R500 budget"
-    ]
-  }
-];
 
-function initCleanDeskChecklist() {
-  renderChecklistPhases();
-  updateChecklistStats();
-}
-
-function getChecklistPhases() {
-  const state = localStorage.getItem('cleandesk_phases') || '{}';
-  return JSON.parse(state);
-}
-
-function getChecklistTasks() {
-  const state = localStorage.getItem('cleandesk_checklist') || '{}';
-  return JSON.parse(state);
-}
-
-function saveChecklistPhases(phases) {
-  localStorage.setItem('cleandesk_phases', JSON.stringify(phases));
-}
-
-function saveChecklistTasks(tasks) {
-  localStorage.setItem('cleandesk_checklist', JSON.stringify(tasks));
-}
-
-function renderChecklistPhases() {
-  const container = document.getElementById('checklist-phases-container');
-  const phases = getChecklistPhases();
-  const tasks = getChecklistTasks();
-  
-  container.innerHTML = CLEANDESK_PHASES.map((phase, i) => {
-    const phaseNum = i + 1;
-    const phaseId = `phase${phaseNum}`;
-    const isCollapsed = phases[phaseId] === false;
-    
-    const tasksList = phase.tasks.map((task, j) => {
-      const taskId = `phase${phaseNum}_task${j}`;
-      const isChecked = tasks[taskId] === true;
-      
-      return `<div class="checklist-task${isChecked ? ' checked' : ''}">
-        <div class="checklist-checkbox${isChecked ? ' checked' : ''}" onclick="toggleTask(${phaseNum}, ${j})"></div>
-        <label class="checklist-label" onclick="toggleTask(${phaseNum}, ${j})">${task}</label>
-      </div>`;
-    }).join('');
-    
-    return `<div class="checklist-phase${isCollapsed ? ' collapsed' : ''}">
-      <div class="checklist-phase-header" onclick="togglePhaseCollapse(${phaseNum})">
-        <div class="checklist-phase-toggle"></div>
-        <div class="checklist-phase-title">${phase.title}</div>
-        <div class="checklist-phase-badge">${phase.week}</div>
-      </div>
-      <div class="checklist-phase-body">${tasksList}</div>
-    </div>`;
-  }).join('');
-}
-
-function togglePhaseCollapse(phaseNum) {
-  const phases = getChecklistPhases();
-  phases[`phase${phaseNum}`] = phases[`phase${phaseNum}`] === false ? true : false;
-  saveChecklistPhases(phases);
-  renderChecklistPhases();
-}
-
-function toggleTask(phaseNum, taskNum) {
-  const tasks = getChecklistTasks();
-  const taskId = `phase${phaseNum}_task${taskNum}`;
-  tasks[taskId] = !tasks[taskId];
-  saveChecklistTasks(tasks);
-  renderChecklistPhases();
-  updateChecklistStats();
-}
-
-function updateChecklistStats() {
-  const tasks = getChecklistTasks();
-  let completed = 0;
-  let total = 0;
-  
-  CLEANDESK_PHASES.forEach((phase, i) => {
-    phase.tasks.forEach((task, j) => {
-      total++;
-      if (tasks[`phase${i+1}_task${j}`]) completed++;
-    });
-  });
-  
-  const remaining = total - completed;
-  const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-  
-  document.getElementById('checklist-completed').textContent = completed;
-  document.getElementById('checklist-remaining').textContent = remaining;
-  document.getElementById('checklist-percentage').textContent = percentage + '%';
-  document.getElementById('checklist-progress-pct').textContent = percentage + '%';
-  document.getElementById('checklist-progress-fill').style.width = percentage + '%';
-}
-
-function resetAllCheckboxes() {
-  localStorage.removeItem('cleandesk_checklist');
-  localStorage.removeItem('cleandesk_phases');
-  renderChecklistPhases();
-  updateChecklistStats();
-  showToast('Checklist reset');
-}
 
 </script>
 
