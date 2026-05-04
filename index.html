@@ -388,6 +388,74 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 .auth-btn{width:100%;background:#C9A84C;color:#120E0B;border:none;border-radius:8px;padding:10px 12px;cursor:pointer;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
 .auth-error{min-height:18px;margin-top:10px;font-size:12px;color:#E04E4E;text-align:center}
 #toast{position:fixed;right:16px;bottom:16px;background:#1A1210;border:1px solid #4A3828;color:#F0EDE7;padding:10px 12px;border-radius:8px;font-size:12px;display:none;z-index:9999}
+/* ═══ MOBILE OPTIMIZATIONS ═══ */
+@media(max-width:900px){
+  #sidebar{width:auto;padding:0;gap:8px;background:var(--surface);border:none;flex-direction:row;overflow-x:auto}
+  #main{margin-left:0;width:100%}
+  .sidebar-sep{display:none}
+  .nav-icon{width:36px;height:36px}
+  .nav-tip{display:none}
+  .content{padding:14px}
+  .topbar{padding:10px}
+}
+@media(max-width:600px){
+  body{font-size:13px}
+  .card-title{font-size:13px}
+  .btn{padding:8px 10px;font-size:10px;min-height:36px}
+  .btn-del{min-height:32px;min-width:32px}
+  .ledger-input{font-size:12px;padding:8px 10px}
+  .itab-panel{padding:10px 0}
+  .grid-2{grid-template-columns:1fr}
+  .grid-4{grid-template-columns:1fr}
+  .grid-3{grid-template-columns:1fr}
+  .stat{padding:10px}
+  .stat-n{font-size:16px}
+  .stat-l{font-size:10px}
+  .prog-pct{font-size:10px}
+  .item-row{gap:8px;flex-direction:row;flex-wrap:wrap}
+  .header{padding:12px;margin-bottom:10px}
+  .header-big{font-size:20px}
+  .header-sub{font-size:10px}
+  .card{padding:12px;margin-bottom:8px}
+  .card-title{font-size:12px;margin-bottom:6px}
+  .badge{padding:3px 8px;font-size:9px}
+  #capture-modal{padding:8px}
+  #capture-modal>div{max-width:100%;padding:12px}
+  #goal-modal{padding:8px}
+  #goal-modal>div{max-width:100%;padding:12px;max-height:85vh}
+  .daily-command{padding:10px}
+  .daily-command .stat{padding:8px}
+  #topbar{flex-direction:column;gap:8px}
+  .day-block{padding:6px 2px}
+  .day-label{font-size:9px}
+  .time-slot{height:12px;margin:1px}
+  .venture-card{padding:10px}
+  .venture-stat{font-size:10px}
+  input[type="date"]{font-size:14px;padding:8px}
+  textarea{padding:8px;font-size:12px}
+  #jarvis-form{padding:12px;gap:8px}
+}
+@media(max-width:480px){
+  .sidebar-sep{display:none}
+  #sidebar{height:auto;width:100%;border-top:0.5px solid var(--border)}
+  .header-big{font-size:18px;margin-bottom:8px}
+  .card-title{font-size:11px}
+  .content{padding:10px}
+  .btn{padding:6px 8px;font-size:9px;min-height:32px}
+  .itab{padding:8px 10px;font-size:10px}
+  .grid-2{grid-template-columns:1fr;gap:8px}
+  .grid-4{grid-template-columns:1fr;gap:6px}
+  .stat-n{font-size:14px}
+  .badge{font-size:8px;padding:2px 6px}
+  .item-row{padding:6px 0;flex-direction:column}
+  .prog-bar{height:3px;margin-bottom:2px}
+  #capture-modal>div{padding:10px}
+  #goal-modal>div{padding:10px;max-height:80vh}
+  .modal-form-group{margin-bottom:6px}
+  .venture-header{flex-direction:column;gap:4px}
+  .venture-stat{font-size:9px}
+  select{padding:6px 8px;font-size:12px}
+}
 </style>
 
 <div id="auth-screen">
