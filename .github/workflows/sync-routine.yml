@@ -1,0 +1,121 @@
+name: Sync Routine to Dashboard
+
+on:
+  push:
+    paths:
+      - '02_Routine/**/*.md'
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      update_nwu_calendar:
+        description: 'Update NWU academic calendar'
+        required: false
+        default: 'false'
+
+jobs:
+  sync:
+    runs-on: windows-latest
+    name: Sync Routine to Supabase
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Load environment variables
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          ROUTINE_USER_ID: ${{ secrets.ROUTINE_USER_ID || 'ntobeko-masemula-estate' }}
+        run: |
+          echo "SUPABASE_URL=${{ env.SUPABASE_URL }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "ROUTINE_USER_ID=${{ env.ROUTINE_USER_ID }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        shell: pwsh
+
+      - name: Validate environment variables
+        run: |
+          if ([string]::IsNullOrEmpty($env:SUPABASE_URL)) {
+              Write-Error "SUPABASE_URL is not set in GitHub Secrets"
+              exit 1
+          }
+          if ([string]::IsNullOrEmpty($env:SUPABASE_ANON_KEY)) {
+              Write-Error "SUPABASE_ANON_KEY is not set in GitHub Secrets"
+              exit 1
+          }
+          Write-Host "✓ Environment variables validated"
+        shell: pwsh
+
+      - name: Run routine sync
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          ROUTINE_USER_ID: ${{ secrets.ROUTINE_USER_ID || 'ntobeko-masemula-estate' }}
+        run: |
+          $updateNWU = if ('${{ github.event.inputs.update_nwu_calendar }}' -eq 'true') { '-UpdateNWUCalendar' } else { '' }
+          & "E:\Business Business\1.Masemula Estate\0.MD Files\02_Routine\agent-sync-routine.ps1" -Verbose $updateNWU
+        shell: pwsh
+
+      - name: Read sync log
+        if: always()
+        run: |
+          $logPath = "E:\Business Business\1.Masemula Estate\0.MD Files\02_Routine\Sync_Log.md"
+          if (Test-Path $logPath) {
+              Write-Host "=== Sync Log ===" 
+              Get-Content -Path $logPath | Select-Object -Last 20
+          } else {
+              Write-Host "No sync log found"
+          }
+        shell: pwsh
+
+      - name: Check sync status
+        if: failure()
+        run: |
+          Write-Error "Routine sync failed. Check logs for details."
+        shell: pwsh
+
+      - name: Report sync status
+        if: always()
+        run: |
+          $logPath = "E:\Business Business\1.Masemula Estate\0.MD Files\02_Routine\Sync_Log.md"
+          if (Test-Path $logPath) {
+              $lastLine = Get-Content -Path $logPath | Select-Object -Last 1
+              if ($lastLine -match "Success") {
+                  Write-Host "✓ Sync completed successfully"
+              } else {
+                  Write-Host "✗ Sync may have encountered issues"
+              }
+          }
+        shell: pwsh
+
+      - name: Create commit with sync timestamp (on success)
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+          $syncMessage = "chore: sync routine at $timestamp`n`nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+          
+          # Only commit if there are changes
+          $status = git status --porcelain
+          if ($status) {
+              git config user.name "github-actions[bot]"
+              git config user.email "github-actions[bot]@users.noreply.github.com"
+              git add -A
+              git commit -m $syncMessage
+              git push
+              Write-Host "✓ Committed sync results"
+          } else {
+              Write-Host "✓ No changes to commit"
+          }
+        shell: pwsh
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          Write-Host "❌ Routine sync workflow failed"
+          Write-Host "Check the logs above for details"
+        shell: pwsh

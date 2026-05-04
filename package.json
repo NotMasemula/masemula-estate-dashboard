@@ -1,0 +1,29 @@
+{
+  "name": "masemula-estate-dashboard",
+  "version": "1.0.0",
+  "description": "Masemula Estate OS - Personal management dashboard with routine synchronization",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "lint": "eslint scripts/**/*.ts",
+    "format": "prettier --write scripts/**/*.ts",
+    "sync-routine": "node scripts/routine-client.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.0",
+    "typescript": "^5.2.0",
+    "vitest": "^0.34.0",
+    "eslint": "^8.50.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
