@@ -1,0 +1,219 @@
+name: Sync Estate Data to Dashboard
+
+on:
+  push:
+    paths:
+      - 'docs/routine-schedule.json'
+      - 'docs/ventures.json'
+      - 'docs/academics.json'
+      - 'docs/finance.json'
+      - 'docs/headspace.json'
+      - 'docs/goals.json'
+  schedule:
+    - cron: '0 * * * *'  # Hourly sync (routine, finance)
+    - cron: '0 6 * * *'  # Daily sync at 06:00 UTC (all sections)
+    - cron: '0 1 1 * *'  # Monthly sync at 01:00 UTC on 1st (NWU calendar)
+  workflow_dispatch:
+    inputs:
+      agent:
+        description: 'Which agent to run (leave empty for all)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - routine
+          - ventures
+          - academics
+          - finance
+          - headspace
+          - goals
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      routine: ${{ steps.changes.outputs.routine }}
+      ventures: ${{ steps.changes.outputs.ventures }}
+      academics: ${{ steps.changes.outputs.academics }}
+      finance: ${{ steps.changes.outputs.finance }}
+      headspace: ${{ steps.changes.outputs.headspace }}
+      goals: ${{ steps.changes.outputs.goals }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect file changes
+        id: changes
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.agent }}" != "" ]]; then
+            echo "${{ github.event.inputs.agent }}=true" >> $GITHUB_OUTPUT
+          else
+            echo "routine=$([[ $(git diff HEAD~1 HEAD -- docs/routine-schedule.json) ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+            echo "ventures=$([[ $(git diff HEAD~1 HEAD -- docs/ventures.json) ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+            echo "academics=$([[ $(git diff HEAD~1 HEAD -- docs/academics.json) ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+            echo "finance=$([[ $(git diff HEAD~1 HEAD -- docs/finance.json) ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+            echo "headspace=$([[ $(git diff HEAD~1 HEAD -- docs/headspace.json) ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+            echo "goals=$([[ $(git diff HEAD~1 HEAD -- docs/goals.json) ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          fi
+
+  sync-routine:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.routine == 'true' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync routine to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ROUTINE_USER_ID: ${{ secrets.ROUTINE_USER_ID || 'ntobeko-routine' }}
+        run: node scripts/routine-client.js --sync docs/routine-schedule.json
+
+      - name: Report sync status
+        if: always()
+        run: echo "✅ Routine synced at $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+
+  sync-ventures:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.ventures == 'true' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync ventures to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VENTURES_USER_ID: ${{ secrets.VENTURES_USER_ID || 'ntobeko-ventures' }}
+        run: node scripts/ventures-client.js --sync docs/ventures.json
+
+  sync-academics:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.academics == 'true' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync academics to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ACADEMICS_USER_ID: ${{ secrets.ACADEMICS_USER_ID || 'ntobeko-academics' }}
+        run: node scripts/academics-client.js --sync docs/academics.json
+
+  sync-finance:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.finance == 'true' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync finance to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FINANCE_USER_ID: ${{ secrets.FINANCE_USER_ID || 'ntobeko-finance' }}
+        run: node scripts/finance-client.js --sync docs/finance.json
+
+  sync-headspace:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.headspace == 'true' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync headspace to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          HEADSPACE_USER_ID: ${{ secrets.HEADSPACE_USER_ID || 'ntobeko-headspace' }}
+        run: node scripts/headspace-client.js --sync docs/headspace.json
+
+  sync-goals:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.goals == 'true' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync goals to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GOALS_USER_ID: ${{ secrets.GOALS_USER_ID || 'ntobeko-goals' }}
+        run: node scripts/goals-client.js --sync docs/goals.json
+
+  notify:
+    needs: [sync-routine, sync-ventures, sync-academics, sync-finance, sync-headspace, sync-goals]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summary
+        run: |
+          echo "📊 Estate Data Sync Complete"
+          echo "Routine: ${{ needs.sync-routine.result }}"
+          echo "Ventures: ${{ needs.sync-ventures.result }}"
+          echo "Academics: ${{ needs.sync-academics.result }}"
+          echo "Finance: ${{ needs.sync-finance.result }}"
+          echo "Headspace: ${{ needs.sync-headspace.result }}"
+          echo "Goals: ${{ needs.sync-goals.result }}"
