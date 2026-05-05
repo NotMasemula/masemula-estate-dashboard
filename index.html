@@ -2600,17 +2600,26 @@ async function initDashboard() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
     
-    const testResp = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?select=user_id&limit=1`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${authSession?.access_token || SUPABASE_KEY}` },
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!testResp.ok) throw new Error('Connection failed');
-    
-    syncEnabled = true;
-    console.log('☁️ Connected to Supabase');
+    try {
+      const testResp = await fetch(`${SUPABASE_URL}/rest/v1/estate_data?select=user_id&limit=1`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${authSession?.access_token || SUPABASE_KEY}` },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!testResp.ok) {
+        console.warn('⚠️ Supabase API returned', testResp.status, '- RLS policies may be blocking access. Proceeding with offline mode.');
+        syncEnabled = false;
+      } else {
+        syncEnabled = true;
+        console.log('☁️ Connected to Supabase');
+      }
+    } catch (connErr) {
+      console.warn('⚠️ Supabase connection test failed:', connErr.message);
+      syncEnabled = false;
+      clearTimeout(timeoutId);
+    }
 
     await applyThemeFromPreferences();
     
