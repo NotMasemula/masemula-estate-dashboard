@@ -2550,10 +2550,14 @@ async function initDashboard() {
   try {
     console.log('🚀 Initializing dashboard...');
     
-    // Initialize global data structures
+    // Initialize global data structures with defaults
     agentTasks = [];
     weekData = {};
     ventureData = {};
+    selectedDay = getTodayIndex();
+    accountBalances = {"primary":0,"business":0,"savings":0};
+    ledger = [];
+    recurringTransactions = [];
     
     // Ensure DOM is ready
     if (document.readyState !== 'complete' && document.readyState !== 'interactive') {
@@ -4174,9 +4178,9 @@ function renderAllChecklists(){
 renderAllChecklists();
 
 // ─── FINANCE LEDGER ───
-let ledger=loadData('financeLedger', []);
+let ledger=[];
 let savingsGoals=loadData('savingsGoals', []);
-let recurringTransactions=loadData('recurringTransactions', []);
+let recurringTransactions=[];
 let financeForecastTargets=loadData('financeForecastTargets', {monthlyIncome:0,monthlyExpense:0});
 
 async function addLedgerEntry(type){
@@ -5198,7 +5202,7 @@ async function removeInvestment(id){
 renderInvestments();
 
 // ─── BANK ACCOUNTS ───
-let accountBalances=loadData('accountBalances', {"primary":0,"business":0,"savings":0});
+let accountBalances={"primary":0,"business":0,"savings":0};
 async function updateAccountBalances(){
   accountBalances.primary=parseFloat(document.getElementById('bal-primary').value)||0;
   accountBalances.business=parseFloat(document.getElementById('bal-business').value)||0;
@@ -5353,7 +5357,7 @@ const getTodayIndex=()=>{const d=new Date().getDay();return d===0?6:d-1;};
 const getWeekKey=()=>{const d=new Date(),j=new Date(d.getFullYear(),0,1),w=Math.ceil(((d-j)/864e5+j.getDay()+1)/7);return'mev4_w'+d.getFullYear()+'_'+w;};
 const emptyWeek=()=>({gym:[0,0,0,0,0,0,0],read:[0,0,0,0,0,0,0],sleep:[0,0,0,0,0,0,0],drop:[0,0,0,0,0,0,0],music:[0,0,0,0,0,0,0],deep:[0,0,0,0,0,0,0],study:[0,0,0,0,0,0,0]});
 let weekData=loadData(getWeekKey(), null) || emptyWeek();
-let selectedDay=getTodayIndex();
+let selectedDay=0; // Will be set to getTodayIndex() in initDashboard
 async function saveWeekData(){await saveData(getWeekKey(), weekData);}
 function renderRoutineDayNav(){
   const ti=getTodayIndex();
