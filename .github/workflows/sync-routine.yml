@@ -9,11 +9,9 @@ on:
     # Run daily at 03:00 UTC to keep the dashboard in sync
     - cron: '0 3 * * *'
   workflow_dispatch:
-    inputs:
-      force_sync:
-        description: 'Force sync even if no changes detected'
-        required: false
-        default: 'false'
+
+permissions:
+  contents: read
 
 jobs:
   sync:

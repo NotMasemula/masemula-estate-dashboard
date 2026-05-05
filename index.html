@@ -1102,7 +1102,12 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       <div class="grid-2" style="gap:16px;width:100%;grid-template-columns:1.5fr 1fr">
         <!-- Schedule Panel -->
         <div class="card routine-schedule-card" style="max-height:600px;overflow-y:auto;width:100%">
-          <div class="card-title" style="display:flex;align-items:center;gap:8px">Today's Schedule <span id="routine-day-label" style="font-weight:300;color:var(--muted);margin-left:4px"></span><span id="routine-cloud-badge" style="display:none;font-size:9px;font-weight:500;color:var(--gold);margin-left:auto;opacity:0.8">☁ live</span><button style="margin-left:4px;background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 6px" title="Refresh schedule from cloud" onclick="loadRoutineScheduleFromCloud().then(()=>{renderRoutineNote();renderRoutineSchedule();})">↻</button></div>
+          <div class="card-title" style="display:flex;align-items:center;gap:8px">
+            Today's Schedule
+            <span id="routine-day-label" style="font-weight:300;color:var(--muted);margin-left:4px"></span>
+            <span id="routine-cloud-badge" style="display:none;font-size:9px;font-weight:500;color:var(--gold);margin-left:auto;opacity:0.8">☁ live</span>
+            <button style="margin-left:4px;background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 6px" title="Refresh schedule from cloud" onclick="refreshRoutineFromCloud()">↻</button>
+          </div>
           <div id="routine-schedule"></div>
         </div>
         <!-- Habits & Tracking Panel -->
@@ -2543,6 +2548,12 @@ async function loadRoutineScheduleFromCloud() {
     console.warn('☁️ Could not load routine schedule from cloud, using static fallback:', err.message);
     return false;
   }
+}
+
+async function refreshRoutineFromCloud() {
+  await loadRoutineScheduleFromCloud();
+  renderRoutineNote();
+  renderRoutineSchedule();
 }
 
 // ═══ LOAD ALL DATA FROM CLOUD ═══

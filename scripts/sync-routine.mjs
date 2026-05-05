@@ -51,7 +51,6 @@ scheduleData.metadata = {
 };
 
 // ─── Upsert to Supabase ───────────────────────────────────────────────────
-const endpoint = `${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${encodeURIComponent(ROUTINE_USER_ID)}`;
 
 const payload = {
   user_id: ROUTINE_USER_ID,
@@ -63,40 +62,20 @@ console.log(`🔄  Syncing routine schedule to Supabase (key: ${ROUTINE_USER_ID}
 
 let response;
 try {
-  // Try PATCH first (update existing record)
-  response = await fetch(endpoint, {
-    method: 'PATCH',
+  // Use POST upsert with merge-duplicates to insert or update in a single call
+  response = await fetch(`${SUPABASE_URL}/rest/v1/estate_data`, {
+    method: 'POST',
     headers: {
       apikey: SUPABASE_SERVICE_ROLE_KEY,
       Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
       'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
+      Prefer: 'resolution=merge-duplicates,return=minimal',
     },
-    body: JSON.stringify({ data: scheduleData, updated_at: payload.updated_at }),
+    body: JSON.stringify(payload),
   });
 } catch (err) {
-  console.error('❌  Network error during PATCH:', err.message);
+  console.error('❌  Network error during upsert:', err.message);
   process.exit(1);
-}
-
-// If no rows were updated (204 with no content), INSERT instead
-if (response.status === 204 || response.ok) {
-  // Supabase PATCH returns 204 even when 0 rows match — check via POST upsert
-  try {
-    response = await fetch(`${SUPABASE_URL}/rest/v1/estate_data`, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'resolution=merge-duplicates,return=minimal',
-      },
-      body: JSON.stringify(payload),
-    });
-  } catch (err) {
-    console.error('❌  Network error during upsert:', err.message);
-    process.exit(1);
-  }
 }
 
 if (!response.ok) {

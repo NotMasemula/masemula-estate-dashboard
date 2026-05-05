@@ -327,7 +327,9 @@ export class RoutineClient {
     const subscriptionKey = `${userId}-subscription`;
     this.subscriptions.set(subscriptionKey, callback);
 
-    // Set up real-time listener using Supabase v2 channel API
+    // Set up real-time listener using Supabase v2 channel API.
+    // The generic type argument types `payload.new`; `payload.old`, `eventType`,
+    // etc. remain typed by the Supabase SDK RealtimePostgresChangesPayload wrapper.
     const channelName = `routine-updates-${userId}`;
     const channel = this.supabase
       .channel(channelName)
