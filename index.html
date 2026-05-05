@@ -1963,7 +1963,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       </div>
       <input id="vision-file-input" type="file" accept="image/*" style="display:none" onchange="handleVisionImageUpload(event)">
       <div id="vision-board-uploaded" class="mb-grid mb-10"></div>
-      <div class="mb-grid mb-10">
+      <div class="mb-grid mb-10" style="display:none">
         <div class="mb-tile" style="grid-column:span 2;grid-row:span 1" onclick="triggerVisionUpload()">
           <div class="mb-visual" style="height:140px;background:linear-gradient(135deg,#2C1A0E 0%,#5C3317 50%,#C9A84C 100%);font-size:16px;flex-direction:column;gap:8px">
             <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:#F5F0E8;font-weight:300;letter-spacing:0.1em">THE ESTATE</div>
@@ -2448,6 +2448,7 @@ async function syncToCloud(updateStatus = true) {
       goalMilestones: loadData('goalMilestones', {}),
       goalTaskLinks: loadData('goalTaskLinks', {}),
       theme: loadData('theme', 'light'),
+      routineState: loadData('routineState', { selectedDay: 0 }),
       syncedAt: new Date().toISOString()
     };
     
@@ -2512,12 +2513,17 @@ async function loadFromCloud(showStatus = true) {
     const keys = ['journalDiary', 'financeLedger', 'savingsGoals', 'emotionLog', 'investments',
                   'agentTasks', 'agentHistory', 'accountBalances', 'moduleMarks', 'contentStats',
                   'moodboardTiles', 'academicModules', 'personalProjects', 'recurringTransactions', 'financeForecastTargets', 'rs3Income',
-                  'workflowInbox', 'dailyTop3', 'dailyWorkflow', 'ventureHealth', 'goalMilestones', 'goalTaskLinks', 'theme'];
+                  'workflowInbox', 'dailyTop3', 'dailyWorkflow', 'ventureHealth', 'goalMilestones', 'goalTaskLinks', 'theme', 'routineState'];
     
     for (const key of keys) {
       if (cloudData[key] !== undefined) {
         cloudStore[key] = cloudData[key];
       }
+    }
+    
+    // Restore routine state if available
+    if (cloudData.routineState && cloudData.routineState.selectedDay !== undefined) {
+      selectedDay = cloudData.routineState.selectedDay;
     }
     
     // Re-render all sections
@@ -5345,6 +5351,7 @@ function renderRoutineDayNav(){
 }
 function selectDay(i){
   selectedDay=i;
+  saveData('routineState', { selectedDay: i });
   renderRoutineDayNav();
   renderRoutineNote();
   renderRoutineSchedule();
@@ -6776,15 +6783,63 @@ async function loadVisionBoardFromSupabase() {
   try {
     const { data, error } = await sbClient.from('vision_board').select('*').eq('owner_uid', USER_ID).order('position_order', { ascending: true });
     if (error) throw error;
-    if (!data?.length) { el.innerHTML = ''; return; }
-    el.innerHTML = data.map(item => {
-      const { data: urlData } = sbClient.storage.from('vision-board').getPublicUrl(item.storage_path);
-      return `<div class="mb-tile" style="position:relative">
-        <div class="mb-visual" style="background-image:url('${urlData.publicUrl}');background-size:cover;background-position:center;height:90px"></div>
-        <div class="mb-overlay">${item.caption || 'Vision'}</div>
-        <button onclick="deleteVisionImage('${item.id}','${item.storage_path}')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;z-index:10">×</button>
+    
+    // Preset tiles configuration
+    const presetTiles = [
+      { emoji: '🏛', label: 'Masemula HQ', bg: '#EAF3DE', color: '#3B6D11' },
+      { emoji: '🎵', label: 'Music legacy', bg: '#EEEDFE', color: '#3C3489' },
+      { emoji: '🚗', label: 'The garage', bg: '#FAEEDA', color: '#854F0B' },
+      { emoji: '💍', label: 'Kea & family', bg: '#E1F5EE', color: '#0F6E56' },
+      { emoji: '🌍', label: 'SA legacy', bg: '#FAECE7', color: '#993C1D' }
+    ];
+    
+    let html = '';
+    
+    // Render uploaded images first
+    if (data && data.length > 0) {
+      html += data.map(item => {
+        const { data: urlData } = sbClient.storage.from('vision-board').getPublicUrl(item.storage_path);
+        return `<div class="mb-tile" style="position:relative">
+          <div class="mb-visual" style="background-image:url('${urlData.publicUrl}');background-size:cover;background-position:center;height:90px"></div>
+          <div class="mb-overlay">${item.caption || 'Vision'}</div>
+          <button onclick="deleteVisionImage('${item.id}','${item.storage_path}')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;z-index:10">×</button>
+        </div>`;
+      }).join('');
+      
+      // If fewer than 6 images, add preset tiles to fill remaining slots
+      const remainingSlots = 6 - data.length;
+      for (let i = 0; i < remainingSlots && i < presetTiles.length; i++) {
+        const tile = presetTiles[i];
+        html += `<div class="mb-tile" onclick="triggerVisionUpload()">
+          <div class="mb-visual" style="background:${tile.bg};flex-direction:column">
+            <div style="font-size:28px">${tile.emoji}</div>
+            <div style="font-size:10px;color:${tile.color};letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">${tile.label}</div>
+          </div>
+          <div class="mb-overlay">Add image</div>
+        </div>`;
+      }
+    } else {
+      // No images uploaded - show all preset tiles plus the estate tile
+      html = `<div class="mb-tile" style="grid-column:span 2;grid-row:span 1" onclick="triggerVisionUpload()">
+        <div class="mb-visual" style="height:140px;background:linear-gradient(135deg,#2C1A0E 0%,#5C3317 50%,#C9A84C 100%);font-size:16px;flex-direction:column;gap:8px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:#F5F0E8;font-weight:300;letter-spacing:0.1em">THE ESTATE</div>
+          <div style="font-size:10px;color:#C49A6C;letter-spacing:0.12em;text-transform:uppercase">Financial independence · Creative legacy</div>
+        </div>
+        <div class="mb-overlay">Edit vision</div>
       </div>`;
-    }).join('');
+      
+      presetTiles.forEach(tile => {
+        html += `<div class="mb-tile" onclick="triggerVisionUpload()">
+          <div class="mb-visual" style="background:${tile.bg};flex-direction:column">
+            <div style="font-size:28px">${tile.emoji}</div>
+            <div style="font-size:10px;color:${tile.color};letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">${tile.label}</div>
+          </div>
+          <div class="mb-overlay">Add image</div>
+        </div>`;
+      });
+    }
+    
+    el.innerHTML = html;
   } catch (err) {
     showToast('Failed to load vision board', true);
   }
