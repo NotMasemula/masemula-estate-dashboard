@@ -2279,11 +2279,16 @@ if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
     console.error('Supabase client initialization failed:', err);
   }
 }
-let USER_ID = null;
+let USER_ID = 'ntobeko-masemula-estate'; // Fixed user ID for routine data
 let authSession = null;
 let syncEnabled = false;
 let isSyncing = false;
 let cloudStore = {}; // In-memory cache of cloud data
+
+// Deferred initialization - these will be set up after page load
+let agentTasks = [];
+let weekData = {};
+let ventureData = {};
 
 console.log('🔧 Estate OS v9: Auth-gated Supabase dashboard');
 
@@ -2544,6 +2549,11 @@ async function loadFromCloud(showStatus = true) {
 async function initDashboard() {
   try {
     console.log('🚀 Initializing dashboard...');
+    
+    // Initialize global data structures
+    agentTasks = [];
+    weekData = {};
+    ventureData = {};
     
     // Ensure DOM is ready
     if (document.readyState !== 'complete' && document.readyState !== 'interactive') {
