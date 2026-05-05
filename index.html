@@ -5229,7 +5229,7 @@ function renderAccountBalances(){
 renderAccountBalances();
 
 /* ═══ AGENTS ═══ */
-let agentTasks=loadData('agentTasks', []);
+
 let agentHistory=loadData('agentHistory', []);
 const agentNames={
   pa:'Personal Assistant',
@@ -5356,7 +5356,7 @@ const toMin=t=>{if(!t||t==='00:00')return 0;const[h,m]=t.split(':').map(Number);
 const getTodayIndex=()=>{const d=new Date().getDay();return d===0?6:d-1;};
 const getWeekKey=()=>{const d=new Date(),j=new Date(d.getFullYear(),0,1),w=Math.ceil(((d-j)/864e5+j.getDay()+1)/7);return'mev4_w'+d.getFullYear()+'_'+w;};
 const emptyWeek=()=>({gym:[0,0,0,0,0,0,0],read:[0,0,0,0,0,0,0],sleep:[0,0,0,0,0,0,0],drop:[0,0,0,0,0,0,0],music:[0,0,0,0,0,0,0],deep:[0,0,0,0,0,0,0],study:[0,0,0,0,0,0,0]});
-let weekData=loadData(getWeekKey(), null) || emptyWeek();
+
 let selectedDay=0; // Will be set to getTodayIndex() in initDashboard
 async function saveWeekData(){await saveData(getWeekKey(), weekData);}
 function renderRoutineDayNav(){
