@@ -455,6 +455,9 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
   .venture-header{flex-direction:column;gap:4px}
   .venture-stat{font-size:9px}
   select{padding:6px 8px;font-size:12px}
+  /* Hide scrollbar on routine schedule but keep scrolling */
+  .routine-schedule-card::-webkit-scrollbar{width:0;height:0}
+  .routine-schedule-card{-ms-overflow-style:none;scrollbar-width:none}
 }
 
 </style>
@@ -1098,7 +1101,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       <div id="routine-note"></div>
       <div class="grid-2" style="gap:16px;width:100%;grid-template-columns:1.5fr 1fr">
         <!-- Schedule Panel -->
-        <div class="card" style="max-height:600px;overflow-y:auto;width:100%;scrollbar-gutter:stable">
+        <div class="card routine-schedule-card" style="max-height:600px;overflow-y:auto;width:100%">
           <div class="card-title">Today's Schedule <span id="routine-day-label" style="font-weight:300;color:var(--muted);margin-left:8px"></span></div>
           <div id="routine-schedule"></div>
         </div>
