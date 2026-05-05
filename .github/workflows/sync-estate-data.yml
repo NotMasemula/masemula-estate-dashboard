@@ -77,6 +77,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build sync scripts
+        run: npm run build
+
       - name: Sync routine to Supabase
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -104,6 +107,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build sync scripts
+        run: npm run build
+
       - name: Sync ventures to Supabase
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -127,12 +133,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build sync scripts
+        run: npm run build
+
       - name: Sync academics to Supabase
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           ACADEMICS_USER_ID: ${{ secrets.ACADEMICS_USER_ID || 'ntobeko-academics' }}
         run: node scripts/academics-client.js --sync docs/academics.json
+
+      - name: Update NWU calendar (monthly)
+        if: github.event.schedule == '0 1 1 * *'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/nwu-calendar-sync.js
 
   sync-finance:
     needs: detect-changes
@@ -150,12 +166,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build sync scripts
+        run: npm run build
+
       - name: Sync finance to Supabase
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           FINANCE_USER_ID: ${{ secrets.FINANCE_USER_ID || 'ntobeko-finance' }}
         run: node scripts/finance-client.js --sync docs/finance.json
+
+      - name: Sync Stitch banking data (hourly)
+        if: github.event.schedule == '0 * * * *'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STITCH_CLIENT_ID: ${{ secrets.STITCH_CLIENT_ID }}
+          STITCH_CLIENT_SECRET: ${{ secrets.STITCH_CLIENT_SECRET }}
+        run: node scripts/stitch-sync.js
+        continue-on-error: true
 
   sync-headspace:
     needs: detect-changes
@@ -172,6 +201,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Build sync scripts
+        run: npm run build
 
       - name: Sync headspace to Supabase
         env:
@@ -195,6 +227,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Build sync scripts
+        run: npm run build
 
       - name: Sync goals to Supabase
         env:
