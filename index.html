@@ -2601,6 +2601,27 @@ async function initDashboard() {
     // Setup Realtime subscription for live updates
     setupSupabaseRealtime();
     
+    // Render all sections after data is loaded
+    if (typeof renderLedger === 'function') renderLedger();
+    if (typeof updateFinanceTotals === 'function') updateFinanceTotals();
+    if (typeof renderSavingsGoals === 'function') renderSavingsGoals();
+    if (typeof renderFinanceForecasting === 'function') renderFinanceForecasting();
+    if (typeof renderInvestments === 'function') renderInvestments();
+    if (typeof renderAccountBalances === 'function') renderAccountBalances();
+    if (typeof renderAgentTasks === 'function') renderAgentTasks();
+    if (typeof renderAgentHistory === 'function') renderAgentHistory();
+    if (typeof updateDashboardAgents === 'function') updateDashboardAgents();
+    if (typeof renderRoutineDayNav === 'function') {
+      renderRoutineDayNav();
+      renderRoutineNote();
+      renderRoutineSchedule();
+      renderRoutineHabits();
+      renderRoutineWeeklyProg();
+      renderRoutineFlags();
+      const dayLabel = document.getElementById('routine-day-label');
+      if (dayLabel) dayLabel.textContent = DAYS_FULL[selectedDay];
+    }
+    
     setSyncStatus('synced');
     console.log('✅ Dashboard initialized');
     
@@ -5150,11 +5171,11 @@ async function deleteSavingsGoal(i){
     renderSavingsGoals();
   }
 }
-// Init finance
-renderLedger();
-updateFinanceTotals();
-renderSavingsGoals();
-renderFinanceForecasting();
+// Init finance — moved to initDashboard()
+// renderLedger();
+// updateFinanceTotals();
+// renderSavingsGoals();
+// renderFinanceForecasting();
 const savedRS3=loadData('rs3Income', null);
 if(savedRS3){
   const el=document.getElementById('rs3-income');
@@ -5199,7 +5220,8 @@ async function removeInvestment(id){
   await saveData('investments', investments);
   renderInvestments();
 }
-renderInvestments();
+// Init investments — moved to initDashboard()
+// renderInvestments();
 
 // ─── BANK ACCOUNTS ───
 let accountBalances={"primary":0,"business":0,"savings":0};
@@ -5226,7 +5248,8 @@ function renderAccountBalances(){
   const s=document.getElementById('bal-savings');if(s&&accountBalances.savings)s.value=accountBalances.savings;
   renderFinanceForecasting();
 }
-renderAccountBalances();
+// Init account balances — moved to initDashboard()
+// renderAccountBalances();
 
 /* ═══ AGENTS ═══ */
 
@@ -5341,8 +5364,8 @@ function updateDashboardAgents(){
   const activeCount=agentTasks.length;
   el.textContent=activeCount>0?`${activeCount} active task${activeCount>1?'s':''} delegated`:'No active tasks — your agents are standing by';
 }
-// Init agents
-renderAgentTasks();renderAgentHistory();updateDashboardAgents();
+// Init agents — moved to initDashboard()
+// renderAgentTasks();renderAgentHistory();updateDashboardAgents();
 
 /* ═══ ROUTINE ═══ */
 const DAYS_FULL=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
@@ -5598,9 +5621,9 @@ function renderRoutineFlags(){
   const ic={w:'◈',o:'◆',i:'◇'},cc={w:'f-warn',o:'f-ok',i:'f-info'};
   el.innerHTML=fl.map(f=>`<div class="flag-row"><span class="flag-icon ${cc[f.t]}">${ic[f.t]}</span><span class="flag-text">${f.m}</span></div>`).join('');
 }
-// Init routine
-renderRoutineDayNav();renderRoutineNote();renderRoutineSchedule();renderRoutineHabits();renderRoutineWeeklyProg();renderRoutineFlags();
-document.getElementById('routine-day-label').textContent=DAYS_FULL[selectedDay];
+// Init routine — moved to initDashboard()
+// renderRoutineDayNav();renderRoutineNote();renderRoutineSchedule();renderRoutineHabits();renderRoutineWeeklyProg();renderRoutineFlags();
+// document.getElementById('routine-day-label').textContent=DAYS_FULL[selectedDay];
 
 // ═══════════════════════════════════════════════════════════════
 // SHARED VENTURES — Partnership Management System
