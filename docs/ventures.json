@@ -1,0 +1,45 @@
+{
+  "metadata": {
+    "last_updated": "2026-05-05T10:00:00Z",
+    "sync_version": "1.0"
+  },
+  "ventures": [
+    {
+      "id": "masemula-menswear",
+      "name": "Masemula Menswear",
+      "description": "Original luxury menswear brand inspired by heritage luxury and South African restraint",
+      "status": "active",
+      "founded": "2024-01-01",
+      "website": "https://masemula.co.za",
+      "revenue": 0,
+      "expenses": 0,
+      "team": [
+        {
+          "name": "Ntobeko Masemula",
+          "role": "Founder/Creative Director",
+          "ownership": 100
+        }
+      ],
+      "milestones": [
+        {
+          "title": "First collection launch",
+          "target_date": "2026-06-30",
+          "completed": false,
+          "description": "Launch signature collection 001"
+        }
+      ],
+      "priorities": [
+        "Product design and sampling",
+        "Build supply chain",
+        "Marketing strategy"
+      ]
+    }
+  ],
+  "summary": {
+    "total_ventures": 1,
+    "active_ventures": 1,
+    "total_revenue": 0,
+    "total_expenses": 0,
+    "net_income": 0
+  }
+}

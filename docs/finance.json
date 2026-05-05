@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "last_updated": "2026-05-05T10:00:00Z",
+    "sync_version": "1.0"
+  },
+  "accounts": [
+    {
+      "id": "main-checking",
+      "name": "Main Checking",
+      "type": "bank_account",
+      "balance": 0,
+      "currency": "ZAR",
+      "provider": "stitch",
+      "last_sync": "2026-05-05T10:00:00Z",
+      "account_number": "****1234"
+    }
+  ],
+  "transactions": [],
+  "income": {
+    "monthly_target": 5000,
+    "ytd": 0,
+    "sources": [
+      {
+        "name": "Masemula Menswear",
+        "monthly_target": 5000,
+        "ytd": 0
+      }
+    ]
+  },
+  "expenses": {
+    "monthly_budget": 3000,
+    "ytd": 0,
+    "categories": [
+      {
+        "name": "Living expenses",
+        "monthly_budget": 2000,
+        "ytd": 0
+      },
+      {
+        "name": "Business expenses",
+        "monthly_budget": 1000,
+        "ytd": 0
+      }
+    ]
+  },
+  "savings": {
+    "emergency_fund_goal": 50000,
+    "emergency_fund_current": 0,
+    "other_savings": []
+  },
+  "investments": [],
+  "summary": {
+    "total_assets": 0,
+    "total_liabilities": 0,
+    "net_worth": 0,
+    "cash_flow": 0
+  }
+}

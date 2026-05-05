@@ -1,0 +1,71 @@
+{
+  "metadata": {
+    "last_updated": "2026-05-05T10:00:00Z",
+    "sync_version": "1.0"
+  },
+  "goals": [
+    {
+      "id": "masemula-100k",
+      "title": "Build Masemula to $100k revenue",
+      "category": "ventures",
+      "priority": 1,
+      "deadline": "2027-12-31",
+      "status": "in-progress",
+      "progress": 0,
+      "description": "Launch and grow Masemula menswear to $100k annual revenue",
+      "why": "Prove the business model and build personal wealth",
+      "milestones": [
+        {
+          "id": "collection-001",
+          "title": "First collection launch",
+          "target_date": "2026-06-30",
+          "completed": false,
+          "description": "Design, sample, and launch signature collection"
+        }
+      ],
+      "resources": [
+        {
+          "type": "time",
+          "required": "20 hrs/week"
+        },
+        {
+          "type": "capital",
+          "required": "R50,000 startup"
+        }
+      ]
+    },
+    {
+      "id": "degree-completion",
+      "title": "Complete Urban Planning degree with 3.5+ GPA",
+      "category": "academics",
+      "priority": 1,
+      "deadline": "2028-12-31",
+      "status": "in-progress",
+      "progress": 25,
+      "description": "Graduate with strong GPA to enable advanced studies"
+    },
+    {
+      "id": "net-worth-250k",
+      "title": "Build net worth to R250,000",
+      "category": "finance",
+      "priority": 2,
+      "deadline": "2028-12-31",
+      "status": "in-progress",
+      "progress": 0
+    }
+  ],
+  "completed_goals": [
+    {
+      "id": "routine-system",
+      "title": "Build comprehensive routine management system",
+      "completed_date": "2026-05-05",
+      "category": "personal"
+    }
+  ],
+  "summary": {
+    "total_active_goals": 3,
+    "completed_goals": 1,
+    "at_risk_goals": 0,
+    "on_track_goals": 3
+  }
+}
