@@ -2290,6 +2290,32 @@ let agentTasks = [];
 let weekData = {};
 let ventureData = {};
 
+// ═══ ROUTINE HELPER FUNCTIONS ═══
+// These must be defined before initDashboard() since they're used during initialization
+const toMin = t => {
+  if (!t || t === '00:00') return 0;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+};
+const getTodayIndex = () => {
+  const d = new Date().getDay();
+  return d === 0 ? 6 : d - 1;
+};
+const getWeekKey = () => {
+  const d = new Date(), j = new Date(d.getFullYear(), 0, 1);
+  const w = Math.ceil(((d - j) / 864e5 + j.getDay() + 1) / 7);
+  return 'mev4_w' + d.getFullYear() + '_' + w;
+};
+const emptyWeek = () => ({
+  gym: [0, 0, 0, 0, 0, 0, 0],
+  read: [0, 0, 0, 0, 0, 0, 0],
+  sleep: [0, 0, 0, 0, 0, 0, 0],
+  drop: [0, 0, 0, 0, 0, 0, 0],
+  music: [0, 0, 0, 0, 0, 0, 0],
+  deep: [0, 0, 0, 0, 0, 0, 0],
+  study: [0, 0, 0, 0, 0, 0, 0]
+});
+
 console.log('🔧 Estate OS v9: Auth-gated Supabase dashboard');
 
 function showToast(message, isError = false) {
@@ -5375,10 +5401,7 @@ const BAR_C={health:'bar-health',school:'bar-school',business:'bar-business',cre
 const BDG_C={health:'bdg-health',school:'bdg-school',business:'bdg-business',creative:'bdg-creative',admin:'bdg-admin',growth:'bdg-growth',personal:'bdg-personal',study:'bdg-study'};
 const NOTES_DAY={2:'The hardest day of the week. This evening is for recovery and light review only — no deep work. Rest is not absence of productivity. It is preparation for it.',3:'Heavy class day. The evening belongs to light review and time with Kea. Protect it.',4:'Friday is earned. The week has asked much. Your evening is yours — protect it.',5:'Prime day. No lectures, no campus, no excuses. This is where the empire advances.',6:'Recovery and intention. Plan the week ahead with clarity before Monday arrives.'};
 const SCHEDULE={0:[{s:'04:00',e:'05:30',l:'Gym',c:'health'},{s:'05:30',e:'07:00',l:'Shower · Breakfast · Morning briefing review',c:'health'},{s:'07:00',e:'07:30',l:'Travel to campus',c:'admin'},{s:'07:30',e:'09:00',l:'GEOG111 — Language · Dr B',c:'school'},{s:'09:00',e:'09:15',l:'Break',c:'break'},{s:'09:15',e:'10:45',l:'SBSS111 — Ms. GS Cornelius',c:'school'},{s:'10:45',e:'11:00',l:'Break',c:'break'},{s:'11:00',e:'12:30',l:'ECON112 — Mariska Aucamp',c:'school'},{s:'12:30',e:'12:45',l:'Lunch',c:'health'},{s:'12:45',e:'14:15',l:'ALDE112 — Ms. KE Motlhankane',c:'school'},{s:'14:15',e:'14:30',l:'Travel home',c:'admin'},{s:'14:30',e:'17:00',l:'Deep work — Dropshipping (priority)',c:'business'},{s:'17:00',e:'17:30',l:'Break & snack',c:'health'},{s:'17:30',e:'19:00',l:'Study block — ECON112 + GEOG111',c:'study'},{s:'19:00',e:'20:00',l:'Deep work — Music production',c:'creative'},{s:'20:00',e:'20:30',l:'Dinner',c:'health'},{s:'20:30',e:'22:00',l:'Masemula · Reading · Planning + Study SBSS111',c:'business'},{s:'22:00',e:'22:45',l:'Wind-down — no screens',c:'health'},{s:'22:45',e:'23:30',l:'Reading — non-fiction · biography · strategy',c:'growth'},{s:'23:30',e:'00:00',l:'Sleep',c:'health'}],1:[{s:'04:00',e:'05:30',l:'Gym',c:'health'},{s:'05:30',e:'07:00',l:'Shower · Breakfast · Morning briefing review',c:'health'},{s:'07:00',e:'10:30',l:'Deep work — Dropshipping (priority) + Study MTHS114 + STTN111',c:'business'},{s:'10:30',e:'11:00',l:'Travel to campus',c:'admin'},{s:'11:00',e:'12:30',l:'MTHS114 — Dr GT Marewo',c:'school'},{s:'12:30',e:'12:45',l:'Lunch',c:'health'},{s:'12:45',e:'14:15',l:'GEOG111 — Language · Dr B',c:'school'},{s:'14:15',e:'14:30',l:'Break',c:'break'},{s:'14:30',e:'16:00',l:'STTN111 — Dr CJL Van Heerden',c:'school'},{s:'16:00',e:'16:30',l:'Travel home',c:'admin'},{s:'16:30',e:'19:00',l:'Deep work — Music or Masemula',c:'creative'},{s:'19:00',e:'19:30',l:'Dinner',c:'health'},{s:'19:30',e:'22:00',l:'Reading · Planning · Estate review',c:'growth'},{s:'22:00',e:'22:45',l:'Wind-down',c:'health'},{s:'22:45',e:'23:30',l:'Reading',c:'growth'},{s:'23:30',e:'00:00',l:'Sleep',c:'health'}],2:[{s:'04:00',e:'05:30',l:'Gym',c:'health'},{s:'05:30',e:'08:45',l:'Shower · Breakfast · Light prep — no deep work',c:'health'},{s:'08:45',e:'09:15',l:'Travel to campus',c:'admin'},{s:'09:15',e:'10:45',l:'ECON112 — Mariska Aucamp',c:'school'},{s:'10:45',e:'11:00',l:'Break',c:'break'},{s:'11:00',e:'12:30',l:'SBSS111 — Ms. GS Cornelius',c:'school'},{s:'12:30',e:'14:30',l:'Lunch + recovery break',c:'health'},{s:'14:30',e:'16:00',l:'SBSS111 — Ms. GS Cornelius',c:'school'},{s:'16:00',e:'16:15',l:'Break',c:'break'},{s:'16:15',e:'17:45',l:'SBSS111 — Ms. GS Cornelius',c:'school'},{s:'17:45',e:'18:30',l:'Travel home + decompress',c:'admin'},{s:'18:30',e:'20:30',l:'Light review — today\'s notes only, no new material',c:'study'},{s:'20:30',e:'21:00',l:'Dinner',c:'health'},{s:'21:00',e:'22:30',l:'Reading or downtime — no deep work on heavy days',c:'growth'},{s:'22:30',e:'23:30',l:'Wind-down · sleep',c:'health'}],3:[{s:'04:00',e:'05:30',l:'Gym',c:'health'},{s:'05:30',e:'10:30',l:'Shower · Breakfast · Deep work — Dropshipping + Study ALDE111 + GEOG111',c:'business'},{s:'10:30',e:'11:00',l:'Travel to campus',c:'admin'},{s:'11:00',e:'12:30',l:'ALDE111 — Mrs. GH Groenen',c:'school'},{s:'12:30',e:'12:45',l:'Lunch',c:'health'},{s:'12:45',e:'14:15',l:'MTHS114 — Dr GT Marewo',c:'school'},{s:'14:15',e:'14:30',l:'Break',c:'break'},{s:'14:30',e:'16:00',l:'GEOG111 — Language · Dr B',c:'school'},{s:'16:00',e:'16:15',l:'Break',c:'break'},{s:'16:15',e:'17:45',l:'GEOG111 — Language · Dr B',c:'school'},{s:'17:45',e:'18:30',l:'Travel home + decompress',c:'admin'},{s:'18:30',e:'20:30',l:'Light work — review · Kea time',c:'admin'},{s:'20:30',e:'21:00',l:'Dinner',c:'health'},{s:'21:00',e:'22:30',l:'Reading or downtime',c:'growth'},{s:'22:30',e:'23:30',l:'Wind-down · sleep',c:'health'}],4:[{s:'04:00',e:'05:30',l:'Gym',c:'health'},{s:'05:30',e:'07:00',l:'Shower · Breakfast · Morning briefing',c:'health'},{s:'07:00',e:'07:30',l:'Travel to campus',c:'admin'},{s:'07:30',e:'09:00',l:'STTN111 — Dr CJL Van Heerden',c:'school'},{s:'09:00',e:'11:00',l:'Study block on campus — past papers + practice',c:'study'},{s:'11:00',e:'12:30',l:'SBSS111 — Ms. GS Cornelius',c:'school'},{s:'12:30',e:'14:30',l:'Lunch + break',c:'health'},{s:'14:30',e:'16:00',l:'MTHS114 — Dr GT Marewo',c:'school'},{s:'16:00',e:'16:15',l:'Break',c:'break'},{s:'16:15',e:'17:45',l:'MTHS114 — Dr GT Marewo',c:'school'},{s:'17:45',e:'18:30',l:'Travel home',c:'admin'},{s:'18:30',e:'20:00',l:'Weekly review + Estate digest prep',c:'admin'},{s:'20:00',e:'20:30',l:'Dinner',c:'health'},{s:'20:30',e:'23:30',l:'Personal time — Kea · social · rest',c:'personal'},{s:'23:30',e:'00:00',l:'Sleep',c:'health'}],5:[{s:'04:00',e:'05:30',l:'Gym',c:'health'},{s:'05:30',e:'07:00',l:'Shower · Breakfast · Weekly digest review (PA compiled)',c:'health'},{s:'07:00',e:'10:00',l:'Deep work — Dropshipping (biggest task of the week)',c:'business'},{s:'10:00',e:'10:30',l:'Break',c:'break'},{s:'10:30',e:'13:00',l:'Deep work — Music production / creative work',c:'creative'},{s:'13:00',e:'14:00',l:'Lunch + rest',c:'health'},{s:'14:00',e:'17:00',l:'Deep work — Masemula · brand planning + Saturday study block',c:'business'},{s:'17:00',e:'23:30',l:'Personal time — Kea · friends · social',c:'personal'},{s:'23:30',e:'00:00',l:'Sleep',c:'health'}],6:[{s:'04:00',e:'05:30',l:'Gym (optional — may push to 6am on Sundays)',c:'health'},{s:'05:30',e:'08:00',l:'Slower morning — longer breakfast, no rush',c:'health'},{s:'08:00',e:'10:00',l:'Weekly planning — review last week · plan next week',c:'admin'},{s:'10:00',e:'12:00',l:'Church · family · personal time',c:'personal'},{s:'12:00',e:'13:00',l:'Lunch',c:'health'},{s:'13:00',e:'16:00',l:'Reading + study block — business · biography · past papers',c:'growth'},{s:'16:00',e:'18:00',l:'Music or creative exploration (low pressure)',c:'creative'},{s:'18:00',e:'19:00',l:'Dinner + wind-down prep for the week',c:'health'},{s:'19:00',e:'22:00',l:'Kea time · personal',c:'personal'},{s:'22:00',e:'23:30',l:'Wind-down · sleep',c:'health'}]};
-const toMin=t=>{if(!t||t==='00:00')return 0;const[h,m]=t.split(':').map(Number);return h*60+m;};
-const getTodayIndex=()=>{const d=new Date().getDay();return d===0?6:d-1;};
-const getWeekKey=()=>{const d=new Date(),j=new Date(d.getFullYear(),0,1),w=Math.ceil(((d-j)/864e5+j.getDay()+1)/7);return'mev4_w'+d.getFullYear()+'_'+w;};
-const emptyWeek=()=>({gym:[0,0,0,0,0,0,0],read:[0,0,0,0,0,0,0],sleep:[0,0,0,0,0,0,0],drop:[0,0,0,0,0,0,0],music:[0,0,0,0,0,0,0],deep:[0,0,0,0,0,0,0],study:[0,0,0,0,0,0,0]});
+// Helper functions have been moved to top of file before initDashboard()
 
 let selectedDay=0; // Will be set to getTodayIndex() in initDashboard
 async function saveWeekData(){await saveData(getWeekKey(), weekData);}
