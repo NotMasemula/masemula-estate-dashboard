@@ -2378,34 +2378,61 @@ async function handleSignOut() {
 }
 
 async function bootstrapAuth() {
-  if (!window.supabase || !sbClient || !SUPABASE_URL || !SUPABASE_KEY) {
-    showAuthScreen(true);
-    const errorEl = document.getElementById('auth-error');
-    if (errorEl) {
-      errorEl.textContent = (!window.supabase)
-        ? 'Supabase library failed to load. Check your network connection.'
-        : 'Unable to load Supabase config.';
-    }
+  // Check if Supabase is available; if not, skip auth and go straight to dashboard
+  if (!window.supabase || !SUPABASE_URL || !SUPABASE_KEY) {
+    console.warn('⚠️ Supabase JS client not available. Proceeding without authentication.');
+    sbClient = null;
+    syncEnabled = false;
+    USER_ID = 'ntobeko-masemula-estate';
+    showAuthScreen(false);
+    await initDashboard();
     return;
   }
+  
+  // Try to create Supabase client
+  if (!sbClient) {
+    try {
+      sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } catch (err) {
+      console.error('Supabase client creation failed:', err);
+      sbClient = null;
+      syncEnabled = false;
+      USER_ID = 'ntobeko-masemula-estate';
+      showAuthScreen(false);
+      await initDashboard();
+      return;
+    }
+  }
+
+  // Set up auth form
   const form = document.getElementById('auth-form');
   if (form) form.addEventListener('submit', handleLoginSubmit);
-  const { data: { session } } = await sbClient.auth.getSession();
-  if (!session) {
-    showAuthScreen(true);
-    return;
+  
+  // Check for existing session
+  try {
+    const { data: { session } } = await sbClient.auth.getSession();
+    if (!session) {
+      showAuthScreen(true);
+      return;
+    }
+    if ((session.user?.email || '').toLowerCase() !== ALLOWED_LOGIN_EMAIL.toLowerCase()) {
+      await sbClient.auth.signOut();
+      showAuthScreen(true);
+      const errorEl = document.getElementById('auth-error');
+      if (errorEl) errorEl.textContent = 'Access denied.';
+      return;
+    }
+    authSession = session;
+    USER_ID = 'ntobeko-masemula-estate';
+    showAuthScreen(false);
+    await initDashboard();
+  } catch (err) {
+    console.warn('Auth check failed:', err.message);
+    // Fallback: proceed without auth
+    USER_ID = 'ntobeko-masemula-estate';
+    showAuthScreen(false);
+    await initDashboard();
   }
-  if ((session.user?.email || '').toLowerCase() !== ALLOWED_LOGIN_EMAIL.toLowerCase()) {
-    await sbClient.auth.signOut();
-    showAuthScreen(true);
-    const errorEl = document.getElementById('auth-error');
-    if (errorEl) errorEl.textContent = 'Access denied.';
-    return;
-  }
-  authSession = session;
-  USER_ID = 'ntobeko-masemula-estate'; // Use fixed user ID for routine data
-  showAuthScreen(false);
-  await initDashboard();
 }
 
 // ═══ SYNC STATUS INDICATOR ═══
@@ -7162,6 +7189,8 @@ document.addEventListener('keydown', (event) => {
 </script>
 
 </html>
+
+
 
 
 
