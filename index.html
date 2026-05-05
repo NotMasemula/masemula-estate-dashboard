@@ -1102,7 +1102,7 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
       <div class="grid-2" style="gap:16px;width:100%;grid-template-columns:1.5fr 1fr">
         <!-- Schedule Panel -->
         <div class="card routine-schedule-card" style="max-height:600px;overflow-y:auto;width:100%">
-          <div class="card-title">Today's Schedule <span id="routine-day-label" style="font-weight:300;color:var(--muted);margin-left:8px"></span></div>
+          <div class="card-title" style="display:flex;align-items:center;gap:8px">Today's Schedule <span id="routine-day-label" style="font-weight:300;color:var(--muted);margin-left:4px"></span><span id="routine-cloud-badge" style="display:none;font-size:9px;font-weight:500;color:var(--gold);margin-left:auto;opacity:0.8">☁ live</span><button style="margin-left:4px;background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 6px" title="Refresh schedule from cloud" onclick="loadRoutineScheduleFromCloud().then(()=>{renderRoutineNote();renderRoutineSchedule();})">↻</button></div>
           <div id="routine-schedule"></div>
         </div>
         <!-- Habits & Tracking Panel -->
@@ -2283,10 +2283,12 @@ if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
   }
 }
 let USER_ID = 'ntobeko-masemula-estate'; // Fixed user ID for routine data
+const ROUTINE_CLOUD_KEY = 'ntobeko-masemula-routine'; // Key for synced routine schedule
 let authSession = null;
 let syncEnabled = false;
 let isSyncing = false;
 let cloudStore = {}; // In-memory cache of cloud data
+let cloudRoutineSchedule = null; // Routine schedule loaded from Supabase (null = use static fallback)
 
 // Deferred initialization - these will be set up after page load
 let agentTasks = [];
@@ -2517,6 +2519,32 @@ async function syncToCloud(updateStatus = true) {
   }
 }
 
+// ═══ LOAD ROUTINE SCHEDULE FROM CLOUD ═══
+// Fetches the schedule synced by the GitHub Actions sync-routine workflow.
+// Falls back to the static ROUTINE_DATA / ROUTINE_NOTES if unavailable.
+async function loadRoutineScheduleFromCloud() {
+  if (!syncEnabled) return false;
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/estate_data?user_id=eq.${ROUTINE_CLOUD_KEY}&select=data,updated_at`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${authSession?.access_token || SUPABASE_KEY}` } }
+    );
+    if (!response.ok) throw new Error('Routine schedule load failed: ' + response.status);
+    const results = await response.json();
+    if (!results || results.length === 0 || !results[0].data) return false;
+    const d = results[0].data;
+    if (d.schedule && typeof d.schedule === 'object') {
+      cloudRoutineSchedule = d;
+      console.log('☁️ Routine schedule loaded from cloud:', results[0].updated_at);
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.warn('☁️ Could not load routine schedule from cloud, using static fallback:', err.message);
+    return false;
+  }
+}
+
 // ═══ LOAD ALL DATA FROM CLOUD ═══
 async function loadFromCloud(showStatus = true) {
   if (!syncEnabled) return false;
@@ -2626,6 +2654,9 @@ async function initDashboard() {
     await loadDesignsFromSupabase();
     await loadContentAnalyticsFromSupabase();
     wireAgentOverviewButtons();
+    
+    // Load cloud routine schedule (synced by GitHub Actions), then render routine
+    await loadRoutineScheduleFromCloud();
     
     // Setup Realtime subscription for live updates
     setupSupabaseRealtime();
@@ -5423,7 +5454,9 @@ function selectDay(i){
 }
 function renderRoutineNote(){
   const dayName = DAYS_FULL[selectedDay];
-  const note = ROUTINE_NOTES[dayName] || '';
+  // Use cloud notes if available, otherwise fall back to static
+  const notesSource = (cloudRoutineSchedule && cloudRoutineSchedule.notes) ? cloudRoutineSchedule.notes : ROUTINE_NOTES;
+  const note = notesSource[dayName] || '';
   document.getElementById('routine-note').innerHTML = note ? `<div class="routine-note">${note}</div>` : '';
 }
 /* ═══ NTOBEKO'S DAILY ROUTINE ═══ */
@@ -5553,8 +5586,13 @@ const ROUTINE_NOTES = {
 
 function renderRoutineSchedule(){
   const dayName = DAYS_FULL[selectedDay];
-  const schedule = ROUTINE_DATA[dayName] || [];
+  // Use cloud schedule if available, otherwise fall back to static ROUTINE_DATA
+  const isCloud = !!(cloudRoutineSchedule && cloudRoutineSchedule.schedule);
+  const scheduleSource = isCloud ? cloudRoutineSchedule.schedule : ROUTINE_DATA;
+  const schedule = scheduleSource[dayName] || [];
   const el = document.getElementById('routine-schedule');
+  const badge = document.getElementById('routine-cloud-badge');
+  if (badge) badge.style.display = isCloud ? 'inline' : 'none';
   
   el.innerHTML = schedule.map(block => {
     const catColor = block.category.includes('School') ? '#C9A84C' :

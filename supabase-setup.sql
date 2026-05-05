@@ -52,3 +52,55 @@ VALUES (
   '{"ventures":[],"transactions":[],"settlements":[],"transfers":[],"loans":[],"audit":[]}'
 )
 ON CONFLICT (user_id) DO NOTHING;
+
+-- ═══════════════════════════════════════════════════════════════
+-- ROUTINE SCHEDULE RECORD
+-- Synced from docs/routine-schedule.json via the sync-routine workflow.
+-- The dashboard reads from this record to display the live schedule.
+-- Key: 'ntobeko-masemula-routine'
+-- ═══════════════════════════════════════════════════════════════
+
+INSERT INTO estate_data (user_id, data)
+VALUES (
+  'ntobeko-masemula-routine',
+  '{"metadata":{"last_updated":"","sync_version":"1.0"},"schedule":{},"notes":{}}'
+)
+ON CONFLICT (user_id) DO NOTHING;
+
+-- ═══════════════════════════════════════════════════════════════
+-- HABITS LOG TABLE
+-- Stores daily habit tracking: gym, reading, sleep, deep work, etc.
+-- Used by the Daily Routine section of the dashboard.
+-- ═══════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS habits_log (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  owner_uid TEXT NOT NULL,
+  habit_key TEXT NOT NULL,             -- e.g. 'gym', 'read', 'sleep', 'drop', 'music', 'deep', 'study'
+  logged_date DATE NOT NULL,           -- YYYY-MM-DD
+  completed BOOLEAN NOT NULL DEFAULT FALSE,
+  notes TEXT,                          -- optional numeric value stored as text (e.g. hours)
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (owner_uid, habit_key, logged_date)
+);
+
+-- Enable RLS
+ALTER TABLE habits_log ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if any
+DROP POLICY IF EXISTS "Anon users can manage habits" ON habits_log;
+
+-- Allow anon users to manage their own habits (dashboard uses anon key + fixed user_id)
+CREATE POLICY "Anon users can manage habits" ON habits_log
+  FOR ALL
+  TO anon
+  USING (true)
+  WITH CHECK (true);
+
+-- Index for efficient week queries
+CREATE INDEX IF NOT EXISTS idx_habits_log_owner_date ON habits_log(owner_uid, logged_date);
+CREATE INDEX IF NOT EXISTS idx_habits_log_owner_key ON habits_log(owner_uid, habit_key);
+
+-- Grant access
+GRANT ALL ON habits_log TO anon;
+

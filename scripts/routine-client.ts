@@ -252,7 +252,7 @@ export class RoutineClient {
     }
 
     try {
-      const { data, error } = await this.supabase
+      const { error } = await this.supabase
         .from("estate_data")
         .upsert(
           {
@@ -261,8 +261,7 @@ export class RoutineClient {
             updated_at: new Date().toISOString(),
           },
           { onConflict: "user_id" }
-        )
-        .select();
+        );
 
       if (error) {
         throw new Error(`Supabase error: ${error.message}`);
@@ -328,20 +327,26 @@ export class RoutineClient {
     const subscriptionKey = `${userId}-subscription`;
     this.subscriptions.set(subscriptionKey, callback);
 
-    // Set up real-time listener
-    const subscription = this.supabase
-      .from("estate_data")
-      .on("*", (payload) => {
-        if (payload.new?.user_id === userId && payload.new?.data?.routine) {
-          callback(payload.new.data.routine as RoutineObject);
+    // Set up real-time listener using Supabase v2 channel API
+    const channelName = `routine-updates-${userId}`;
+    const channel = this.supabase
+      .channel(channelName)
+      .on<{ user_id: string; data: { routine?: RoutineObject } }>(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "estate_data" },
+        (payload) => {
+          const newRecord = payload.new as { user_id?: string; data?: { routine?: RoutineObject } } | undefined;
+          if (newRecord?.user_id === userId && newRecord?.data?.routine) {
+            callback(newRecord.data.routine);
+          }
         }
-      })
+      )
       .subscribe();
 
     return {
       unsubscribe: () => {
         this.subscriptions.delete(subscriptionKey);
-        subscription.unsubscribe();
+        void this.supabase.removeChannel(channel);
       },
     };
   }
