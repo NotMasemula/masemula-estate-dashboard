@@ -1,0 +1,4 @@
+{
+  "dispatchUrl": "https://romytadgdnpphqzlseaa.supabase.co/functions/v1/dispatch-workflow",
+  "dispatchSecretHeader": "x-dispatch-secret"
+}
