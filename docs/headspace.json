@@ -1,0 +1,75 @@
+{
+  "metadata": {
+    "last_updated": "2026-05-05T10:00:00Z",
+    "sync_version": "1.0"
+  },
+  "mood_log": [
+    {
+      "date": "2026-05-05",
+      "mood": "focused",
+      "score": 8,
+      "energy": 7,
+      "stress": 3,
+      "notes": "Good morning routine, productive study session"
+    }
+  ],
+  "journal_entries": [
+    {
+      "date": "2026-05-05",
+      "title": "Reflections on routine",
+      "content": "Started implementing the master sync system...",
+      "mood": "excited",
+      "tags": [
+        "productivity",
+        "projects",
+        "learning"
+      ]
+    }
+  ],
+  "wellness_goals": [
+    {
+      "id": "meditation",
+      "goal": "Meditate daily",
+      "frequency": "daily",
+      "duration_minutes": 15,
+      "streak": 0,
+      "last_completed": "2026-05-05"
+    },
+    {
+      "id": "sleep",
+      "goal": "8 hours sleep",
+      "frequency": "daily",
+      "duration_hours": 8,
+      "streak": 0,
+      "last_completed": "2026-05-05"
+    },
+    {
+      "id": "exercise",
+      "goal": "Exercise 3x/week",
+      "frequency": "weekly",
+      "sessions_per_week": 3,
+      "streak": 0,
+      "last_completed": "2026-05-05"
+    }
+  ],
+  "gratitude_log": [
+    {
+      "date": "2026-05-05",
+      "entry": "Grateful for progress on the estate system"
+    }
+  ],
+  "streaks": {
+    "meditation": 0,
+    "exercise": 0,
+    "journaling": 0,
+    "gratitude": 0,
+    "best_streak": "meditation (12 days)"
+  },
+  "summary": {
+    "avg_mood": 0,
+    "avg_energy": 0,
+    "avg_stress": 0,
+    "total_journal_entries": 0,
+    "total_wellness_completions": 0
+  }
+}

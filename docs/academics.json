@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "last_updated": "2026-05-05T10:00:00Z",
+    "sync_version": "1.0"
+  },
+  "institution": "North-West University (NWU) Potchefstroom",
+  "program": "Urban & Regional Planning",
+  "academic_year": 2026,
+  "current_term": 2,
+  "gpa": {
+    "target": 3.5,
+    "current": 0,
+    "scale": 4.0
+  },
+  "courses": [
+    {
+      "code": "URP101",
+      "name": "Introduction to Urban Planning",
+      "credits": 3,
+      "term": 1,
+      "grade": null,
+      "target_grade": "A",
+      "lecturer": "Prof. Smith",
+      "assessment": {
+        "participation": 10,
+        "assignments": 30,
+        "exams": 60
+      }
+    }
+  ],
+  "academic_calendar": {
+    "terms": [
+      {
+        "term": 1,
+        "start": "2026-02-02",
+        "end": "2026-03-27",
+        "exam_start": "2026-03-30",
+        "exam_end": "2026-04-10"
+      },
+      {
+        "term": 2,
+        "start": "2026-04-27",
+        "end": "2026-06-19",
+        "exam_start": "2026-06-22",
+        "exam_end": "2026-07-03"
+      }
+    ],
+    "holidays": [
+      {
+        "name": "Easter Recess",
+        "start": "2026-04-10",
+        "end": "2026-04-24"
+      }
+    ]
+  },
+  "study_goals": {
+    "hours_per_week": 20,
+    "focus_areas": [
+      "Urban design",
+      "GIS analysis",
+      "Sustainability"
+    ],
+    "long_term": "Master's degree in Urban Planning"
+  },
+  "assignments": [
+    {
+      "course_code": "URP101",
+      "title": "Urban Design Case Study",
+      "due_date": "2026-05-20",
+      "weight": 15,
+      "status": "in-progress"
+    }
+  ]
+}
