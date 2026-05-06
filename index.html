@@ -10,6 +10,7 @@
 <title>Masemula Estate OS</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config/env.js"></script>
+<script src="dashboard-auth-fix.js"></script>
 <!-- v7 - REST API sync with merge logic -->
 <!-- Using direct REST API instead of Supabase JS (works on all browsers including Safari) -->
 <style>
@@ -2282,7 +2283,7 @@ if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
     console.error('Supabase client initialization failed:', err);
   }
 }
-let USER_ID = 'ntobeko-masemula-estate'; // Fixed user ID for routine data
+let USER_ID = null; // Will be set from selectedDashboardKey after auth
 let authSession = null;
 let syncEnabled = false;
 let isSyncing = false;
@@ -2383,7 +2384,6 @@ async function bootstrapAuth() {
     console.warn('⚠️ Supabase JS client not available. Proceeding without authentication.');
     sbClient = null;
     syncEnabled = false;
-    USER_ID = 'ntobeko-masemula-estate';
     showAuthScreen(false);
     await initDashboard();
     return;
@@ -2397,7 +2397,6 @@ async function bootstrapAuth() {
       console.error('Supabase client creation failed:', err);
       sbClient = null;
       syncEnabled = false;
-      USER_ID = 'ntobeko-masemula-estate';
       showAuthScreen(false);
       await initDashboard();
       return;
@@ -2423,17 +2422,32 @@ async function bootstrapAuth() {
       return;
     }
     authSession = session;
-    USER_ID = 'ntobeko-masemula-estate';
+    
+    // ═══ NEW: Complete auth and load dashboard ═══
+    console.log('🔐 Auth successful. Loading user dashboard...');
+    const authResult = await window.DashboardAuth.completeAuthAndLoadDashboard();
+    
+    if (!authResult.success) {
+      console.error('❌ Dashboard loading failed:', authResult.error);
+      const errorEl = document.getElementById('auth-error');
+      if (errorEl) errorEl.textContent = 'Failed to load dashboard: ' + authResult.error;
+      return;
+    }
+    
+    // Set USER_ID to the selected dashboard key for backwards compatibility
+    USER_ID = window.DashboardAuth.getState().selectedDashboardKey;
+    console.log('✅ Dashboard ready. USER_ID (dashboard key):', USER_ID);
+    
     showAuthScreen(false);
     await initDashboard();
   } catch (err) {
     console.warn('Auth check failed:', err.message);
     // Fallback: proceed without auth
-    USER_ID = 'ntobeko-masemula-estate';
     showAuthScreen(false);
     await initDashboard();
   }
 }
+
 
 // ═══ SYNC STATUS INDICATOR ═══
 function setSyncStatus(state) {
@@ -7189,6 +7203,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 
 </html>
+
 
 
 
