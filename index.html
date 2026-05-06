@@ -2278,7 +2278,7 @@ const SUPABASE_KEY = ESTATE_ENV.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY ||
 let sbClient = null;
 if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
   try {
-    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { db: { schema: 'api' } });
+    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   } catch (err) {
     console.error('Supabase client initialization failed:', err);
   }
@@ -2392,7 +2392,7 @@ async function bootstrapAuth() {
   // Try to create Supabase client
   if (!sbClient) {
     try {
-      sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { db: { schema: 'api' } });
+      sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     } catch (err) {
       console.error('Supabase client creation failed:', err);
       sbClient = null;
