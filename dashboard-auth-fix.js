@@ -15,22 +15,22 @@ let selectedDashboardKey = null;    // Currently active dashboard (e.g., 'masemu
 
 /**
  * Fetch the list of dashboard keys this user can access
- * Called after successful auth, before loading dashboard
+ * IMPORTANT: Call this AFTER session is verified to be ready
+ * Pass userId as parameter (don't rely on global timing)
  */
-async function fetchUserDashboardKeys() {
-  if (!sbClient || !authSession) {
-    console.warn('⚠️ fetchUserDashboardKeys: Not authenticated');
+async function fetchUserDashboardKeys(userId) {
+  if (!sbClient) {
+    console.error('❌ fetchUserDashboardKeys: sbClient not initialized');
+    return [];
+  }
+
+  if (!userId) {
+    console.error('❌ fetchUserDashboardKeys: userId is required');
     return [];
   }
 
   try {
-    // Get current user's ID
-    const { data: { user }, error: userErr } = await sbClient.auth.getUser();
-    if (userErr || !user) {
-      console.error('❌ Could not get current user:', userErr);
-      return [];
-    }
-    currentUserId = user.id;
+    currentUserId = userId;
     console.log('✅ Authenticated user ID:', currentUserId);
 
     // Query user_dashboards for this user
@@ -38,7 +38,7 @@ async function fetchUserDashboardKeys() {
     const { data, error } = await sbClient
       .from('user_dashboards')
       .select('dashboard_key')
-      .eq('user_id', currentUserId);
+      .eq('user_id', userId);
 
     if (error) {
       console.error('❌ Failed to fetch dashboard keys:', error.message, error.hint);
@@ -118,14 +118,25 @@ async function loadDashboardItemsAuth() {
 
 /**
  * Complete auth flow for dashboard:
- * 1. Fetch dashboard keys
- * 2. Select Masemula dashboard
- * 3. Load items
+ * 1. Verify session is ready
+ * 2. Fetch dashboard keys
+ * 3. Select Masemula dashboard
+ * 4. Load items
  */
 async function completeAuthAndLoadDashboard() {
   try {
-    // Step 1: Fetch allowed dashboard keys
-    const keys = await fetchUserDashboardKeys();
+    // Step 0: Ensure session is loaded FIRST
+    const { data: userData, error: userErr } = await sbClient.auth.getUser();
+    if (userErr || !userData?.user) {
+      console.error('❌ Not authenticated:', userErr?.message || 'No user in session');
+      throw new Error('User not authenticated');
+    }
+
+    const userId = userData.user.id;
+    console.log('✅ Session verified, user:', userId);
+
+    // Step 1: Now it's safe to fetch dashboard keys
+    const keys = await fetchUserDashboardKeys(userId);
     if (keys.length === 0) {
       console.error('❌ User has no assigned dashboards');
       throw new Error('No dashboards assigned to this user');
