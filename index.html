@@ -2434,9 +2434,9 @@ async function bootstrapAuth() {
       return;
     }
     
-    // Set USER_ID to the selected dashboard key for backwards compatibility
-    USER_ID = window.DashboardAuth.getState().selectedDashboardKey;
-    console.log('✅ Dashboard ready. USER_ID (dashboard key):', USER_ID);
+    // Set USER_ID to the authenticated user's UUID for database queries
+    USER_ID = window.DashboardAuth.getState().currentUserId;
+    console.log('✅ Dashboard ready. USER_ID (user UUID):', USER_ID);
     
     showAuthScreen(false);
     await initDashboard();
