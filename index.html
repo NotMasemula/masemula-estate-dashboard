@@ -6881,7 +6881,7 @@ async function handleVisionImageUpload(event) {
   try {
     const { error: uploadError } = await sbClient.storage.from('vision-board').upload(path, file, { upsert: false });
     if (uploadError) throw uploadError;
-    const { error } = await sbClient.from('vision_board').insert({ owner_uid: USER_ID, storage_path: path, caption: file.name });
+    const { error } = await sbClient.from('vision_board').insert({ owner_uid: USER_ID, storage_path: path, title: file.name, caption: file.name });
     if (error) throw error;
     await loadVisionBoardFromSupabase();
   } catch (err) {
@@ -7009,7 +7009,7 @@ async function loadDesignsFromSupabase() {
   try {
     const { data, error } = await sbClient
       .from('vision_board')
-      .select('id, caption, storage_path, created_at')
+      .select('id, title, storage_path, caption, created_at')
       .eq('owner_uid', USER_ID)
       .order('created_at', { ascending: false });
     if (error) throw error;
