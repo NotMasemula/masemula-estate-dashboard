@@ -2665,6 +2665,7 @@ async function initDashboard() {
     await applyThemeFromPreferences();
     
     // Load data from cloud on initial page load
+    console.log('USER_ID for estate/designs:', USER_ID);
     await loadFromCloud();
     // Also sync shared venture data (independent from main sync)
     svLoadFromCloud().then(() => svRenderAll()).catch(e => console.warn('SV sync error:', e));
@@ -7007,17 +7008,17 @@ async function loadDesignsFromSupabase() {
   if (!syncEnabled || !USER_ID || !sbClient) return;
   try {
     const { data, error } = await sbClient
-      .from('designs')
+      .from('vision_board')
       .select('*')
       .eq('owner_uid', USER_ID)
       .order('created_at', { ascending: false });
     if (error) throw error;
     if (!data || data.length === 0) return;
 
-    // Group by tab_category
+    // Group by tab (vision_board doesn't have tab_category, all go to masemula)
     const byTab = {};
     data.forEach(row => {
-      const tab = row.tab_category || 'masemula';
+      const tab = 'masemula';
       byTab[tab] = byTab[tab] || [];
       byTab[tab].push(row);
     });
@@ -7029,7 +7030,7 @@ async function loadDesignsFromSupabase() {
       // Remove previously appended cloud cards to avoid duplicates on re-load
       grid.querySelectorAll('.design-card[data-cloud]').forEach(c => c.remove());
       rows.forEach(row => {
-        const { data: publicUrlData } = sbClient.storage.from('designs').getPublicUrl(row.storage_path);
+        const { data: publicUrlData } = sbClient.storage.from('vision-board').getPublicUrl(row.storage_path);
         const url = publicUrlData?.publicUrl || '';
         const card = document.createElement('div');
         card.className = 'design-card';
@@ -7037,12 +7038,11 @@ async function loadDesignsFromSupabase() {
         const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(row.storage_path);
         card.innerHTML = `
           <div class="design-header">
-            <span style="font-size:12px;font-weight:400">${row.title || row.storage_path.split('/').pop()}</span>
-            <span class="badge b-track">v${row.version || 1}</span>
+            <span style="font-size:12px;font-weight:400">${row.caption || row.storage_path.split('/').pop()}</span>
           </div>
           <div class="design-canvas" style="padding:0;overflow:hidden">
             ${isImage
-              ? `<img src="${url}" alt="${row.title || ''}" style="width:100%;height:100%;object-fit:cover;border-radius:4px">`
+              ? `<img src="${url}" alt="${row.caption || ''}" style="width:100%;height:100%;object-fit:cover;border-radius:4px">`
               : `<a href="${url}" target="_blank" rel="noopener" style="font-size:11px;color:var(--gold)">Open file ↗</a>`
             }
           </div>`;
