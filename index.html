@@ -2868,6 +2868,15 @@ function applyTheme(isDark){
 
 async function loadUserPreferences(){
   try {
+    // Verify session is attached to sbClient BEFORE making API call
+    const { data: { session } } = await sbClient.auth.getSession();
+    if (!session) {
+      console.warn('⚠️ loadUserPreferences: No session attached to sbClient. Using default theme.');
+      applyTheme(true);
+      return;
+    }
+    console.log('✅ Session verified for user_preferences query:', session.user.id);
+    
     const { data, error } = await sbClient.from('user_preferences').select('id,dark_mode').eq('owner_uid', USER_ID).maybeSingle();
     if (error) throw error;
     if (!data) {
@@ -2879,8 +2888,9 @@ async function loadUserPreferences(){
     }
     applyTheme(!!userPreferences.dark_mode);
   } catch (err) {
+    console.error('⚠️ loadUserPreferences error:', err.message);
     applyTheme(true);
-    showToast('Failed to load theme preferences', true);
+    // Don't show toast on init load - it's non-critical
   }
 }
 
