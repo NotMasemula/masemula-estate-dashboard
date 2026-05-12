@@ -7127,20 +7127,42 @@ async function addContentMetric() {
 
 async function setupSupabaseRealtime() {
   try {
-    const channel = sbClient.channel('estate-live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'habits_log', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadHabitsWeekFromSupabase(); await loadOverviewData(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'goals', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadGoalsFromSupabase(); await loadOverviewData(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadOverviewData(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'ventures', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadOverviewData(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'agent_logs', filter: `owner_uid=eq.${USER_ID}` }, async () => { showToast('Agent update received'); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'estate_flags', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadOverviewData(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'focus_sessions', filter: `owner_uid=eq.${USER_ID}` }, async () => { await loadOverviewData(); })
-      .subscribe();
-    void channel;
+    // Broadcast-based realtime sync: single listener for all dashboard changes
+    const topic = `user:${USER_ID}`;
+    const channel = sbClient
+      .channel(topic, { config: { private: true } })
+      .on('broadcast', { event: '*' }, async (payload) => {
+        console.log('📡 Broadcast sync received:', payload);
+        
+        // Debounce: refresh entire dashboard using existing sync logic
+        if (refreshDebounce) clearTimeout(refreshDebounce);
+        refreshDebounce = setTimeout(async () => {
+          try {
+            // Use existing bulk-load strategy
+            await loadFromCloud();
+            // Also sync shared ventures
+            svLoadFromCloud().then(() => svRenderAll()).catch(e => console.warn('SV sync error:', e));
+            showToast('📡 Dashboard synced');
+            console.log('✅ Broadcast refresh complete');
+          } catch (err) {
+            console.error('Broadcast refresh error:', err);
+            showToast('Sync failed', true);
+          }
+        }, 500); // 500ms debounce to batch rapid changes
+      })
+      .subscribe((status) => {
+        console.log(`🔗 Realtime channel ${status}`);
+      });
+    
+    window.dashboardChannel = channel; // Store for unsubscribe on auth changes
   } catch (err) {
+    console.error('Realtime subscription failed:', err);
     showToast('Realtime subscription failed', true);
   }
 }
+
+// Global debounce handle for broadcast refresh
+let refreshDebounce = null;
 
 function wireAgentOverviewButtons() {
   document.querySelectorAll('#agents-overview .agent-card[data-agent]').forEach((card) => {
