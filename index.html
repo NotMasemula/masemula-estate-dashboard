@@ -2509,6 +2509,45 @@ function loadData(key, fallback = null) {
   return fallback;
 }
 
+function applyCloudSnapshot(cloudData) {
+  const keys = [
+    'journalDiary', 'financeLedger', 'savingsGoals', 'emotionLog', 'investments',
+    'agentTasks', 'agentHistory', 'accountBalances', 'moduleMarks', 'contentStats',
+    'moodboardTiles', 'academicModules', 'personalProjects', 'recurringTransactions',
+    'financeForecastTargets', 'rs3Income', 'workflowInbox', 'dailyTop3', 'dailyWorkflow',
+    'ventureHealth', 'goalMilestones', 'goalTaskLinks', 'theme', 'routineState'
+  ];
+
+  for (const key of keys) {
+    if (cloudData[key] !== undefined) {
+      cloudStore[key] = cloudData[key];
+      try {
+        globalThis[key] = cloudData[key];
+      } catch (err) {}
+    }
+  }
+
+  if (cloudData.agentTasks !== undefined) agentTasks = cloudData.agentTasks;
+  if (cloudData.personalProjects !== undefined) personalProjects = cloudData.personalProjects;
+  if (cloudData.ventureHealth !== undefined) ventureHealth = cloudData.ventureHealth;
+  if (cloudData.workflowInbox !== undefined) workflowInbox = cloudData.workflowInbox;
+  if (cloudData.dailyTop3 !== undefined) dailyTop3 = cloudData.dailyTop3;
+  if (cloudData.dailyWorkflow !== undefined) dailyWorkflow = cloudData.dailyWorkflow;
+  if (cloudData.moduleMarks !== undefined) moduleMarks = cloudData.moduleMarks;
+  if (cloudData.savingsGoals !== undefined) savingsGoals = cloudData.savingsGoals;
+  if (cloudData.recurringTransactions !== undefined) recurringTransactions = cloudData.recurringTransactions;
+  if (cloudData.financeForecastTargets !== undefined) financeForecastTargets = cloudData.financeForecastTargets;
+  if (cloudData.investments !== undefined) investments = cloudData.investments;
+  if (cloudData.accountBalances !== undefined) accountBalances = cloudData.accountBalances;
+  if (cloudData.agentHistory !== undefined) agentHistory = cloudData.agentHistory;
+  if (cloudData.goalMilestones !== undefined) goalMilestones = cloudData.goalMilestones;
+  if (cloudData.goalTaskLinks !== undefined) goalTaskLinks = cloudData.goalTaskLinks;
+
+  if (cloudData.routineState && cloudData.routineState.selectedDay !== undefined) {
+    selectedDay = cloudData.routineState.selectedDay;
+  }
+}
+
 // ═══ ENSURE CLOUD ROW EXISTS ═══
 async function ensureCloudRecord() {
   if (!syncEnabled || !USER_ID) return false;
@@ -2679,23 +2718,8 @@ async function loadFromCloud(showStatus = true) {
     const cloudData = results[0].data;
     console.log('☁️ Loaded cloud data from:', results[0].updated_at);
     lastCloudUpdatedAt = results[0].updated_at || lastCloudUpdatedAt;
-    
-    // Hydrate localStorage and cloudStore
-    const keys = ['journalDiary', 'financeLedger', 'savingsGoals', 'emotionLog', 'investments',
-                  'agentTasks', 'agentHistory', 'accountBalances', 'moduleMarks', 'contentStats',
-                  'moodboardTiles', 'academicModules', 'personalProjects', 'recurringTransactions', 'financeForecastTargets', 'rs3Income',
-                  'workflowInbox', 'dailyTop3', 'dailyWorkflow', 'ventureHealth', 'goalMilestones', 'goalTaskLinks', 'theme', 'routineState'];
-    
-    for (const key of keys) {
-      if (cloudData[key] !== undefined) {
-        cloudStore[key] = cloudData[key];
-      }
-    }
-    
-    // Restore routine state if available
-    if (cloudData.routineState && cloudData.routineState.selectedDay !== undefined) {
-      selectedDay = cloudData.routineState.selectedDay;
-    }
+
+    applyCloudSnapshot(cloudData);
     
     // Re-render all sections
     renderAllSections();
