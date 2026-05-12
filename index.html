@@ -7129,6 +7129,13 @@ async function setupSupabaseRealtime() {
   try {
     // Broadcast-based realtime sync: single listener for all dashboard changes
     const topic = `user:${USER_ID}`;
+    
+    // 🔐 Authorize realtime access with current session
+    const { data: { session } } = await sbClient.auth.getSession();
+    if (session) {
+      sbClient.realtime.setAuth(session.access_token);
+    }
+    
     const channel = sbClient
       .channel(topic, { config: { private: true } })
       .on('broadcast', { event: '*' }, async (payload) => {
