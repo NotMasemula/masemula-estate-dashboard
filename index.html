@@ -7323,7 +7323,8 @@ async function loadVisionBoardFromSupabase() {
   const el = document.getElementById('vision-board-uploaded');
   if (!el) return;
   try {
-    const { data, error } = await sbClient.from('vision_board').select('*').eq('owner_uid', 'masemula-estate-dashboard').order('position_order', { ascending: true });
+    if (!sbClient) throw new Error('Supabase not initialized');
+    const { data, error } = await sbClient.from('vision_board').select('*').eq('owner_uid', USER_ID).order('position_order', { ascending: true });
     if (error) throw error;
     
     // Preset tiles configuration
@@ -7390,16 +7391,16 @@ async function loadVisionBoardFromSupabase() {
 async function deleteVisionImage(id, storagePath) {
   confirmModal('Delete Image?', 'Remove this image from your vision board.', async () => {
     try {
+      if (!sbClient) throw new Error('Supabase not initialized');
       await sbClient.storage.from('vision-board').remove([storagePath]);
       const { error } = await sbClient.from('vision_board').delete().eq('id', id);
       if (error) throw error;
       await loadVisionBoardFromSupabase();
       showToast('✅ Image removed');
     } catch (err) {
-      showToast('Failed to remove image', true);
+      showToast('Failed to remove image: ' + err.message, true);
     }
   });
-}
 }
 
 function triggerDesignUpload() { document.getElementById('design-file-input')?.click(); }
@@ -7410,13 +7411,14 @@ async function handleDesignUpload(event) {
   const activeTab = document.querySelector('#s-designs .design-tab-btn.active')?.dataset.tab || 'masemula';
   const path = `${activeTab}/${USER_ID}-${Date.now()}-${file.name}`.replace(/\s+/g, '-');
   try {
+    if (!sbClient) throw new Error('Supabase not initialized');
     const { error: uploadError } = await sbClient.storage.from('designs').upload(path, file, { upsert: false });
     if (uploadError) throw uploadError;
     const { error } = await sbClient.from('designs').insert({ owner_uid: USER_ID, storage_path: path, tab_category: activeTab, title: file.name, version: 1 });
     if (error) throw error;
     await loadDesignsFromSupabase();
   } catch (err) {
-    showToast('Design upload failed', true);
+    showToast('Design upload failed: ' + err.message, true);
   } finally {
     event.target.value = '';
   }
@@ -7438,21 +7440,21 @@ async function loadDesignsFromSupabase() {
   // Fetch uploaded designs from Supabase and append them to the matching tab panels
   if (!syncEnabled || !sbClient) return;
   try {
-    const { data, error } = await sbClient
-      .from('vision_board')
-      .select('id, owner_uid, title, caption, storage_path, created_at')
-      .eq('owner_uid', 'masemula-estate-dashboard')
-      .order('created_at', { ascending: false });
-    if (error) throw error;
-    if (!data || data.length === 0) return;
+   const { data, error } = await sbClient
+     .from('designs')
+     .select('id, owner_uid, title, tab_category, storage_path, created_at')
+     .eq('owner_uid', USER_ID)
+     .order('created_at', { ascending: false });
+   if (error) throw error;
+   if (!data || data.length === 0) return;
 
-    // Group by tab (vision_board doesn't have tab_category, all go to masemula)
-    const byTab = {};
-    data.forEach(row => {
-      const tab = 'masemula';
-      byTab[tab] = byTab[tab] || [];
-      byTab[tab].push(row);
-    });
+    // Group by tab
+   const byTab = {};
+   data.forEach(row => {
+     const tab = row.tab_category || 'masemula';
+     byTab[tab] = byTab[tab] || [];
+     byTab[tab].push(row);
+   });
 
     for (const [tab, rows] of Object.entries(byTab)) {
       const panel = document.getElementById(`des-${tab}`);
