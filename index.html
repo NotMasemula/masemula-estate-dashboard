@@ -510,6 +510,10 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
   </div>
 </div>
 <div id="toast"></div>
+<!-- ═══ OFFLINE STATUS BANNER ═══ -->
+<div id="offline-banner" style="display:none;position:fixed;bottom:56px;left:0;right:0;background:#993C1D;color:#F0EDE7;padding:10px 16px;font-size:12px;text-align:center;border-top:1px solid #D8D2C8;z-index:99">
+  📡 Offline — Changes will sync when you're back online
+</div>
 <!-- ═══ CONFIRM MODAL (REPLACES confirm()) ═══ -->
 <div id="confirm-overlay">
   <div id="confirm-modal">
@@ -2417,6 +2421,122 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// ═══ REPLACE alert() WITH TOAST ═══
+// Global override: whenever code calls alert(), show toast instead
+const originalAlert = window.alert;
+window.alert = function(message) {
+  showToast(message, false);
+};
+
+// ═══ REPLACE prompt() WITH MODAL INPUT ═══
+// Since prompt() expects a return value, we use a modified pattern:
+// Instead of: const val = prompt('Enter name:');
+// Use: promptModal('Enter name:', (val) => { ... do work with val ... })
+let promptCallback = null;
+let promptValue = '';
+
+function promptModal(title, message = '', placeholder = '', onConfirm) {
+  const overlay = document.getElementById('confirm-overlay');
+  const titleEl = document.getElementById('confirm-title');
+  const msgEl = document.getElementById('confirm-message');
+  const btnContainer = document.getElementById('confirm-buttons');
+  
+  titleEl.textContent = title;
+  msgEl.innerHTML = `<input type="text" id="prompt-input" placeholder="${placeholder}" value="" style="width:100%;padding:8px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface);color:var(--ink);font-family:'Jost',sans-serif;font-size:13px" autofocus>
+    ${message ? `<div style="font-size:12px;color:var(--muted);margin-top:8px">${message}</div>` : ''}`;
+  
+  promptCallback = onConfirm;
+  
+  // Replace buttons with input-specific ones
+  btnContainer.innerHTML = `
+    <button class="confirm-btn" onclick="closeConfirmModal()">Cancel</button>
+    <button class="confirm-btn confirm-action" onclick="triggerPromptAction()">Submit</button>
+  `;
+  
+  overlay.classList.add('open');
+  
+  // Focus input and allow Enter key
+  setTimeout(() => {
+    const inp = document.getElementById('prompt-input');
+    if (inp) {
+      inp.focus();
+      inp.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') triggerPromptAction();
+      });
+    }
+  }, 50);
+}
+
+function triggerPromptAction() {
+  const inp = document.getElementById('prompt-input');
+  promptValue = inp ? inp.value : '';
+  if (promptCallback) promptCallback(promptValue);
+  closeConfirmModal();
+}
+
+// ═══ OFFLINE DETECTION & SYNC QUEUING ═══
+let isOffline = !navigator.onLine;
+let pendingSyncs = [];
+const MAX_RETRY_ATTEMPTS = 3;
+let retryAttempts = 0;
+
+function updateOfflineBanner() {
+  const banner = document.getElementById('offline-banner');
+  if (!banner) return;
+  banner.style.display = isOffline ? 'block' : 'none';
+}
+
+window.addEventListener('offline', () => {
+  isOffline = true;
+  updateOfflineBanner();
+  showToast('📡 Going offline — changes will sync later', false);
+  console.log('🔴 OFFLINE');
+});
+
+window.addEventListener('online', () => {
+  isOffline = false;
+  updateOfflineBanner();
+  showToast('📡 Back online! Syncing changes...', false);
+  console.log('🟢 BACK ONLINE');
+  
+  // Retry pending syncs
+  if (pendingSyncs.length > 0) {
+    console.log(`🔄 Retrying ${pendingSyncs.length} pending syncs`);
+    pendingSyncs = []; // Clear queue, will retry on next save
+    syncToCloud(false).then(ok => {
+      if (ok) showToast('✅ All changes synced!');
+    });
+  }
+});
+
+// Override syncToCloud to queue when offline
+const originalSyncToCloud = syncToCloud;
+window.syncToCloud = async function(updateStatus = true) {
+  // If offline and updateStatus is false (background sync), queue it
+  if (isOffline && !updateStatus) {
+    if (!pendingSyncs.includes('background')) {
+      pendingSyncs.push('background');
+      console.log('📋 Queued background sync (offline)');
+    }
+    return false;
+  }
+  
+  // If offline and user requested manual sync, show message and queue
+  if (isOffline && updateStatus) {
+    showToast('📡 Offline — queuing changes to sync when online', false);
+    pendingSyncs.push('manual');
+    return false;
+  }
+  
+  // Online: proceed with sync
+  const result = await originalSyncToCloud.call(this, updateStatus);
+  if (result && updateStatus) retryAttempts = 0; // Reset on success
+  return result;
+};
+
+// Initialize offline banner on load
+document.addEventListener('DOMContentLoaded', updateOfflineBanner);
 
 async function handleLoginSubmit(event) {
   event.preventDefault();
