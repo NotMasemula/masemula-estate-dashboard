@@ -331,6 +331,21 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 .pulse{animation:pulse 2s ease-in-out infinite}
 
+/* CONFIRM MODAL */
+#confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center}
+#confirm-overlay.open{display:flex}
+#confirm-modal{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:24px;width:90%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.2)}
+#confirm-title{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:400;margin-bottom:12px;color:var(--ink)}
+#confirm-message{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+#confirm-buttons{display:flex;gap:10px;justify-content:flex-end}
+.confirm-btn{padding:8px 16px;border-radius:6px;border:0.5px solid var(--border);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;font-family:'Jost',sans-serif;background:var(--card);color:var(--ink);transition:all 0.2s}
+.confirm-btn:hover{border-color:var(--gold);color:var(--gold)}
+.confirm-btn.confirm-action{background:var(--gold);color:#0A0806;border-color:var(--gold)}
+.confirm-btn.confirm-action:hover{background:var(--accent);border-color:var(--accent)}
+.dark #confirm-title{color:#F0EDE7}
+.dark #confirm-message{color:#F0EDE7}
+.dark #confirm-modal{background:var(--card);border-color:var(--border)}
+
 /* SHARED VENTURES */
 .sv-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center}
 .sv-modal-overlay.open{display:flex}
@@ -495,7 +510,17 @@ select.sel{font-size:11px;font-family:'Jost',sans-serif;border:0.5px solid var(-
   </div>
 </div>
 <div id="toast"></div>
-<div id="capture-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9998;align-items:center;justify-content:center;padding:16px">
+<!-- ═══ CONFIRM MODAL (REPLACES confirm()) ═══ -->
+<div id="confirm-overlay">
+  <div id="confirm-modal">
+    <div id="confirm-title"></div>
+    <div id="confirm-message"></div>
+    <div id="confirm-buttons">
+      <button class="confirm-btn" onclick="closeConfirmModal()">Cancel</button>
+      <button class="confirm-btn confirm-action" id="confirm-action-btn" onclick="triggerConfirmAction()">Confirm</button>
+    </div>
+  </div>
+</div>
   <div style="width:100%;max-width:460px;background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div class="card-title" style="margin-bottom:0">Quick capture</div>
@@ -2358,6 +2383,41 @@ function showAuthScreen(show) {
   os.style.display = show ? 'none' : 'flex';
 }
 
+// ═══ CONFIRM MODAL (replaces confirm()) ═══
+let confirmCallback = null;
+function confirmModal(title, message, onConfirm) {
+  const overlay = document.getElementById('confirm-overlay');
+  const titleEl = document.getElementById('confirm-title');
+  const msgEl = document.getElementById('confirm-message');
+  
+  titleEl.textContent = title;
+  msgEl.textContent = message;
+  confirmCallback = onConfirm;
+  
+  overlay.classList.add('open');
+}
+
+function closeConfirmModal() {
+  const overlay = document.getElementById('confirm-overlay');
+  overlay.classList.remove('open');
+  confirmCallback = null;
+}
+
+function triggerConfirmAction() {
+  if (confirmCallback) confirmCallback();
+  closeConfirmModal();
+}
+
+// Close modal on overlay click
+document.addEventListener('DOMContentLoaded', () => {
+  const overlay = document.getElementById('confirm-overlay');
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeConfirmModal();
+    });
+  }
+});
+
 async function handleLoginSubmit(event) {
   event.preventDefault();
   if (!sbClient) {
@@ -2682,11 +2742,15 @@ async function syncToCloud(updateStatus = true) {
       isSyncing = false;
       return true;
     } else {
-      throw new Error('Sync failed: ' + response.status);
+      const errText = await response.text().catch(() => 'Unknown error');
+      throw new Error(`HTTP ${response.status}: ${errText}`);
     }
   } catch (err) {
     console.error('☁️ Sync error:', err);
-    if (updateStatus) setSyncStatus('offline');
+    if (updateStatus) {
+      setSyncStatus('offline');
+      showToast(`❌ Sync failed: ${err.message || 'Network error'}`, true);
+    }
     isSyncing = false;
     return false;
   }
@@ -2730,7 +2794,10 @@ async function loadFromCloud(showStatus = true) {
   } catch (err) {
     console.error('☁️ Load error:', err);
     isSyncing = false;
-    if (showStatus) setSyncStatus('offline');
+    if (showStatus) {
+      setSyncStatus('offline');
+      showToast(`❌ Load failed: ${err.message || 'Network error'}`, true);
+    }
     return false;
   }
 }
@@ -3101,11 +3168,12 @@ async function addPersonalProject() {
 }
 
 async function deletePersonalProject(id) {
-  if (confirm('Delete this project?')) {
+  confirmModal('Delete Project?', 'Remove this project from your list.', async () => {
     personalProjects = personalProjects.filter(p => p.id !== id);
     await saveData('personalProjects', personalProjects);
     renderPersonalProjects();
-  }
+    showToast('✅ Project deleted');
+  });
 }
 
 async function updateProjectStatus(id, newStatus) {
@@ -3895,11 +3963,12 @@ async function logEmotion(){
   document.getElementById('emo-note').value='';
 }
 async function deleteEmotionEntry(i){
-  if(confirm('Delete this emotion entry?')){
+  confirmModal('Delete Entry?', 'Remove this emotion entry from your log.', async () => {
     emoLog.splice(i,1);
     await saveData('emotionLog', emoLog);
     renderEmotionLog();
-  }
+    showToast('✅ Entry deleted');
+  });
 }
 function renderEmotionLog(){
   const hist=document.getElementById('emo-history');if(!hist)return;
@@ -4344,11 +4413,13 @@ function renderJournalDiary(){
   }).join('');
 }
 async function deleteJournalEntry(idx){
-  if(!confirm('Delete this journal entry?'))return;
-  let diary=loadData('journalDiary', []);
-  diary.splice(idx,1);
-  await saveData('journalDiary', diary);
-  renderJournalDiary();
+  confirmModal('Delete Entry?', 'Remove this journal entry.', async () => {
+    let diary=loadData('journalDiary', []);
+    diary.splice(idx,1);
+    await saveData('journalDiary', diary);
+    renderJournalDiary();
+    showToast('✅ Entry deleted');
+  });
 }
 // Init journal
 renderJournalPrompts();
@@ -4478,12 +4549,13 @@ function renderLedger(){
   }).join('');
 }
 async function deleteLedgerEntry(i){
-  if(confirm('Delete this transaction?')){
+  confirmModal('Delete Transaction?', 'Remove this transaction from your ledger.', async () => {
     ledger.splice(i,1);
     await saveData('financeLedger', ledger);
     renderLedger();
     updateFinanceTotals();
-  }
+    showToast('✅ Transaction deleted');
+  });
 }
 function updateFinanceTotals(){
   const income=ledger.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
@@ -4867,10 +4939,13 @@ async function addRecurringTransaction() {
 }
 
 async function deleteRecurringTransaction(id) {
-  if (confirm('Delete this recurring transaction?')) {
+  confirmModal('Delete Recurring?', 'Remove this recurring transaction.', async () => {
     recurringTransactions = recurringTransactions.filter(r => r.id !== id);
     await saveData('recurringTransactions', recurringTransactions);
     renderRecurringTransactions();
+    showToast('✅ Recurring deleted');
+  });
+}
     checkPendingRecurring();
   }
 }
@@ -5406,10 +5481,13 @@ function renderSavingsGoals(){
   }).join('');
 }
 async function deleteSavingsGoal(i){
-  if(confirm('Delete this savings goal?')){
+  confirmModal('Delete Goal?', 'Remove this savings goal.', async () => {
     savingsGoals.splice(i,1);
     await saveData('savingsGoals', savingsGoals);
     renderSavingsGoals();
+    showToast('✅ Goal deleted');
+  });
+}
   }
 }
 // Init finance — moved to initDashboard()
@@ -6133,10 +6211,10 @@ async function svUpdateVentureStatus(id) {
 }
 
 async function svDeleteVenture(id) {
-  if (!confirm('Delete this venture? All associated transactions will be removed.')) return;
-  const v = svData.ventures.find(x=>x.id===id);
-  svData.ventures = svData.ventures.filter(x=>x.id!==id);
-  svData.transactions = svData.transactions.filter(x=>x.venture_id!==id);
+  confirmModal('Delete Venture?', 'Remove this venture and all associated transactions.', async () => {
+    const v = svData.ventures.find(x=>x.id===id);
+    svData.ventures = svData.ventures.filter(x=>x.id!==id);
+    svData.transactions = svData.transactions.filter(x=>x.venture_id!==id);
   svAuditLog('venture_deleted', `Deleted venture: ${v?v.name:id}`, 'ntobeko');
   await svSaveToCloud();
   document.getElementById('sv-venture-detail').style.display = 'none';
@@ -6220,10 +6298,10 @@ async function svConfirmDispute() {
 }
 
 async function svDeleteTransaction(id) {
-  if (!confirm('Delete this transaction?')) return;
-  const tx = svData.transactions.find(t=>t.id===id);
-  svData.transactions = svData.transactions.filter(t=>t.id!==id);
-  svAuditLog('transaction_deleted', `Deleted: ${tx?tx.description:id}`, 'ntobeko');
+  confirmModal('Delete Transaction?', 'Remove this transaction.', async () => {
+    const tx = svData.transactions.find(t=>t.id===id);
+    svData.transactions = svData.transactions.filter(t=>t.id!==id);
+    svAuditLog('transaction_deleted', `Deleted: ${tx?tx.description:id}`, 'ntobeko');
   await svSaveToCloud();
   svRenderTransactions();
 }
@@ -6333,15 +6411,16 @@ async function svSaveSettlement() {
   if (!calc) return;
   const existing = svData.settlements.find(s=>s.venture_id===calc.ventureId&&s.month_year===calc.month);
   if (existing) {
-    if (!confirm('A settlement for this month already exists. Overwrite?')) return;
-    Object.assign(existing, calc, { venture_id:calc.ventureId, month_year:calc.month, status:'draft', updated_at:new Date().toISOString() });
-  } else {
-    svData.settlements.unshift({ id:'st_'+Date.now(), venture_id:calc.ventureId, month_year:calc.month, total_revenue:calc.revenue, total_expenses:calc.expenses, reinvestment:calc.reinvest, net_profit:calc.net_profit, share_ntobeko:calc.share_ntobeko, share_partner:calc.share_partner, status:'draft', created_at:new Date().toISOString() });
-  }
-  const v = svData.ventures.find(x=>x.id===calc.ventureId);
-  svAuditLog('settlement_saved', `Settlement saved: ${v?v.name:''} ${calc.month}`, 'ntobeko');
-  await svSaveToCloud();
-  svRenderSettlements();
+    confirmModal('Overwrite Settlement?', 'A settlement for this month already exists. Replace it?', async () => {
+      Object.assign(existing, calc, { venture_id:calc.ventureId, month_year:calc.month, status:'draft', updated_at:new Date().toISOString() });
+      const v = svData.ventures.find(x=>x.id===calc.ventureId);
+      svAuditLog('settlement_saved', `Settlement saved: ${v?v.name:''} ${calc.month}`, 'ntobeko');
+      await svSaveToCloud();
+      svRenderSettlements();
+      svPopulateSettlementSelect();
+      showToast('✅ Settlement saved!');
+    });
+    return;
   svPopulateSettlementSelect();
   alert('Settlement saved! Go to Transfers to log the actual money movement.');
 }
@@ -6387,11 +6466,13 @@ async function svMarkSettlementPaid(id) {
   svRenderSettlements();
 }
 async function svDeleteSettlement(id) {
-  if (!confirm('Delete this settlement record?')) return;
-  svData.settlements = svData.settlements.filter(x=>x.id!==id);
-  await svSaveToCloud();
-  svRenderSettlements();
-  svPopulateSettlementSelect();
+  confirmModal('Delete Settlement?', 'Remove this settlement record.', async () => {
+    svData.settlements = svData.settlements.filter(x=>x.id!==id);
+    await svSaveToCloud();
+    svRenderSettlements();
+    svPopulateSettlementSelect();
+    showToast('✅ Settlement deleted');
+  });
 }
 
 // ─── TRANSFERS ───
@@ -6451,7 +6532,14 @@ async function svConfirmReceived(id) {
 }
 
 async function svDeleteTransfer(id) {
-  if (!confirm('Delete this transfer record?')) return;
+  confirmModal('Delete Transfer?', 'Remove this transfer record.', async () => {
+    svData.transfers = svData.transfers.filter(x=>x.id!==id);
+    svAuditLog('transfer_deleted', `Transfer deleted: ${id}`, 'ntobeko');
+    await svSaveToCloud();
+    svRenderTransfers();
+    showToast('✅ Transfer deleted');
+  });
+}
   svData.transfers = svData.transfers.filter(x=>x.id!==id);
   await svSaveToCloud();
   svRenderTransfers();
@@ -6561,7 +6649,14 @@ async function svLogLoanRepayment(id) {
 }
 
 async function svDeleteLoan(id) {
-  if (!confirm('Delete this loan record?')) return;
+  confirmModal('Delete Loan?', 'Remove this loan record.', async () => {
+    svData.loans = svData.loans.filter(x=>x.id!==id);
+    svAuditLog('loan_deleted', `Loan deleted: ${id}`, 'ntobeko');
+    await svSaveToCloud();
+    svRenderLoans();
+    showToast('✅ Loan deleted');
+  });
+}
   svData.loans = svData.loans.filter(l=>l.id!==id);
   await svSaveToCloud();
   svRenderLoans();
@@ -6931,7 +7026,15 @@ async function updateMilestoneProgress(goalId, milestoneId, value) {
 }
 
 async function deleteMilestone(goalId, milestoneId) {
-  if (!confirm('Remove this milestone?')) return;
+  confirmModal('Delete Milestone?', 'Remove this milestone.', async () => {
+    if (goalMilestones[goalId]) {
+      goalMilestones[goalId] = goalMilestones[goalId].filter(m => m.id !== milestoneId);
+      await saveData('goalMilestones', goalMilestones);
+      renderGoalMilestones(goalId);
+      showToast('✅ Milestone deleted');
+    }
+  });
+}
   goalMilestones[goalId] = (goalMilestones[goalId] || []).filter(m => m.id !== milestoneId);
   await saveData('goalMilestones', goalMilestones);
   renderGoalMilestones(goalId);
@@ -6972,10 +7075,12 @@ async function toggleGoalTask(goalId, taskId) {
 }
 
 async function deleteGoalTask(goalId, taskId) {
-  if (!confirm('Remove this task?')) return;
-  goalTaskLinks[goalId] = (goalTaskLinks[goalId] || []).filter(t => t.id !== taskId);
-  await saveData('goalTaskLinks', goalTaskLinks);
-  renderGoalTasks(goalId);
+  confirmModal('Delete Task?', 'Remove this task from the goal.', async () => {
+    goalTaskLinks[goalId] = (goalTaskLinks[goalId] || []).filter(t => t.id !== taskId);
+    await saveData('goalTaskLinks', goalTaskLinks);
+    renderGoalTasks(goalId);
+    showToast('✅ Task removed');
+  });
 }
 
 function renderGoalTasks(goalId) {
@@ -7121,15 +7226,18 @@ async function loadVisionBoardFromSupabase() {
 }
 
 async function deleteVisionImage(id, storagePath) {
-  if (!confirm('Remove this image from your vision board?')) return;
-  try {
-    await sbClient.storage.from('vision-board').remove([storagePath]);
-    const { error } = await sbClient.from('vision_board').delete().eq('id', id);
-    if (error) throw error;
-    await loadVisionBoardFromSupabase();
-  } catch (err) {
-    showToast('Failed to remove image', true);
-  }
+  confirmModal('Delete Image?', 'Remove this image from your vision board.', async () => {
+    try {
+      await sbClient.storage.from('vision-board').remove([storagePath]);
+      const { error } = await sbClient.from('vision_board').delete().eq('id', id);
+      if (error) throw error;
+      await loadVisionBoardFromSupabase();
+      showToast('✅ Image removed');
+    } catch (err) {
+      showToast('Failed to remove image', true);
+    }
+  });
+}
 }
 
 function triggerDesignUpload() { document.getElementById('design-file-input')?.click(); }
