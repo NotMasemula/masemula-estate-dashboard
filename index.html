@@ -5608,8 +5608,7 @@ async function deleteSavingsGoal(i){
     showToast('✅ Goal deleted');
   });
 }
-  }
-}
+
 // Init finance — moved to initDashboard()
 // renderLedger();
 // updateFinanceTotals();
@@ -7005,12 +7004,13 @@ function renderEmpirePillars(p) {
 
 async function loadGoalsFromSupabase() {
   try {
+    if (!sbClient) throw new Error('Supabase not initialized');
     const { data, error } = await sbClient.from('goals').select('*').eq('owner_uid', USER_ID).order('created_at', { ascending: false });
     if (error) throw error;
     goals = data || [];
     renderGoals();
   } catch (err) {
-    showToast('Failed to load goals', true);
+    showToast('Failed to load goals: ' + err.message, true);
   }
 }
 
@@ -7068,52 +7068,55 @@ async function submitNewGoal() {
   const target_value = parseFloat(document.getElementById('goal-target')?.value || '0') || 0;
   const unit = (document.getElementById('goal-unit')?.value || '').trim() || null;
   const deadline = (document.getElementById('goal-deadline')?.value || '').trim() || null;
-  const data_source = document.getElementById('goal-source')?.value || 'manual';
+ const data_source = document.getElementById('goal-source')?.value || 'manual';
   
-  if (target_value <= 0) {
-    showToast('Target value must be greater than 0', true);
-    return;
-  }
+ if (target_value <= 0) {
+   showToast('Target value must be greater than 0', true);
+   return;
+ }
   
-  try {
-    const { error } = await sbClient.from('goals').insert({ 
-      owner_uid: USER_ID, 
-      title, 
-      category, 
-      target_value, 
-      unit, 
-      deadline, 
-      data_source, 
-      current_value: 0 
-    });
-    if (error) throw error;
-    await loadGoalsFromSupabase();
-    closeGoalModal();
-    showToast('Goal created! 🎯');
-  } catch (err) {
-    showToast('Failed to create goal', true);
-  }
+ try {
+   if (!sbClient) throw new Error('Supabase not initialized');
+   const { error } = await sbClient.from('goals').insert({ 
+     owner_uid: USER_ID, 
+     title, 
+     category, 
+     target_value, 
+     unit, 
+     deadline, 
+     data_source, 
+     current_value: 0 
+   });
+   if (error) throw error;
+   await loadGoalsFromSupabase();
+   closeGoalModal();
+   showToast('Goal created! 🎯');
+ } catch (err) {
+   showToast('Failed to create goal: ' + err.message, true);
+ }
 }
 
 async function deleteGoal(goalId) {
   try {
+    if (!sbClient) throw new Error('Supabase not initialized');
     const { error } = await sbClient.from('goals').delete().eq('id', goalId);
     if (error) throw error;
     await loadGoalsFromSupabase();
   } catch (err) {
-    showToast('Failed to remove goal', true);
+    showToast('Failed to remove goal: ' + err.message, true);
   }
 }
 
 async function updateGoalManualValue(goalId, value) {
   const current_value = parseFloat(value || '0') || 0;
   try {
+    if (!sbClient) throw new Error('Supabase not initialized');
     const { error } = await sbClient.from('goals').update({ current_value }).eq('id', goalId).eq('owner_uid', USER_ID);
     if (error) throw error;
     goals = goals.map(g => g.id === goalId ? { ...g, current_value } : g);
     renderGoals();
   } catch (err) {
-    showToast('Failed to update goal value', true);
+    showToast('Failed to update goal value: ' + err.message, true);
   }
 }
 
@@ -7228,9 +7231,10 @@ async function autoUpdateGoalFromMilestones(goalId) {
     if (goal) {
       goal.current_value = totalProgress;
       try {
+        if (!sbClient) throw new Error('Supabase not initialized');
         const { error } = await sbClient.from('goals').update({ current_value: totalProgress }).eq('id', goalId);
         if (!error) renderGoals();
-      } catch (err) { console.error('Failed to auto-update goal:', err); }
+      } catch (err) { console.error('Failed to auto-update goal:', err.message); }
     }
   }
 }
@@ -7239,6 +7243,7 @@ async function autoUpdateGoalsFromMetrics() {
   for (const goal of goals) {
     if (!goal.data_source || goal.data_source === 'manual') continue;
     try {
+      if (!sbClient) throw new Error('Supabase not initialized');
       let newValue = goal.current_value || 0;
       if (goal.data_source === 'finance:income') {
         const totalIncome = (financeLedger || []).filter(t => t.type === 'income').reduce((s, t) => s + (t.amount || 0), 0);
@@ -7297,20 +7302,21 @@ function getConfidenceEmoji(confidence) {
 function triggerVisionUpload() { document.getElementById('vision-file-input')?.click(); }
 
 async function handleVisionImageUpload(event) {
-  const file = event.target.files?.[0];
-  if (!file) return;
-  const path = `${USER_ID}/${Date.now()}-${file.name}`.replace(/\s+/g, '-');
-  try {
-    const { error: uploadError } = await sbClient.storage.from('vision-board').upload(path, file, { upsert: false });
-    if (uploadError) throw uploadError;
-    const { error } = await sbClient.from('vision_board').insert({ owner_uid: 'masemula-estate-dashboard', storage_path: path, title: file.name, caption: file.name });
-    if (error) throw error;
-    await loadVisionBoardFromSupabase();
-  } catch (err) {
-    showToast('Vision upload failed', true);
-  } finally {
-    event.target.value = '';
-  }
+ const file = event.target.files?.[0];
+ if (!file) return;
+ const path = `${USER_ID}/${Date.now()}-${file.name}`.replace(/\s+/g, '-');
+ try {
+   if (!sbClient) throw new Error('Supabase not initialized');
+   const { error: uploadError } = await sbClient.storage.from('vision-board').upload(path, file, { upsert: false });
+   if (uploadError) throw uploadError;
+   const { error } = await sbClient.from('vision_board').insert({ owner_uid: USER_ID, storage_path: path, title: file.name, caption: file.name });
+   if (error) throw error;
+   await loadVisionBoardFromSupabase();
+ } catch (err) {
+   showToast('Vision upload failed: ' + err.message, true);
+ } finally {
+   event.target.value = '';
+ }
 }
 
 async function loadVisionBoardFromSupabase() {
@@ -7658,6 +7664,7 @@ async function syncHabitToSupabase(habitKey, dayOffset, completed, notes = null)
 
 async function openWeeklyHistory(type) {
   try {
+    if (!sbClient) throw new Error('Supabase not initialized');
     if (type === 'gym') {
       const { data, error } = await sbClient.from('habits_log').select('logged_date,completed').eq('owner_uid', USER_ID).eq('habit_key', 'gym').order('logged_date', { ascending: false }).limit(12);
       if (error) throw error;
@@ -7668,7 +7675,7 @@ async function openWeeklyHistory(type) {
     if (error) throw error;
     alert((data || []).map(r => `${new Date(r.started_at).toLocaleDateString('en-ZA')}: ${(Number(r.duration_minutes) / 60).toFixed(1)}h`).join('\n') || 'No history yet');
   } catch (err) {
-    showToast('Failed to load weekly history', true);
+    showToast('Failed to load weekly history: ' + err.message, true);
   }
 }
 
