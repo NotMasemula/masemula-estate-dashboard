@@ -7025,10 +7025,12 @@ function renderGoals() {
     const target = Number(g.target_value || 0);
     const current = Number(g.current_value || 0);
     const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+    const confidence = calculateGoalConfidence(g);
+    const confidenceEmoji = getConfidenceEmoji(confidence);
     const milestones = goalMilestones[g.id] || [];
     const tasks = goalTaskLinks[g.id] || [];
     const completedTasks = tasks.filter(t => t.completed).length;
-    return `<div class="card mb-10"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:14px;font-family:'Cormorant Garamond',serif">${g.title}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Goal ${pct}% complete · ${completedTasks}/${tasks.length} tasks</div></div><button class="btn-del" onclick="deleteGoal('${g.id}')">🗑</button></div><div style="font-size:11px;color:var(--muted);margin-bottom:6px">${g.category || 'general'}${g.deadline ? ' · due ' + g.deadline : ''}</div><div class="prog-row" style="border:none;padding:0;margin-bottom:8px"><div class="prog-bar" style="flex:1"><div class="prog-fill" style="width:${pct}%"></div></div><div class="prog-pct">${pct}%</div></div><div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><div style="font-size:11px;color:var(--muted)">${current}/${target}${g.unit ? ' ' + g.unit : ''}</div>${g.data_source === 'manual' ? `<input class="habit-input" type="number" value="${current}" onchange="updateGoalManualValue('${g.id}', this.value)">` : `<button class="btn" onclick="autoUpdateGoalsFromMetrics()" style="font-size:10px;padding:4px 8px">⟳ Sync</button>`}</div><div id="goal-milestones-${g.id}"></div><div style="margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border)"><div id="goal-tasks-${g.id}"></div><button class="btn" onclick="linkTaskToGoal('${g.id}')" style="font-size:10px;margin-top:4px;width:100%">+ Link Task</button><button class="btn" onclick="addMilestoneToGoal('${g.id}')" style="font-size:10px;margin-top:4px;width:100%">+ Add Milestone</button></div></div>`;
+    return `<div class="card mb-10"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:14px;font-family:'Cormorant Garamond',serif">${g.title}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Goal ${pct}% complete · ${completedTasks}/${tasks.length} tasks · Confidence: ${confidenceEmoji} ${confidence}%</div></div><button class="btn-del" onclick="deleteGoal('${g.id}')">🗑</button></div><div style="font-size:11px;color:var(--muted);margin-bottom:6px">${g.category || 'general'}${g.deadline ? ' · due ' + g.deadline : ''}</div><div class="prog-row" style="border:none;padding:0;margin-bottom:8px"><div class="prog-bar" style="flex:1"><div class="prog-fill" style="width:${pct}%"></div></div><div class="prog-pct">${pct}%</div></div><div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><div style="font-size:11px;color:var(--muted)">${current}/${target}${g.unit ? ' ' + g.unit : ''}</div>${g.data_source === 'manual' ? `<input class="habit-input" type="number" value="${current}" onchange="updateGoalManualValue('${g.id}', this.value)">` : `<button class="btn" onclick="autoUpdateGoalsFromMetrics()" style="font-size:10px;padding:4px 8px">⟳ Sync</button>`}</div><div id="goal-milestones-${g.id}"></div><div style="margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border)"><div id="goal-tasks-${g.id}"></div><button class="btn" onclick="linkTaskToGoal('${g.id}')" style="font-size:10px;margin-top:4px;width:100%">+ Link Task</button><button class="btn" onclick="addMilestoneToGoal('${g.id}')" style="font-size:10px;margin-top:4px;width:100%">+ Add Milestone</button></div></div>`;
   }).join('');
   goals.forEach(g => {
     renderGoalMilestones(g.id);
@@ -7142,6 +7144,7 @@ async function updateMilestoneProgress(goalId, milestoneId, value) {
     await saveData('goalMilestones', goalMilestones);
     renderGoalMilestones(goalId);
     autoUpdateGoalFromMilestones(goalId);
+    renderGoals();
   }
 }
 
@@ -7151,13 +7154,10 @@ async function deleteMilestone(goalId, milestoneId) {
       goalMilestones[goalId] = goalMilestones[goalId].filter(m => m.id !== milestoneId);
       await saveData('goalMilestones', goalMilestones);
       renderGoalMilestones(goalId);
+      renderGoals();
       showToast('✅ Milestone deleted');
     }
   });
-}
-  goalMilestones[goalId] = (goalMilestones[goalId] || []).filter(m => m.id !== milestoneId);
-  await saveData('goalMilestones', goalMilestones);
-  renderGoalMilestones(goalId);
 }
 
 function renderGoalMilestones(goalId) {
@@ -7182,6 +7182,7 @@ async function linkTaskToGoal(goalId) {
   goalTaskLinks[goalId].push(task);
   await saveData('goalTaskLinks', goalTaskLinks);
   renderGoalTasks(goalId);
+  renderGoals();
   showToast('Task linked to goal');
 }
 
@@ -7191,15 +7192,17 @@ async function toggleGoalTask(goalId, taskId) {
     task.completed = !task.completed;
     await saveData('goalTaskLinks', goalTaskLinks);
     renderGoalTasks(goalId);
+    renderGoals();
   }
 }
 
 async function deleteGoalTask(goalId, taskId) {
   confirmModal('Delete Task?', 'Remove this task from the goal.', async () => {
-    goalTaskLinks[goalId] = (goalTaskLinks[goalId] || []).filter(t => t.id !== taskId);
-    await saveData('goalTaskLinks', goalTaskLinks);
-    renderGoalTasks(goalId);
-    showToast('✅ Task removed');
+   goalTaskLinks[goalId] = (goalTaskLinks[goalId] || []).filter(t => t.id !== taskId);
+   await saveData('goalTaskLinks', goalTaskLinks);
+   renderGoalTasks(goalId);
+   renderGoals();
+   showToast('✅ Task removed');
   });
 }
 
@@ -7256,6 +7259,39 @@ async function autoUpdateGoalsFromMetrics() {
     } catch (err) { console.error('Error updating goal from metrics:', err); }
   }
   renderGoals();
+}
+
+function calculateGoalConfidence(goal) {
+  const target = Number(goal.target_value || 0);
+  const current = Number(goal.current_value || 0);
+  if (target <= 0) return 0;
+  
+  const progressPct = Math.min(100, (current / target) * 100);
+  const milestones = goalMilestones[goal.id] || [];
+  const tasks = goalTaskLinks[goal.id] || [];
+  const completedTasks = tasks.filter(t => t.completed).length;
+  const taskCompletion = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 100;
+  const milestoneCompletion = milestones.length > 0 ? 
+    (milestones.filter(m => m.completed).length / milestones.length) * 100 : 100;
+  
+  let confidence = (progressPct * 0.4 + taskCompletion * 0.3 + milestoneCompletion * 0.3);
+  
+  if (goal.deadline) {
+    const now = new Date();
+    const deadline = new Date(goal.deadline);
+    const daysLeft = Math.max(0, (deadline - now) / (1000 * 60 * 60 * 24));
+    const pace = daysLeft > 0 ? progressPct / ((100 - daysLeft) / daysLeft + 1) : progressPct;
+    confidence = Math.min(100, (confidence * 0.7 + pace * 0.3));
+  }
+  
+  return Math.round(confidence);
+}
+
+function getConfidenceEmoji(confidence) {
+  if (confidence >= 80) return '🟢';
+  if (confidence >= 60) return '🟡';
+  if (confidence >= 40) return '🟠';
+  return '🔴';
 }
 
 function triggerVisionUpload() { document.getElementById('vision-file-input')?.click(); }
